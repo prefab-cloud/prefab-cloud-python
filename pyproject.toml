@@ -9,7 +9,7 @@ packages = [{include = "prefab_cloud_python"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 grpcio = "^1.51"
-
+pytest = "^7.1.3"
 
 [build-system]
 requires = ["poetry-core"]

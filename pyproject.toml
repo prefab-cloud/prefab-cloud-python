@@ -8,6 +8,7 @@ packages = [{include = "prefab_cloud_python"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+grpcio = "^1.51"
 
 
 [build-system]

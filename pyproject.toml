@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "prefab-cloud-python"
+version = "0.1.0"
+description = ""
+authors = ["Michael Berkowitz <michael.berkowitz@gmail.com>"]
+readme = "README.md"
+packages = [{include = "prefab_cloud_python"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

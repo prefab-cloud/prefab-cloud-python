@@ -70,6 +70,9 @@ class Options:
         self.__set_on_no_default(on_no_default)
         self.__set_on_connection_failure(on_connection_failure)
 
+    def is_local_only(self):
+        return self.prefab_datasources == 'LOCAL_ONLY'
+
     def __set_url_for_api_cdn(self):
         if self.prefab_datasources == "LOCAL_ONLY":
             self.url_for_api_cdn = None

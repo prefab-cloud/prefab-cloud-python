@@ -1,8 +1,8 @@
 from prefab_cloud_python import Options
 from prefab_cloud_python.options import MissingApiKeyException, InvalidApiKeyException, InvalidApiUrlException, InvalidGrpcUrlException
 
-import unittest
 import os
+import pytest
 
 from contextlib import contextmanager
 
@@ -16,7 +16,7 @@ def extended_env(new_env_vars):
     os.environ.update(old_env)
 
 
-class TestOptionsApiKey(unittest.TestCase):
+class TestOptionsApiKey:
     def test_valid_api_key_from_input(self):
         options = Options(api_key="1-dev-api-key")
         assert options.api_key == "1-dev-api-key"
@@ -34,15 +34,15 @@ class TestOptionsApiKey(unittest.TestCase):
             assert options.api_key == "3-dev-api-key"
 
     def test_missing_api_key_error(self):
-        with self.assertRaises(MissingApiKeyException) as context:
+        with pytest.raises(MissingApiKeyException) as context:
             Options()
 
-        assert "No API key found" in str(context.exception)
+        assert "No API key found" in str(context)
 
     def test_invalid_api_key_error(self):
-        with self.assertRaises(InvalidApiKeyException) as context:
+        with pytest.raises(InvalidApiKeyException) as context:
             Options(api_key="bad_api_key")
-            assert "Invalid API key: bad_api_key" in str(context.exception)
+            assert "Invalid API key: bad_api_key" in str(context)
 
     def test_api_key_doesnt_matter_local_only_set_in_env(self):
         with extended_env({"PREFAB_DATASOURCES": "LOCAL_ONLY"}):
@@ -55,7 +55,7 @@ class TestOptionsApiKey(unittest.TestCase):
         assert options.api_key is None
 
 
-class TestOptionsApiUrl(unittest.TestCase):
+class TestOptionsApiUrl:
     def test_prefab_api_url_from_env(self):
         with extended_env({"PREFAB_API_KEY": "1-api", "PREFAB_API_URL": "https://api.dev-prefab.cloud"}):
             options = Options()
@@ -73,11 +73,10 @@ class TestOptionsApiUrl(unittest.TestCase):
 
     def test_prefab_api_url_errors_on_invalid_format(self):
         with extended_env({"PREFAB_API_KEY": "1-api"}):
-            with self.assertRaises(InvalidApiUrlException) as context:
+            with pytest.raises(InvalidApiUrlException) as context:
                 Options(prefab_api_url="httttp://api.prefab.cloud")
 
-            assert "Invalid API URL found: httttp://api.prefab.cloud" in str(
-                context.exception)
+            assert "Invalid API URL found: httttp://api.prefab.cloud" in str(context)
 
     def test_prefab_api_url_doesnt_matter_local_only_set_in_env(self):
         with extended_env({"PREFAB_DATASOURCES": "LOCAL_ONLY"}):
@@ -90,7 +89,7 @@ class TestOptionsApiUrl(unittest.TestCase):
         assert options.prefab_api_url is None
 
 
-class TestOptionsGrpcUrl(unittest.TestCase):
+class TestOptionsGrpcUrl:
     def test_prefab_grpc_url_from_env(self):
         with extended_env({"PREFAB_API_KEY": "1-api", "PREFAB_GRPC_URL": "grpc.dev-prefab.cloud"}):
             options = Options()
@@ -108,11 +107,11 @@ class TestOptionsGrpcUrl(unittest.TestCase):
 
     def test_prefab_grpc_url_errors_on_invalid_format(self):
         with extended_env({"PREFAB_API_KEY": "1-api"}):
-            with self.assertRaises(InvalidGrpcUrlException) as context:
+            with pytest.raises(InvalidGrpcUrlException) as context:
                 Options(prefab_grpc_url="gprc.prefab.cloud")
 
         assert "Invalid gRPC URL found: gprc.prefab.cloud" in str(
-            context.exception)
+            context)
 
     def test_prefab_grpc_url_doesnt_matter_local_only_set_in_env(self):
         with extended_env({"PREFAB_DATASOURCES": "LOCAL_ONLY"}):
@@ -125,7 +124,7 @@ class TestOptionsGrpcUrl(unittest.TestCase):
         assert options.prefab_grpc_url is None
 
 
-class TestOptionsPrefabEnvs(unittest.TestCase):
+class TestOptionsPrefabEnvs:
     def test_reads_single_value_from_options(self):
         with extended_env({"PREFAB_DATASOURCES": "LOCAL_ONLY"}):
             options = Options(prefab_envs="testing")
@@ -153,7 +152,7 @@ class TestOptionsPrefabEnvs(unittest.TestCase):
                 "development", "testing", "unit_tests"]
 
 
-class TestOptionsCdnUrl(unittest.TestCase):
+class TestOptionsCdnUrl:
     def test_is_none_when_local_only(self):
         with extended_env({"PREFAB_DATASOURCES": "LOCAL_ONLY"}):
             options = Options()
@@ -170,7 +169,7 @@ class TestOptionsCdnUrl(unittest.TestCase):
             assert options.url_for_api_cdn == "prefab-cdn-url"
 
 
-class TestOptionsOnNoDefault(unittest.TestCase):
+class TestOptionsOnNoDefault:
     def test_defaults_to_raise(self):
         with extended_env({"PREFAB_DATASOURCES": "LOCAL_ONLY"}):
             options = Options()
@@ -187,7 +186,7 @@ class TestOptionsOnNoDefault(unittest.TestCase):
             assert options.on_no_default == 'RAISE'
 
 
-class TestOptionsOnConnectionFailure(unittest.TestCase):
+class TestOptionsOnConnectionFailure:
     def test_defaults_to_return(self):
         with extended_env({"PREFAB_DATASOURCES": "LOCAL_ONLY"}):
             options = Options()

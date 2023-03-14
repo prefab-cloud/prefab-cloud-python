@@ -1,8 +1,8 @@
-import logging
 import functools
 from .config_client import ConfigClient
 from .feature_flag_client import FeatureFlagClient
 import prefab_pb2 as Prefab
+from .logger_client import LoggerClient
 
 
 class Client:
@@ -40,7 +40,9 @@ class Client:
 
     @functools.cache
     def config_client(self):
-        return ConfigClient(self, timeout=5.0)
+        client = ConfigClient(self, timeout=5.0)
+        self.logger().set_config_client(client)
+        return client
 
     @functools.cache
     def feature_flag_client(self):
@@ -48,17 +50,4 @@ class Client:
 
     @functools.cache
     def logger(self):
-        log = logging.getLogger("prefab")
-        log.setLevel(logging.DEBUG)
-
-        handler = logging.StreamHandler()
-        handler.setLevel(logging.DEBUG)
-
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-        handler.setFormatter(formatter)
-
-        log.addHandler(handler)
-
-        return log
+        return LoggerClient(self.options.log_prefix)

@@ -1,14 +1,13 @@
 import prefab_pb2 as Prefab
 
+from prefab_cloud_python._processors import LOG_LEVEL_BASE_KEY
+
 
 class MissingFeatureFlagValueException(Exception):
     "Raised when a feature flag is missing a value"
 
     def __init__(self, key, source):
         super().__init__("Feature flag config `%s` in %s must have a `value`" % (key, source))
-
-
-LOG_LEVEL_BASE_KEY = "log-level"
 
 
 class ConfigParser:

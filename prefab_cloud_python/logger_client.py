@@ -1,0 +1,63 @@
+import structlog
+import os
+from ._processors import clean_event_dict, set_location, log_or_drop
+
+
+structlog.configure(
+    processors=[
+        structlog.contextvars.merge_contextvars,
+        structlog.processors.add_log_level,
+        structlog.processors.StackInfoRenderer(),
+        structlog.dev.set_exc_info,
+        structlog.processors.TimeStamper(),
+        structlog.processors.CallsiteParameterAdder(
+            [
+                structlog.processors.CallsiteParameter.PATHNAME,
+                structlog.processors.CallsiteParameter.FUNC_NAME,
+            ],
+            additional_ignores=["prefab_cloud_python.logger_client"]
+        ),
+        set_location,
+        log_or_drop,
+        clean_event_dict,
+        structlog.dev.ConsoleRenderer(),
+    ]
+)
+
+class BootstrappingConfigClient:
+    def get(self, _key, default=None):
+        bootstrap_log_level = os.environ.get("PREFAB_LOG_CLIENT_BOOTSTRAP_LOG_LEVEL")
+        if bootstrap_log_level is not None:
+            return bootstrap_log_level.upper()
+        return default
+
+
+class LoggerClient:
+    def __init__(self):
+        self.config_client = BootstrappingConfigClient()
+
+    def debug(self, msg):
+        self.configured_logger().bind(config_client=self.config_client).debug(msg)
+
+    def info(self, msg):
+        self.configured_logger().bind(config_client=self.config_client).info(msg)
+
+    def warn(self, msg):
+        self.configured_logger().bind(config_client=self.config_client).warn(msg)
+
+    def error(self, msg):
+        self.configured_logger().bind(config_client=self.config_client).error(msg)
+
+    def critical(self, msg):
+        self.configured_logger().bind(config_client=self.config_client).critical(msg)
+
+    def set_config_client(self, config_client):
+        self.config_client = config_client
+
+    def add_config_client(self, _, __, event_dict):
+        event_dict["config_client"] = self.config_client
+        return event_dict
+
+    def configured_logger(self):
+        return structlog.get_logger()
+

@@ -9,7 +9,7 @@ structlog.configure(
         structlog.processors.add_log_level,
         structlog.processors.StackInfoRenderer(),
         structlog.dev.set_exc_info,
-        structlog.processors.TimeStamper(),
+        structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S", utc=False),
         structlog.processors.CallsiteParameterAdder(
             [
                 structlog.processors.CallsiteParameter.PATHNAME,

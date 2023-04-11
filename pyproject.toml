@@ -8,12 +8,12 @@ packages = [{include = "prefab_cloud_python"}]
 
 [tool.poetry.dependencies]
 python = ">= 3.10, < 4"
-grpcio = "1.51.3"
-grpcio-tools = "1.51.3"
-pytest = "7.2.1"
-pyyaml = "6.0.0"
-mmh3 = "3.0.0"
-urllib3 = "1.26"
+grpcio = "^1.51.3"
+grpcio-tools = "^1.51.3"
+pytest = "^7.2.1"
+pyyaml = "^6.0.0"
+mmh3 = "^3.0.0"
+urllib3 = "^1.26"
 structlog = "^22.3"
 
 [build-system]

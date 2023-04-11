@@ -4,7 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Michael Berkowitz <michael.berkowitz@gmail.com>"]
 readme = "README.md"
-packages = [{include = "prefab_cloud_python"}]
+packages = [{include = "prefab_cloud_python"}, {include = "prefab_pb2"}, {include = "prefab_pb2_grpc"}]
 
 [tool.poetry.dependencies]
 python = ">= 3.10, < 4"

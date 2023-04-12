@@ -34,8 +34,9 @@ class BootstrappingConfigClient:
 
 
 class LoggerClient:
-    def __init__(self, log_prefix=None):
+    def __init__(self, log_prefix=None, log_boundary=None):
         self.log_prefix = log_prefix
+        self.log_boundary = log_boundary
         self.config_client = BootstrappingConfigClient()
 
     def debug(self, msg):
@@ -62,5 +63,7 @@ class LoggerClient:
 
     def configured_logger(self):
         return structlog.get_logger().bind(
-            config_client=self.config_client, log_prefix=self.log_prefix
+            config_client=self.config_client,
+            log_prefix=self.log_prefix,
+            log_boundary=self.log_boundary,
         )

@@ -60,4 +60,4 @@ class Client:
 
     @functools.cache
     def logger(self):
-        return LoggerClient(self.options.log_prefix)
+        return LoggerClient(self.options.log_prefix, self.options.log_boundary)

@@ -25,7 +25,9 @@ class TestConfigClient:
         with pytest.raises(MissingDefaultException) as exception:
             config_client.get("bad key")
 
-        assert "No value found for key 'bad key' and no default was provided." in str(exception.value)
+        assert "No value found for key 'bad key' and no default was provided." in str(
+            exception.value
+        )
 
     def test_get_without_default_returns_none_if_configured(self):
         config_client = self.build_config_client("RETURN_NONE")
@@ -37,7 +39,7 @@ class TestConfigClient:
             prefab_config_classpath_dir="tests",
             prefab_envs="unit_tests",
             prefab_datasources="LOCAL_ONLY",
-            on_no_default=on_no_default
+            on_no_default=on_no_default,
         )
         client = Client(options)
         return client.config_client()

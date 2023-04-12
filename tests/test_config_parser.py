@@ -29,21 +29,27 @@ class TestConfigParser:
         top_level = parsed[key]
         assert top_level["source"] == file_name
         assert top_level["match"] == default_match
-        assert top_level["config"].config_type == Prefab.ConfigType.keys().index("CONFIG")
+        assert top_level["config"].config_type == Prefab.ConfigType.keys().index(
+            "CONFIG"
+        )
         assert top_level["config"].key == key
         assert top_level["config"].rows[0].values[0].value.string == "top level"
 
         nested_string = parsed["nested.string"]
         assert nested_string["source"] == file_name
         assert nested_string["match"] == default_match
-        assert nested_string["config"].config_type == Prefab.ConfigType.keys().index("CONFIG")
+        assert nested_string["config"].config_type == Prefab.ConfigType.keys().index(
+            "CONFIG"
+        )
         assert nested_string["config"].key == "nested.string"
         assert nested_string["config"].rows[0].values[0].value.string == "nested value"
 
         nested_int = parsed["nested.int"]
         assert nested_int["source"] == file_name
         assert nested_int["match"] == default_match
-        assert nested_int["config"].config_type == Prefab.ConfigType.keys().index("CONFIG")
+        assert nested_int["config"].config_type == Prefab.ConfigType.keys().index(
+            "CONFIG"
+        )
         assert nested_int["config"].key == "nested.int"
         assert nested_int["config"].rows[0].values[0].value.int == 123
 
@@ -65,4 +71,3 @@ class TestConfigParser:
 
         assert isinstance(value_row.value.weighted_values, Prefab.WeightedValues)
         assert ConfigValueUnwrapper.unwrap(value_row.value, key, {}) == "sample value"
-

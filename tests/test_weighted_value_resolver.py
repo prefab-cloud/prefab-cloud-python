@@ -4,6 +4,7 @@ import pytest
 
 key = "config_key"
 
+
 class TestWeightedValueResolver:
     def test_resolving_a_single_value(self):
         weighted_values = self.build_weighted_values({"abc": 1})
@@ -35,7 +36,9 @@ class TestWeightedValueResolver:
         weighted_values = self.build_weighted_values({"abc": 1, "def": 98, "ghi": 1})
         results = {}
         for i in range(10_000):
-            resolved = WeightedValueResolver(weighted_values, key, "user:%s" % i).resolve()
+            resolved = WeightedValueResolver(
+                weighted_values, key, "user:%s" % i
+            ).resolve()
             result = resolved.value.string
             if results.get(result) is None:
                 results[result] = 1
@@ -51,9 +54,7 @@ class TestWeightedValueResolver:
         weighted_values = []
         for value in values_and_weights:
             weighted_value = Prefab.WeightedValue(
-                value=Prefab.ConfigValue(string=value),
-                weight=values_and_weights[value]
+                value=Prefab.ConfigValue(string=value), weight=values_and_weights[value]
             )
             weighted_values.append(weighted_value)
         return weighted_values
-

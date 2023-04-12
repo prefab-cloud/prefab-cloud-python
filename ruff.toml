@@ -1,0 +1,9 @@
+ignore = [
+  # I don't care about long lines
+  "E501",
+]
+
+[isort]
+known-first-party = ["prefab_cloud_python", "prefab_pb2", "prefab_pb2_grpc", "tests"]
+force-single-line = true
+required-imports = ["from __future__ import annotations"]

@@ -1,6 +1,7 @@
 from .read_write_lock import ReadWriteLock
 from .criteria_evaluator import CriteriaEvaluator
 
+
 class ConfigResolver:
     def __init__(self, base_client, config_loader):
         self.lock = ReadWriteLock()
@@ -26,7 +27,12 @@ class ConfigResolver:
 
     def evaluate(self, config, lookup_key, properties={}):
         props = properties | {"LOOKUP": lookup_key}
-        return CriteriaEvaluator(config, project_env_id=self.project_env_id, resolver=self, base_client=self.base_client).evaluate(props)
+        return CriteriaEvaluator(
+            config,
+            project_env_id=self.project_env_id,
+            resolver=self,
+            base_client=self.base_client,
+        ).evaluate(props)
 
     def update(self):
         self.make_local()

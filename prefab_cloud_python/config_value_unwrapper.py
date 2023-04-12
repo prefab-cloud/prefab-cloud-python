@@ -26,5 +26,3 @@ class ConfigValueUnwrapper:
             return ConfigValueUnwrapper.unwrap(resolved_value.value, key, properties)
         else:
             raise UnknownConfigValueTypeException(type)
-
-

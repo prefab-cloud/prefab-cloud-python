@@ -2,14 +2,16 @@ from prefab_cloud_python import Options, Client
 from prefab_cloud_python.config_client import MissingDefaultException
 import pytest
 
+
 @pytest.fixture
 def client():
     options = Options(
         prefab_config_classpath_dir="tests",
         prefab_envs=["unit_tests"],
-        prefab_datasources="LOCAL_ONLY"
+        prefab_datasources="LOCAL_ONLY",
     )
     return Client(options)
+
 
 class TestClient:
     def test_get(self, client):
@@ -53,15 +55,50 @@ class TestClient:
         assert client.get("in_lookup_key", "xyz9987")
 
     def test_ff_enabled_with_attributes(self, client):
-        assert not client.enabled("just_my_domain", lookup_key="abc123", attributes={"domain": "gmail.com"})
-        assert not client.enabled("just_my_domain", lookup_key="abc123", attributes={"domain": "prefab.cloud"})
-        assert not client.enabled("just_my_domain", lookup_key="abc123", attributes={"domain": "example.com"})
+        assert not client.enabled(
+            "just_my_domain", lookup_key="abc123", attributes={"domain": "gmail.com"}
+        )
+        assert not client.enabled(
+            "just_my_domain", lookup_key="abc123", attributes={"domain": "prefab.cloud"}
+        )
+        assert not client.enabled(
+            "just_my_domain", lookup_key="abc123", attributes={"domain": "example.com"}
+        )
 
     def test_ff_get_with_attributes(self, client):
-        assert client.get("just_my_domain", lookup_key="abc123", properties={"domain": "gmail.com"}) is None
-        assert client.get("just_my_domain", lookup_key="abc123", properties={"domain": "gmail.com"}, default="DEFAULT") == "DEFAULT"
-        assert client.get("just_my_domain", lookup_key="abc123", properties={"domain": "prefab.cloud"}) == "new-version"
-        assert client.get("just_my_domain", lookup_key="abc123", properties={"domain": "example.com"}) == "new-version"
+        assert (
+            client.get(
+                "just_my_domain",
+                lookup_key="abc123",
+                properties={"domain": "gmail.com"},
+            )
+            is None
+        )
+        assert (
+            client.get(
+                "just_my_domain",
+                lookup_key="abc123",
+                properties={"domain": "gmail.com"},
+                default="DEFAULT",
+            )
+            == "DEFAULT"
+        )
+        assert (
+            client.get(
+                "just_my_domain",
+                lookup_key="abc123",
+                properties={"domain": "prefab.cloud"},
+            )
+            == "new-version"
+        )
+        assert (
+            client.get(
+                "just_my_domain",
+                lookup_key="abc123",
+                properties={"domain": "example.com"},
+            )
+            == "new-version"
+        )
 
     def test_getting_feature_flag_value(self, client):
         assert not client.enabled("flag_with_a_value")

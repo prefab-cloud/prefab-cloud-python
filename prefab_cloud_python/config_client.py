@@ -13,16 +13,21 @@ import prefab_pb2_grpc as PrefabGrpc
 import concurrent.futures
 import functools
 
+
 class InitializationTimeoutException(Exception):
     def __init__(self, timeout_seconds, key):
-        super().__init__(f"Prfeab couldn't initialize in {timeout_seconds} second timeout. Trying to fetch key `{key}`.")
+        super().__init__(
+            f"Prfeab couldn't initialize in {timeout_seconds} second timeout. Trying to fetch key `{key}`."
+        )
 
 
 class MissingDefaultException(Exception):
     def __init__(self, key):
-        super().__init__(f"""No value found for key '{key}' and no default was provided.
+        super().__init__(
+            f"""No value found for key '{key}' and no default was provided.
 
-If you'd prefer returning `None` rather than raising when this occurs, modify the `on_no_default` value you provide in your Options.""")
+If you'd prefer returning `None` rather than raising when this occurs, modify the `on_no_default` value you provide in your Options."""
+        )
 
 
 class ConfigClient:
@@ -43,7 +48,9 @@ class ConfigClient:
         self.base_client.logger().debug("Initialize ConfigClient: acquire write lock")
         self.init_lock.acquire_write()
         self.base_client.logger().debug("Initialize ConfigClient: acquired write lock")
-        self.init_future = concurrent.futures.ThreadPoolExecutor().submit(lambda: self.init_lock.acquire_read())
+        self.init_future = concurrent.futures.ThreadPoolExecutor().submit(
+            lambda: self.init_lock.acquire_read()
+        )
 
         if self.options.is_local_only():
             self.finish_init("local only")
@@ -63,8 +70,12 @@ class ConfigClient:
         self.init_future.result(self.options.connection_timeout_seconds)
         if not self.init_future.done():
             if self.options.on_connection_failure == "RAISE":
-                raise InitializationTimeoutException(self.options.connection_timeout_seconds, key)
-            self.base_client.logger().warn(f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have.")
+                raise InitializationTimeoutException(
+                    self.options.connection_timeout_seconds, key
+                )
+            self.base_client.logger().warn(
+                f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have."
+            )
             self.init_lock.release_write()
         return self.config_resolver.get(key, lookup_key, properties)
 
@@ -102,7 +113,7 @@ class ConfigClient:
             try:
                 self.load_checkpoint()
                 time.sleep(self.checkpoint_freq_secs)
-            except:
+            except Exception:
                 self.base_client.logger().info("Issue Checkpointing")
 
     def load_checkpoint_from_api_cdn(self):
@@ -116,18 +127,26 @@ class ConfigClient:
             self.load_configs(configs, "remote_api_cdn")
             return True
         else:
-            self.base_client.logger().info(f"Checkpoint remote_cdn_api failed to load. Response {response.status}")
+            self.base_client.logger().info(
+                f"Checkpoint remote_cdn_api failed to load. Response {response.status}"
+            )
             return False
 
     def load_checkpoint_from_grpc_api(self):
         try:
             channel = self.grpc_channel()
-            request = Prefab.ConfigServicePointer(start_at_id=self.config_loader.highwater_mark)
+            request = Prefab.ConfigServicePointer(
+                start_at_id=self.config_loader.highwater_mark
+            )
             stub = PrefabGrpc.ConfigServiceStub(channel)
-            response = stub.GetAllConfig(request=request, metadata=[('auth', self.options.api_key)])
+            response = stub.GetAllConfig(
+                request=request, metadata=[("auth", self.options.api_key)]
+            )
             self.load_configs(response, "remote_api_grpc")
         except Exception as ex:
-            self.base_client.logger().warn("Unexpected error loading GRPC checkpoint %s" % ex)
+            self.base_client.logger().warn(
+                "Unexpected error loading GRPC checkpoint %s" % ex
+            )
 
     def load_configs(self, configs, source):
         project_id = configs.config_service_pointer.project_id
@@ -137,9 +156,13 @@ class ConfigClient:
         for config in configs.configs:
             self.config_loader.set(config, source)
         if self.config_loader.highwater_mark > starting_highwater_mark:
-            self.base_client.logger().info(f"Found new checkpoint with highwater id {self.config_loader.highwater_mark} from {source} in project {project_id} environment: {project_env_id} and namespace {self.base_client.options.namespace}")
+            self.base_client.logger().info(
+                f"Found new checkpoint with highwater id {self.config_loader.highwater_mark} from {source} in project {project_id} environment: {project_env_id} and namespace {self.base_client.options.namespace}"
+            )
         else:
-            self.base_client.logger().debug(f"Checkpoint with highwater id {self.config_loader.highwater_mark} from {source}. No changes.")
+            self.base_client.logger().debug(
+                f"Checkpoint with highwater id {self.config_loader.highwater_mark} from {source}. No changes."
+            )
         self.config_resolver.update()
         self.finish_init(source)
 

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from urllib.parse import urlparse
 
 
@@ -39,6 +40,7 @@ class Options:
         prefab_datasources=None,
         logdev="STDIO",
         log_prefix=None,
+        log_boundary=None,
         namespace="",
         connection_timeout_seconds=10,
         prefab_config_override_dir=os.environ.get("HOME"),
@@ -60,6 +62,10 @@ class Options:
         )
         self.logdev = logdev
         self.log_prefix = log_prefix
+        if log_boundary is not None:
+            self.log_boundary = str(Path(log_boundary).resolve())
+        else:
+            self.log_boundary = None
         self.namespace = namespace
         self.connection_timeout_seconds = connection_timeout_seconds
         self.prefab_config_override_dir = prefab_config_override_dir

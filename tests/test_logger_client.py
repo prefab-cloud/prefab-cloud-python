@@ -3,6 +3,7 @@ from prefab_cloud_python import Options, Client
 import prefab_pb2 as Prefab
 import pytest
 import re
+import os
 
 
 @pytest.fixture
@@ -19,22 +20,36 @@ class TestLoggerClient:
     def test_get_path(self):
         assert (
             get_path(
-                "/Users/mikowitz/.asdf/installs/python/3.10.7/lib/python3.10/site-packages/my_lib.py",
+                "/Users/user/.asdf/installs/python/3.10.7/lib/python3.10/site-packages/my_lib.py",
                 "my_func",
             )
             == "my_lib.my_func"
         )
+
+    def test_get_path_with_prefix(self):
         assert (
             get_path(
-                "/Users/mikowitz/.asdf/installs/python/3.10.7/lib/python3.10/site-packages/my_lib.py",
+                "/Users/user/.asdf/installs/python/3.10.7/lib/python3.10/site-packages/my_lib.py",
                 "my_func",
                 "my.prefix",
             )
             == "my.prefix.my_lib.my_func"
         )
+
+    def test_get_path_without_site_packages(self):
         assert (
-            get_path("/Users/mikowitz/Code/my_app/my_app/my_lib.py", "my_func")
-            == "my_app.my_app.my_lib.my_func"
+            get_path(os.environ["HOME"] + "/Code/my_app/my_app/my_lib.py", "my_func")
+            == "code.my_app.my_app.my_lib.my_func"
+        )
+
+    def test_get_path_without_site_packages_and_explicit_boundary(self):
+        assert (
+            get_path(
+                "/Users/user/Code/my_app/my_app/my_lib.py",
+                "my_func",
+                log_boundary="/Users/user/Code/my_app",
+            )
+            == "my_app.my_lib.my_func"
         )
 
     def test_get_severity(self, client):
@@ -92,7 +107,7 @@ class TestLoggerClient:
         captured = capsys.readouterr()
         log_pattern = re.compile(".*warning.*ok.*")
         location_pattern = re.compile(
-            ".*location.*=.*my.prefix.prefab_cloud_python.tests.test_logger_client.test_log_prefix_from_client"
+            ".*location.*=.*my.prefix.*.prefab_cloud_python.tests.test_logger_client.test_log_prefix_from_client"
         )
         assert log_pattern.match(captured.out)
         assert location_pattern.match(captured.out)

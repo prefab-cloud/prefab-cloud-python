@@ -7,7 +7,9 @@ class MissingFeatureFlagValueException(Exception):
     "Raised when a feature flag is missing a value"
 
     def __init__(self, key, source):
-        super().__init__("Feature flag config `%s` in %s must have a `value`" % (key, source))
+        super().__init__(
+            "Feature flag config `%s` in %s must have a `value`" % (key, source)
+        )
 
 
 class ConfigParser:
@@ -47,8 +49,8 @@ class ConfigParser:
                             )
                         ]
                     )
-                ]
-            )
+                ],
+            ),
         }
 
     def feature_flag_config(key, value, source):
@@ -69,13 +71,10 @@ class ConfigParser:
                     value=Prefab.ConfigValue(
                         weighted_values=Prefab.WeightedValues(
                             weighted_values=[
-                                Prefab.WeightedValue(
-                                    weight=1000,
-                                    value=variant
-                                )
+                                Prefab.WeightedValue(weight=1000, value=variant)
                             ]
                         )
-                    )
+                    ),
                 )
             ]
         )
@@ -87,15 +86,15 @@ class ConfigParser:
                 config_type="FEATURE_FLAG",
                 key=key,
                 rows=[row],
-                allowable_values=[variant]
-            )
+                allowable_values=[variant],
+            ),
         }
 
     def parse_criterion(criterion):
         return Prefab.Criterion(
             operator=criterion.get("operator"),
             property_name=ConfigParser.parse_property(criterion),
-            value_to_match=ConfigParser.parse_value_to_match(criterion.get("values"))
+            value_to_match=ConfigParser.parse_value_to_match(criterion.get("values")),
         )
 
     def parse_property(criterion):

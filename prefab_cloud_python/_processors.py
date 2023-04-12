@@ -35,7 +35,9 @@ def clean_event_dict(_, __, event_dict):
 
 
 def set_location(_, __, event_dict):
-    event_dict["location"] = get_path(event_dict["pathname"], event_dict["func_name"], event_dict["log_prefix"])
+    event_dict["location"] = get_path(
+        event_dict["pathname"], event_dict["func_name"], event_dict["log_prefix"]
+    )
     return event_dict
 
 
@@ -57,7 +59,7 @@ def get_severity(location, config_client):
 
     path_segs = location.split(".")
     for i, _ in enumerate(path_segs):
-        next_search_path = ".".join([LOG_LEVEL_BASE_KEY, *path_segs[:i+1]])
+        next_search_path = ".".join([LOG_LEVEL_BASE_KEY, *path_segs[: i + 1]])
         next_level = config_client.get(next_search_path, default=closest_log_level)
         if next_level is not None:
             closest_log_level = next_level

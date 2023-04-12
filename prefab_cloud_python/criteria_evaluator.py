@@ -4,6 +4,7 @@ import google
 
 OPS = Prefab.Criterion.CriterionOperator
 
+
 class CriteriaEvaluator:
     def __init__(self, config, project_env_id, resolver, base_client):
         self.config = config
@@ -41,37 +42,59 @@ class CriteriaEvaluator:
         if criterion.operator == OPS.PROP_ENDS_WITH_ONE_OF:
             if value_from_properties is None:
                 return False
-            return any([value_from_properties.endswith(ending) for ending in criterion.value_to_match.string_list.values])
+            return any(
+                [
+                    value_from_properties.endswith(ending)
+                    for ending in criterion.value_to_match.string_list.values
+                ]
+            )
         if criterion.operator == OPS.PROP_DOES_NOT_END_WITH_ONE_OF:
             if value_from_properties is None:
                 return True
-            return not any([value_from_properties.endswith(ending) for ending in criterion.value_to_match.string_list.values])
+            return not any(
+                [
+                    value_from_properties.endswith(ending)
+                    for ending in criterion.value_to_match.string_list.values
+                ]
+            )
         if criterion.operator == OPS.HIERARCHICAL_MATCH:
             value_from_properties.startswith(criterion.value_to_match.string)
         if criterion.operator == OPS.ALWAYS_TRUE:
             return True
 
-        self.base_client.logger().info(f"Unknown criterion operator {criterion.operator}")
+        self.base_client.logger().info(
+            f"Unknown criterion operator {criterion.operator}"
+        )
         return False
 
     def matches(self, criterion, value, properties):
-        criterion_value_or_values = ConfigValueUnwrapper.unwrap(criterion.value_to_match, self.config.key, properties)
-        if isinstance(criterion_value_or_values, google._upb._message.RepeatedScalarContainer):
+        criterion_value_or_values = ConfigValueUnwrapper.unwrap(
+            criterion.value_to_match, self.config.key, properties
+        )
+        if isinstance(
+            criterion_value_or_values, google._upb._message.RepeatedScalarContainer
+        ):
             return value in criterion_value_or_values
         return value == criterion_value_or_values
 
     def in_segment(self, criterion, properties):
-        return self.resolver.get(criterion.value_to_match.string, properties.get("LOOKUP"), properties).bool
+        return self.resolver.get(
+            criterion.value_to_match.string, properties.get("LOOKUP"), properties
+        ).bool
 
     def matching_environment_row_values(self):
-        env_rows = [row for row in self.config.rows if row.project_env_id == self.project_env_id]
+        env_rows = [
+            row for row in self.config.rows if row.project_env_id == self.project_env_id
+        ]
         if env_rows == []:
             return []
         else:
             return env_rows[0].values
 
     def default_row_values(self):
-        env_rows = [row for row in self.config.rows if row.project_env_id != self.project_env_id]
+        env_rows = [
+            row for row in self.config.rows if row.project_env_id != self.project_env_id
+        ]
         if env_rows == []:
             return []
         else:

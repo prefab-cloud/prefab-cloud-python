@@ -15,7 +15,7 @@ structlog.configure(
                 structlog.processors.CallsiteParameter.PATHNAME,
                 structlog.processors.CallsiteParameter.FUNC_NAME,
             ],
-            additional_ignores=["prefab_cloud_python.logger_client"]
+            additional_ignores=["prefab_cloud_python.logger_client"],
         ),
         set_location,
         log_or_drop,
@@ -61,4 +61,6 @@ class LoggerClient:
         return event_dict
 
     def configured_logger(self):
-        return structlog.get_logger().bind(config_client=self.config_client, log_prefix=self.log_prefix)
+        return structlog.get_logger().bind(
+            config_client=self.config_client, log_prefix=self.log_prefix
+        )

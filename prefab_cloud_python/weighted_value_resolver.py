@@ -3,6 +3,7 @@ import mmh3
 
 max_32_float = 4_294_967_294.0
 
+
 class WeightedValueResolver:
     def __init__(self, weights, key, lookup_key=None):
         self.weights = weights
@@ -29,10 +30,9 @@ class WeightedValueResolver:
         bucket = distribution_space * percent
 
         bucket_sum = 0
-        for (index, variant_weight) in enumerate(self.weights):
+        for index, variant_weight in enumerate(self.weights):
             if bucket < bucket_sum + variant_weight.weight:
                 return index
             bucket_sum += variant_weight.weight
 
         return len(self.weights) - 1
-

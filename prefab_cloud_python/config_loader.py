@@ -3,6 +3,7 @@ import os
 from .yaml_parser import YamlParser
 import prefab_pb2 as Prefab
 
+
 class ConfigLoader:
     def __init__(self, base_client):
         self.base_client = base_client
@@ -24,7 +25,10 @@ class ConfigLoader:
             self.api_config.pop(config.key)
         else:
             if existing_config:
-                self.base_client.logger().debug("Replace %s with value from %s %s -> %s" % (config.key, source, existing_config["config"].id, config.id))
+                self.base_client.logger().debug(
+                    "Replace %s with value from %s %s -> %s"
+                    % (config.key, source, existing_config["config"].id, config.id)
+                )
             self.api_config[config.key] = {"source": source, "config": config}
         self.highwater_mark = max([config.id, self.highwater_mark])
 
@@ -47,7 +51,11 @@ class ConfigLoader:
         envs.insert(0, "default")
         loaded_config = {}
         for env in envs:
-            loaded_config.update(ConfigLoader.__load_glob(os.path.join(dir, ".prefab.%s.config.yaml" % env)))
+            loaded_config.update(
+                ConfigLoader.__load_glob(
+                    os.path.join(dir, ".prefab.%s.config.yaml" % env)
+                )
+            )
         return loaded_config
 
     def __load_glob(filepath):

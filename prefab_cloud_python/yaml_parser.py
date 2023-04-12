@@ -2,7 +2,6 @@ from .config_parser import ConfigParser
 import yaml
 
 
-
 class YamlParser:
     def __init__(self, filename):
         self.filename = filename
@@ -16,5 +15,3 @@ class YamlParser:
             config = ConfigParser.parse(key, yaml_data[key], config, self.filename)
         f.close()
         self.data = config
-
-

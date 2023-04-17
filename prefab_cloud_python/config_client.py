@@ -62,7 +62,9 @@ class ConfigClient:
     def get(self, key, default="NO_DEFAULT_PROVIDED", properties={}, lookup_key=None):
         value = self.__get(key, lookup_key, properties)
         if value is not None:
-            return ConfigValueUnwrapper.unwrap(value, key, properties)
+            return ConfigValueUnwrapper.unwrap(
+                value, key, properties | {"LOOKUP": lookup_key}
+            )
         else:
             return self.handle_default(key, default)
 

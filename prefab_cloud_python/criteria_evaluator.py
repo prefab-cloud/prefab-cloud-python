@@ -22,7 +22,6 @@ class CriteriaEvaluator:
         return None
 
     def all_criteria_match(self, conditional_value, props):
-        # all(conditional_value.criteria,
         for criterion in conditional_value.criteria:
             if not self.evaluate_criterion(criterion, props):
                 return False

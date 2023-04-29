@@ -1,4 +1,5 @@
 from prefab_cloud_python.criteria_evaluator import CriteriaEvaluator
+from prefab_cloud_python.context import Context
 import prefab_pb2 as Prefab
 
 project_env_id = 1
@@ -11,6 +12,10 @@ wrong_env_value = "wrong_env_value"
 default_row = Prefab.ConfigRow(
     values=[Prefab.ConditionalValue(value=Prefab.ConfigValue(string=default_value))]
 )
+
+
+def context(dict):
+    return Context(dict)
 
 
 class TestCriteriaEvaluator:
@@ -34,9 +39,9 @@ class TestCriteriaEvaluator:
         evaluator = CriteriaEvaluator(
             config, project_env_id, resolver=None, base_client=None
         )
-        assert evaluator.evaluate({}).string == desired_value
+        assert evaluator.evaluate(context({})).string == desired_value
 
-    def test_lookup_key_in(self):
+    def test_nested_props_in(self):
         config = Prefab.Config(
             key=key,
             rows=[
@@ -47,13 +52,13 @@ class TestCriteriaEvaluator:
                         Prefab.ConditionalValue(
                             criteria=[
                                 Prefab.Criterion(
-                                    operator="LOOKUP_KEY_IN",
+                                    operator="PROP_IS_ONE_OF",
                                     value_to_match=Prefab.ConfigValue(
                                         string_list=Prefab.StringList(
                                             values=["ok", "fine"]
                                         )
                                     ),
-                                    property_name="LOOKUP",
+                                    property_name="user.key",
                                 )
                             ],
                             value=Prefab.ConfigValue(string=desired_value),
@@ -67,11 +72,16 @@ class TestCriteriaEvaluator:
             config, project_env_id, resolver=None, base_client=None
         )
 
-        assert evaluator.evaluate({}).string == default_value
-        assert evaluator.evaluate({"LOOKUP": "wrong"}).string == default_value
-        assert evaluator.evaluate({"LOOKUP": "ok"}).string == desired_value
+        assert evaluator.evaluate(context({})).string == default_value
+        assert (
+            evaluator.evaluate(context({"user": {"key": "wrong"}})).string
+            == default_value
+        )
+        assert (
+            evaluator.evaluate(context({"user": {"key": "ok"}})).string == desired_value
+        )
 
-    def test_lookup_key_not_in(self):
+    def test_nested_props_not_in(self):
         config = Prefab.Config(
             key=key,
             rows=[
@@ -82,13 +92,13 @@ class TestCriteriaEvaluator:
                         Prefab.ConditionalValue(
                             criteria=[
                                 Prefab.Criterion(
-                                    operator="LOOKUP_KEY_NOT_IN",
+                                    operator="PROP_IS_NOT_ONE_OF",
                                     value_to_match=Prefab.ConfigValue(
                                         string_list=Prefab.StringList(
                                             values=["wrong", "bad"]
                                         )
                                     ),
-                                    property_name="LOOKUP",
+                                    property_name="user.key",
                                 )
                             ],
                             value=Prefab.ConfigValue(string=desired_value),
@@ -102,9 +112,14 @@ class TestCriteriaEvaluator:
             config, project_env_id, resolver=None, base_client=None
         )
 
-        assert evaluator.evaluate({}).string == desired_value
-        assert evaluator.evaluate({"LOOKUP": "wrong"}).string == default_value
-        assert evaluator.evaluate({"LOOKUP": "ok"}).string == desired_value
+        assert evaluator.evaluate(context({})).string == desired_value
+        assert (
+            evaluator.evaluate(context({"user": {"key": "wrong"}})).string
+            == default_value
+        )
+        assert (
+            evaluator.evaluate(context({"user": {"key": "ok"}})).string == desired_value
+        )
 
     def test_prop_is_one_of(self):
         config = Prefab.Config(
@@ -123,7 +138,7 @@ class TestCriteriaEvaluator:
                                             values=["hotmail.com", "gmail.com"]
                                         )
                                     ),
-                                    property_name="email_suffix",
+                                    property_name="user.email_suffix",
                                 )
                             ],
                             value=Prefab.ConfigValue(string=desired_value),
@@ -137,12 +152,18 @@ class TestCriteriaEvaluator:
             config, project_env_id, resolver=None, base_client=None
         )
 
-        assert evaluator.evaluate({}).string == default_value
+        assert evaluator.evaluate(context({})).string == default_value
         assert (
-            evaluator.evaluate({"email_suffix": "prefab.cloud"}).string == default_value
+            evaluator.evaluate(
+                context({"user": {"email_suffix": "prefab.cloud"}})
+            ).string
+            == default_value
         )
         assert (
-            evaluator.evaluate({"email_suffix": "hotmail.com"}).string == desired_value
+            evaluator.evaluate(
+                context({"user": {"email_suffix": "hotmail.com"}})
+            ).string
+            == desired_value
         )
 
     def test_prop_is_not_one_of(self):
@@ -162,7 +183,7 @@ class TestCriteriaEvaluator:
                                             values=["hotmail.com", "gmail.com"]
                                         )
                                     ),
-                                    property_name="email_suffix",
+                                    property_name="user.email_suffix",
                                 )
                             ],
                             value=Prefab.ConfigValue(string=desired_value),
@@ -176,12 +197,18 @@ class TestCriteriaEvaluator:
             config, project_env_id, resolver=None, base_client=None
         )
 
-        assert evaluator.evaluate({}).string == desired_value
+        assert evaluator.evaluate(context({})).string == desired_value
         assert (
-            evaluator.evaluate({"email_suffix": "prefab.cloud"}).string == desired_value
+            evaluator.evaluate(
+                context({"user": {"email_suffix": "prefab.cloud"}})
+            ).string
+            == desired_value
         )
         assert (
-            evaluator.evaluate({"email_suffix": "hotmail.com"}).string == default_value
+            evaluator.evaluate(
+                context({"user": {"email_suffix": "hotmail.com"}})
+            ).string
+            == default_value
         )
 
     def test_prop_ends_with_one_of(self):
@@ -201,7 +228,7 @@ class TestCriteriaEvaluator:
                                             values=["hotmail.com", "gmail.com"]
                                         )
                                     ),
-                                    property_name="email",
+                                    property_name="user.email",
                                 )
                             ],
                             value=Prefab.ConfigValue(string=desired_value),
@@ -217,11 +244,16 @@ class TestCriteriaEvaluator:
 
         assert evaluator.evaluate({}).string == default_value
         assert (
-            evaluator.evaluate({"email": "example@prefab.cloud"}).string
+            evaluator.evaluate(
+                context({"user": {"email": "example@prefab.cloud"}})
+            ).string
             == default_value
         )
         assert (
-            evaluator.evaluate({"email": "example@hotmail.com"}).string == desired_value
+            evaluator.evaluate(
+                context({"user": {"email": "example@hotmail.com"}})
+            ).string
+            == desired_value
         )
 
     def test_prop_does_not_end_with_one_of(self):
@@ -241,7 +273,7 @@ class TestCriteriaEvaluator:
                                             values=["hotmail.com", "gmail.com"]
                                         )
                                     ),
-                                    property_name="email",
+                                    property_name="user.email",
                                 )
                             ],
                             value=Prefab.ConfigValue(string=desired_value),
@@ -257,11 +289,16 @@ class TestCriteriaEvaluator:
 
         assert evaluator.evaluate({}).string == desired_value
         assert (
-            evaluator.evaluate({"email": "example@prefab.cloud"}).string
+            evaluator.evaluate(
+                context({"user": {"email": "example@prefab.cloud"}})
+            ).string
             == desired_value
         )
         assert (
-            evaluator.evaluate({"email": "example@hotmail.com"}).string == default_value
+            evaluator.evaluate(
+                context({"user": {"email": "example@hotmail.com"}})
+            ).string
+            == default_value
         )
 
     def test_in_seg(self):
@@ -283,7 +320,7 @@ class TestCriteriaEvaluator:
                                             values=["hotmail.com", "gmail.com"]
                                         )
                                     ),
-                                    property_name="email",
+                                    property_name="user.email",
                                 )
                             ],
                         ),
@@ -343,11 +380,15 @@ class TestCriteriaEvaluator:
 
         assert evaluator.evaluate({}).string == "default_value"
         assert (
-            evaluator.evaluate({"email": "example@prefab.cloud"}).string
+            evaluator.evaluate(
+                context({"user": {"email": "example@prefab.cloud"}})
+            ).string
             == "default_value"
         )
         assert (
-            evaluator.evaluate({"email": "example@hotmail.com"}).string
+            evaluator.evaluate(
+                context({"user": {"email": "example@hotmail.com"}})
+            ).string
             == "desired_value"
         )
 
@@ -370,7 +411,7 @@ class TestCriteriaEvaluator:
                                             values=["hotmail.com", "gmail.com"]
                                         )
                                     ),
-                                    property_name="email",
+                                    property_name="user.email",
                                 )
                             ],
                         ),
@@ -412,11 +453,16 @@ class TestCriteriaEvaluator:
 
         assert evaluator.evaluate({}).string == desired_value
         assert (
-            evaluator.evaluate({"email": "example@prefab.cloud"}).string
+            evaluator.evaluate(
+                context({"user": {"email": "example@prefab.cloud"}})
+            ).string
             == desired_value
         )
         assert (
-            evaluator.evaluate({"email": "example@hotmail.com"}).string == default_value
+            evaluator.evaluate(
+                context({"user": {"email": "example@hotmail.com"}})
+            ).string
+            == default_value
         )
 
     def test_multiple_conditions_in_one_value(self):
@@ -438,12 +484,12 @@ class TestCriteriaEvaluator:
                                             values=["prefab.cloud", "gmail.com"]
                                         )
                                     ),
-                                    property_name="email",
+                                    property_name="user.email",
                                 ),
                                 Prefab.Criterion(
                                     operator="PROP_IS_ONE_OF",
                                     value_to_match=Prefab.ConfigValue(bool=True),
-                                    property_name="admin",
+                                    property_name="user.admin",
                                 ),
                             ],
                         ),
@@ -471,7 +517,7 @@ class TestCriteriaEvaluator:
                                 Prefab.Criterion(
                                     operator="PROP_IS_NOT_ONE_OF",
                                     value_to_match=Prefab.ConfigValue(bool=True),
-                                    property_name="deleted",
+                                    property_name="user.deleted",
                                 ),
                             ],
                             value=Prefab.ConfigValue(string=desired_value),
@@ -490,29 +536,52 @@ class TestCriteriaEvaluator:
 
         assert evaluator.evaluate({}).string == default_value
         assert (
-            evaluator.evaluate({"email": "example@prefab.cloud"}).string
-            == default_value
-        )
-        assert (
-            evaluator.evaluate({"email": "example@prefab.cloud", "admin": True}).string
-            == desired_value
-        )
-        assert (
             evaluator.evaluate(
-                {"email": "example@prefab.cloud", "admin": True, "deleted": True}
+                context({"user": {"email": "example@prefab.cloud"}})
             ).string
             == default_value
         )
         assert (
-            evaluator.evaluate({"email": "example@gmail.com"}).string == default_value
-        )
-        assert (
-            evaluator.evaluate({"email": "example@gmail.com", "admin": True}).string
+            evaluator.evaluate(
+                context({"user": {"email": "example@prefab.cloud", "admin": True}})
+            ).string
             == desired_value
         )
         assert (
             evaluator.evaluate(
-                {"email": "example@gmail.com", "admin": True, "deleted": True}
+                context(
+                    {
+                        "user": {
+                            "email": "example@prefab.cloud",
+                            "admin": True,
+                            "deleted": True,
+                        }
+                    }
+                )
+            ).string
+            == default_value
+        )
+        assert (
+            evaluator.evaluate(context({"user": {"email": "example@gmail.com"}})).string
+            == default_value
+        )
+        assert (
+            evaluator.evaluate(
+                context({"user": {"email": "example@gmail.com", "admin": True}})
+            ).string
+            == desired_value
+        )
+        assert (
+            evaluator.evaluate(
+                context(
+                    {
+                        "user": {
+                            "email": "example@gmail.com",
+                            "admin": True,
+                            "deleted": True,
+                        }
+                    }
+                )
             ).string
             == default_value
         )
@@ -536,7 +605,7 @@ class TestCriteriaEvaluator:
                                             values=["prefab.cloud", "gmail.com"]
                                         )
                                     ),
-                                    property_name="email",
+                                    property_name="user.email",
                                 ),
                             ],
                         ),
@@ -546,7 +615,7 @@ class TestCriteriaEvaluator:
                                 Prefab.Criterion(
                                     operator="PROP_IS_ONE_OF",
                                     value_to_match=Prefab.ConfigValue(bool=True),
-                                    property_name="admin",
+                                    property_name="user.admin",
                                 ),
                             ],
                         ),
@@ -574,7 +643,7 @@ class TestCriteriaEvaluator:
                                 Prefab.Criterion(
                                     operator="PROP_IS_NOT_ONE_OF",
                                     value_to_match=Prefab.ConfigValue(bool=True),
-                                    property_name="deleted",
+                                    property_name="user.deleted",
                                 ),
                             ],
                             value=Prefab.ConfigValue(string=desired_value),
@@ -593,31 +662,107 @@ class TestCriteriaEvaluator:
 
         assert evaluator.evaluate({}).string == default_value
         assert (
-            evaluator.evaluate({"email": "example@prefab.cloud"}).string
-            == desired_value
-        )
-        assert (
-            evaluator.evaluate({"email": "example@prefab.cloud", "admin": True}).string
+            evaluator.evaluate(
+                context({"user": {"email": "example@prefab.cloud"}})
+            ).string
             == desired_value
         )
         assert (
             evaluator.evaluate(
-                {"email": "example@prefab.cloud", "admin": True, "deleted": True}
+                context({"user": {"email": "example@prefab.cloud", "admin": True}})
             ).string
-            == default_value
-        )
-        assert (
-            evaluator.evaluate({"email": "example@gmail.com"}).string == desired_value
-        )
-        assert (
-            evaluator.evaluate({"email": "example@gmail.com", "admin": True}).string
             == desired_value
         )
         assert (
             evaluator.evaluate(
-                {"email": "example@gmail.com", "admin": True, "deleted": True}
+                context(
+                    {
+                        "user": {
+                            "email": "example@prefab.cloud",
+                            "admin": True,
+                            "deleted": True,
+                        }
+                    }
+                )
             ).string
             == default_value
+        )
+        assert (
+            evaluator.evaluate(context({"user": {"email": "example@gmail.com"}})).string
+            == desired_value
+        )
+        assert (
+            evaluator.evaluate(
+                context({"user": {"email": "example@gmail.com", "admin": True}})
+            ).string
+            == desired_value
+        )
+        assert (
+            evaluator.evaluate(
+                context(
+                    {
+                        "user": {
+                            "email": "example@gmail.com",
+                            "admin": True,
+                            "deleted": True,
+                        }
+                    }
+                )
+            ).string
+            == default_value
+        )
+
+    def test_stringifying_property_values_and_names(self):
+        config = Prefab.Config(
+            key=key,
+            rows=[
+                default_row,
+                Prefab.ConfigRow(
+                    project_env_id=project_env_id,
+                    values=[
+                        Prefab.ConditionalValue(
+                            criteria=[
+                                Prefab.Criterion(
+                                    operator="PROP_IS_ONE_OF",
+                                    value_to_match=Prefab.ConfigValue(
+                                        string_list=Prefab.StringList(
+                                            values=["1", "True"]
+                                        )
+                                    ),
+                                    property_name="team.name",
+                                )
+                            ],
+                            value=Prefab.ConfigValue(string=desired_value),
+                        )
+                    ],
+                ),
+            ],
+        )
+
+        evaluator = CriteriaEvaluator(
+            config, project_env_id, resolver=None, base_client=None
+        )
+
+        assert evaluator.evaluate(context({})).string == default_value
+        assert (
+            evaluator.evaluate(context({"team": {"name": "prefab.cloud"}})).string
+            == default_value
+        )
+
+        assert (
+            evaluator.evaluate(context({"team": {"name": 1}})).string == desired_value
+        )
+        assert (
+            evaluator.evaluate(context({"team": {"name": "1"}})).string == desired_value
+        )
+
+        assert (
+            evaluator.evaluate(context({"team": {"name": True}})).string
+            == desired_value
+        )
+        assert (
+            evaluator.evaluate(context({"team": {"name": "True"}})).string
+            == desired_value
         )
 
     @staticmethod
@@ -632,7 +777,7 @@ class MockResolver:
     def raw(self, key):
         self.config.get(key)
 
-    def get(self, key, _lookup_key, properties={}):
+    def get(self, key, context=Context({})):
         return CriteriaEvaluator(
             self.config.get(key), project_env_id=None, resolver=None, base_client=None
-        ).evaluate(properties)
+        ).evaluate(context)

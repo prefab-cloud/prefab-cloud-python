@@ -1,4 +1,5 @@
 from .weighted_value_resolver import WeightedValueResolver
+from .context import Context
 
 
 class UnknownConfigValueTypeException(Exception):
@@ -9,7 +10,7 @@ class UnknownConfigValueTypeException(Exception):
 
 
 class ConfigValueUnwrapper:
-    def unwrap(value, key, properties={}):
+    def unwrap(value, key, context=Context.get_current()):
         if value is None:
             return None
 
@@ -20,9 +21,9 @@ class ConfigValueUnwrapper:
         elif type == "string_list":
             return value.string_list.values
         elif type == "weighted_values":
-            lookup_key = properties.get("LOOKUP")
             weights = value.weighted_values.weighted_values
-            resolved_value = WeightedValueResolver(weights, key, lookup_key).resolve()
-            return ConfigValueUnwrapper.unwrap(resolved_value.value, key, properties)
+            hash_value = context.get(value.weighted_values.hash_by_property_name)
+            resolved_value = WeightedValueResolver(weights, key, hash_value).resolve()
+            return ConfigValueUnwrapper.unwrap(resolved_value.value, key, context)
         else:
             raise UnknownConfigValueTypeException(type)

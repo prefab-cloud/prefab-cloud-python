@@ -2,6 +2,7 @@ from .config_loader import ConfigLoader
 from .config_resolver import ConfigResolver
 from .read_write_lock import ReadWriteLock
 from .config_value_unwrapper import ConfigValueUnwrapper
+from .context import Context
 
 import grpc
 import threading
@@ -9,7 +10,6 @@ import time
 import urllib3
 import base64
 import prefab_pb2 as Prefab
-import prefab_pb2_grpc as PrefabGrpc
 import concurrent.futures
 import functools
 
@@ -59,16 +59,14 @@ class ConfigClient:
             self.start_checkpointing_thread()
             self.start_streaming()
 
-    def get(self, key, default="NO_DEFAULT_PROVIDED", properties={}, lookup_key=None):
-        value = self.__get(key, lookup_key, properties)
+    def get(self, key, default="NO_DEFAULT_PROVIDED", context=Context.get_current()):
+        value = self.__get(key, None, {}, context=context)
         if value is not None:
-            return ConfigValueUnwrapper.unwrap(
-                value, key, properties | {"LOOKUP": lookup_key}
-            )
+            return ConfigValueUnwrapper.unwrap(value, key, context)
         else:
             return self.handle_default(key, default)
 
-    def __get(self, key, lookup_key, properties):
+    def __get(self, key, lookup_key, properties, context=Context.get_current()):
         self.init_future.result(self.options.connection_timeout_seconds)
         if not self.init_future.done():
             if self.options.on_connection_failure == "RAISE":
@@ -79,7 +77,7 @@ class ConfigClient:
                 f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have."
             )
             self.init_lock.release_write()
-        return self.config_resolver.get(key, lookup_key, properties)
+        return self.config_resolver.get(key, context=context)
 
     def handle_default(self, key, default):
         if default != "NO_DEFAULT_PROVIDED":
@@ -91,24 +89,13 @@ class ConfigClient:
     def load_checkpoint(self):
         if self.load_checkpoint_from_api_cdn():
             return
-        self.base_client.logger().info("load_checkpoint: fallback to GRPC API")
-        if self.load_checkpoint_from_grpc_api():
-            return
         self.base_client.logger().warn("No success loading checkpoints")
 
     def start_checkpointing_thread(self):
-        threading.Thread(target=self.checkpointing_loop).start()
+        threading.Thread(target=self.checkpointing_loop, daemon=True).start()
 
     def start_streaming(self):
-        threading.Thread(target=self.grpc_stream).start()
-
-    def grpc_stream(self):
-        channel = self.grpc_channel()
-        req = Prefab.ConfigServicePointer(start_at_id=self.config_loader.highwater_mark)
-        stub = PrefabGrpc.ConfigServiceStub(channel)
-        stream = stub.GetConfig(req, metadata=[("auth", self.options.api_key)])
-        for resp in stream:
-            self.load_configs(resp, "remote_api_grpc_stream")
+        pass
 
     def checkpointing_loop(self):
         while True:
@@ -133,22 +120,6 @@ class ConfigClient:
                 f"Checkpoint remote_cdn_api failed to load. Response {response.status}"
             )
             return False
-
-    def load_checkpoint_from_grpc_api(self):
-        try:
-            channel = self.grpc_channel()
-            request = Prefab.ConfigServicePointer(
-                start_at_id=self.config_loader.highwater_mark
-            )
-            stub = PrefabGrpc.ConfigServiceStub(channel)
-            response = stub.GetAllConfig(
-                request=request, metadata=[("auth", self.options.api_key)]
-            )
-            self.load_configs(response, "remote_api_grpc")
-        except Exception as ex:
-            self.base_client.logger().warn(
-                "Unexpected error loading GRPC checkpoint %s" % ex
-            )
 
     def load_configs(self, configs, source):
         project_id = configs.config_service_pointer.project_id

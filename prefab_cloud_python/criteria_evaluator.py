@@ -28,7 +28,10 @@ class CriteriaEvaluator:
         return True
 
     def evaluate_criterion(self, criterion, properties):
-        value_from_properties = properties.get(criterion.property_name)
+        if criterion.property_name == "NAMESPACE":
+            value_from_properties = self.base_client.options.namespace
+        else:
+            value_from_properties = properties.get(criterion.property_name)
 
         if criterion.operator in [OPS.LOOKUP_KEY_IN, OPS.PROP_IS_ONE_OF]:
             return self.matches(criterion, value_from_properties, properties)
@@ -43,7 +46,7 @@ class CriteriaEvaluator:
                 return False
             return any(
                 [
-                    value_from_properties.endswith(ending)
+                    str(value_from_properties).endswith(ending)
                     for ending in criterion.value_to_match.string_list.values
                 ]
             )
@@ -52,12 +55,12 @@ class CriteriaEvaluator:
                 return True
             return not any(
                 [
-                    value_from_properties.endswith(ending)
+                    str(value_from_properties).endswith(ending)
                     for ending in criterion.value_to_match.string_list.values
                 ]
             )
         if criterion.operator == OPS.HIERARCHICAL_MATCH:
-            value_from_properties.startswith(criterion.value_to_match.string)
+            return value_from_properties.startswith(criterion.value_to_match.string)
         if criterion.operator == OPS.ALWAYS_TRUE:
             return True
 
@@ -73,12 +76,12 @@ class CriteriaEvaluator:
         if isinstance(
             criterion_value_or_values, google._upb._message.RepeatedScalarContainer
         ):
-            return value in criterion_value_or_values
+            return str(value) in criterion_value_or_values
         return value == criterion_value_or_values
 
     def in_segment(self, criterion, properties):
         return self.resolver.get(
-            criterion.value_to_match.string, properties.get("LOOKUP"), properties
+            criterion.value_to_match.string, context=properties
         ).bool
 
     def matching_environment_row_values(self):

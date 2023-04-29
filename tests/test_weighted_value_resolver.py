@@ -9,7 +9,7 @@ class TestWeightedValueResolver:
     def test_resolving_a_single_value(self):
         weighted_values = self.build_weighted_values({"abc": 1})
 
-        resolved = WeightedValueResolver(weighted_values, key).resolve()
+        resolved = WeightedValueResolver(weighted_values, key, None).resolve()
         assert resolved.value.string == "abc"
 
     def test_multiple_values_with_even_distribution(self):

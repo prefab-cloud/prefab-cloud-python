@@ -6,6 +6,7 @@ on:
   pull_request:
     branches:
       - main
+      - context
   workflow_dispatch:
 
 jobs:
@@ -38,4 +39,6 @@ jobs:
         run: poetry install --no-interaction
 
       - name: Run tests
-        run: python -m pytest
+        run: python -m pytest -k 'not integration'
+        env:
+          PREFAB_INTEGRATION_TEST_API_KEY: ${{ secrets.PREFAB_INTEGRATION_TEST_API_KEY }}

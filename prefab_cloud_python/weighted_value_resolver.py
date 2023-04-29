@@ -5,13 +5,13 @@ max_32_float = 4_294_967_294.0
 
 
 class WeightedValueResolver:
-    def __init__(self, weights, key, lookup_key=None):
+    def __init__(self, weights, key, context_hash_value):
         self.weights = weights
         self.key = key
-        self.lookup_key = lookup_key
+        self.context_hash_value = context_hash_value
 
     def resolve(self):
-        if self.lookup_key is not None:
+        if self.context_hash_value is not None:
             percent = self.user_percent()
         else:
             percent = random.random()
@@ -21,7 +21,7 @@ class WeightedValueResolver:
         return self.weights[index]
 
     def user_percent(self):
-        to_hash = "%s%s" % (self.key, self.lookup_key)
+        to_hash = "%s%s" % (self.key, self.context_hash_value)
         int_value = mmh3.hash(to_hash, signed=False)
         return int_value / max_32_float
 

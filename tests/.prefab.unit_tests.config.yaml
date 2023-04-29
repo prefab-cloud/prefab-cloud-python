@@ -11,11 +11,16 @@ disabled_flag: false
 flag_with_a_bool: { "feature_flag": "true", value: true }
 flag_with_a_bool_disabled: { "feature_flag": "true", value: false }
 flag_with_a_value: { "feature_flag": "true", value: "all-features" }
-in_lookup_key:
+user_key_match:
   {
     "feature_flag": "true",
     value: true,
-    criterion: { operator: LOOKUP_KEY_IN, values: ["abc123", "xyz987"] },
+    criterion:
+      {
+        operator: PROP_IS_ONE_OF,
+        values: ["abc123", "xyz987"],
+        property: "user.key",
+      },
   }
 just_my_domain:
   {
@@ -24,7 +29,7 @@ just_my_domain:
     criterion:
       {
         operator: PROP_IS_ONE_OF,
-        property: "domain",
+        property: "user.domain",
         values: ["prefab.cloud", "example.com"],
       },
   }

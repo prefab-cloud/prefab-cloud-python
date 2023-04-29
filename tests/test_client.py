@@ -43,42 +43,41 @@ class TestClient:
         assert not client.enabled("disabled_flag")
         assert not client.enabled("flag_with_a_value")
 
-    def test_enabled_with_lookup_key(self, client):
-        assert not client.enabled("in_lookup_key", "jimmy")
-        assert client.enabled("in_lookup_key", "abc123")
-        assert client.enabled("in_lookup_key", "xyz987")
+    def test_enabled_with_user_key_match(self, client):
+        assert not client.enabled("user_key_match", context={"user": {"key": "jimmy"}})
+        assert client.enabled("user_key_match", context={"user": {"key": "abc123"}})
+        assert client.enabled("user_key_match", context={"user": {"key": "xyz987"}})
 
-    def test_ff_get_with_lookup_key(self, client):
-        assert client.get("in_lookup_key", lookup_key="jimmy") is None
-        assert client.get("in_lookup_key", "DEFAULT", "jimmmy", {}) == "DEFAULT"
-        assert client.get("in_lookup_key", "abc123")
-        assert client.get("in_lookup_key", "xyz9987")
+    def test_enabled_with_scoped_context(self, client):
+        with Client.scoped_context({"user": {"key": "jimmy"}}):
+            assert not client.enabled("user_key_match")
 
-    def test_ff_enabled_with_attributes(self, client):
+        with Client.scoped_context({"user": {"key": "abc123"}}):
+            assert client.enabled("user_key_match")
+
+        with Client.scoped_context({"user": {"key": "xyz987"}}):
+            assert client.enabled("user_key_match")
+
+    def test_ff_enabled_with_context(self, client):
         assert not client.enabled(
-            "just_my_domain", lookup_key="abc123", attributes={"domain": "gmail.com"}
+            "just_my_domain", context={"user": {"domain": "gmail.com"}}
         )
         assert not client.enabled(
-            "just_my_domain", lookup_key="abc123", attributes={"domain": "prefab.cloud"}
+            "just_my_domain", context={"user": {"domain": "prefab.cloud"}}
         )
         assert not client.enabled(
-            "just_my_domain", lookup_key="abc123", attributes={"domain": "example.com"}
+            "just_my_domain", context={"user": {"domain": "example.com"}}
         )
 
     def test_ff_get_with_attributes(self, client):
         assert (
-            client.get(
-                "just_my_domain",
-                lookup_key="abc123",
-                properties={"domain": "gmail.com"},
-            )
+            client.get("just_my_domain", context={"user": {"domain": "gmail.com"}})
             is None
         )
         assert (
             client.get(
                 "just_my_domain",
-                lookup_key="abc123",
-                properties={"domain": "gmail.com"},
+                context={"user": {"domain": "gmail.com"}},
                 default="DEFAULT",
             )
             == "DEFAULT"
@@ -86,19 +85,24 @@ class TestClient:
         assert (
             client.get(
                 "just_my_domain",
-                lookup_key="abc123",
-                properties={"domain": "prefab.cloud"},
+                context={"user": {"domain": "prefab.cloud"}},
             )
             == "new-version"
         )
         assert (
-            client.get(
-                "just_my_domain",
-                lookup_key="abc123",
-                properties={"domain": "example.com"},
-            )
+            client.get("just_my_domain", context={"user": {"domain": "example.com"}})
             == "new-version"
         )
+
+    def test_ff_get_with_scoped_context(self, client):
+        with Client.scoped_context({"user": {"domain": "gmail.com"}}):
+            assert client.get("just_my_domain") is None
+
+        with Client.scoped_context({"user": {"domain": "gmail.com"}}):
+            assert client.get("just_my_domain", default="DEFAULT") == "DEFAULT"
+
+        with Client.scoped_context({"user": {"domain": "prefab.cloud"}}):
+            assert client.get("just_my_domain") == "new-version"
 
     def test_getting_feature_flag_value(self, client):
         assert not client.enabled("flag_with_a_value")

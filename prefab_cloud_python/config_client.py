@@ -57,7 +57,7 @@ class ConfigClient:
         else:
             self.load_checkpoint()
             self.start_checkpointing_thread()
-            self.start_streaming()
+            # self.start_streaming()
 
     def get(self, key, default="NO_DEFAULT_PROVIDED", properties={}, lookup_key=None):
         value = self.__get(key, lookup_key, properties)
@@ -97,10 +97,10 @@ class ConfigClient:
         self.base_client.logger().warn("No success loading checkpoints")
 
     def start_checkpointing_thread(self):
-        threading.Thread(target=self.checkpointing_loop).start()
+        threading.Thread(target=self.checkpointing_loop, daemon=True).start()
 
-    def start_streaming(self):
-        threading.Thread(target=self.grpc_stream).start()
+    # def start_streaming(self):
+    #     threading.Thread(target=self.grpc_stream, daemon=True).start()
 
     def grpc_stream(self):
         channel = self.grpc_channel()

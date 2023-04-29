@@ -22,8 +22,11 @@ class CriteriaEvaluator:
         return None
 
     def all_criteria_match(self, conditional_value, props):
+        print("in all_criteria_match")
         for criterion in conditional_value.criteria:
+            print("crit:", criterion)
             if not self.evaluate_criterion(criterion, props):
+                print("hmmmmm")
                 return False
         return True
 
@@ -57,7 +60,9 @@ class CriteriaEvaluator:
                 ]
             )
         if criterion.operator == OPS.HIERARCHICAL_MATCH:
-            value_from_properties.startswith(criterion.value_to_match.string)
+            print("HIERARCHICAL_MATCH")
+            print(value_from_properties and value_from_properties.startswith(criterion.value_to_match.string))
+            value_from_properties and value_from_properties.startswith(criterion.value_to_match.string)
         if criterion.operator == OPS.ALWAYS_TRUE:
             return True
 

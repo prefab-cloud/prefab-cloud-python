@@ -26,7 +26,7 @@ class ConfigResolver:
         return None
 
     def evaluate(self, config, lookup_key, properties={}):
-        props = properties | {"LOOKUP": lookup_key}
+        props = properties | {"LOOKUP": lookup_key, "NAMESPACE": self.base_client.options.namespace }
         return CriteriaEvaluator(
             config,
             project_env_id=self.project_env_id,

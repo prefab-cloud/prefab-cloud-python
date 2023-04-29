@@ -1,3 +1,10 @@
+class InvalidContextFormatException(Exception):
+    "Raised when a provided context is neither a NamedContext nor a dict"
+
+    def __init__(self, context):
+        super().__init__("Expected a NamedContext or dict, received a", str(type(context)))
+
+
 class Context:
     def __init__(self, context={}):
         self.contexts = {}
@@ -12,6 +19,9 @@ class Context:
                     print("Prefab contexts should be a dict with a key of the context name and a value of a dict of the context")
                     self.contexts[""] = self.contexts.get("") or NamedContext("", {})
                     self.contexts[""].merge({name: values})
+
+        else:
+            raise InvalidContextFormatException(context)
 
 
 class NamedContext:

@@ -1,4 +1,4 @@
-from prefab_cloud_python.context import Context, NamedContext
+from prefab_cloud_python.context import Context, NamedContext, InvalidContextFormatException
 import pytest
 import re
 
@@ -39,3 +39,7 @@ class TestContext:
         captured = capsys.readouterr()
         assert re.compile("Prefab contexts should be a dict with a key of the context name and a value of a dict of the context").match(captured.out)
 
+    def test_init_with_invalid_argument(self, setup):
+        with pytest.raises(InvalidContextFormatException) as exception:
+            Context([])
+            assert "Expected a NamedConstant or dict" in str(exception)

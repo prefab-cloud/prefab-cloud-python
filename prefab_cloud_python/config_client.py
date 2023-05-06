@@ -2,6 +2,7 @@ from .config_loader import ConfigLoader
 from .config_resolver import ConfigResolver
 from .read_write_lock import ReadWriteLock
 from .config_value_unwrapper import ConfigValueUnwrapper
+from .context import Context
 
 import grpc
 import threading
@@ -59,8 +60,8 @@ class ConfigClient:
             self.start_checkpointing_thread()
             self.start_streaming()
 
-    def get(self, key, default="NO_DEFAULT_PROVIDED", properties={}, lookup_key=None):
-        value = self.__get(key, lookup_key, properties)
+    def get(self, key, default="NO_DEFAULT_PROVIDED", properties={}, lookup_key=None, context=Context.get_current()):
+        value = self.__get(key, lookup_key, properties, context=context)
         if value is not None:
             return ConfigValueUnwrapper.unwrap(
                 value, key, properties | {"LOOKUP": lookup_key}
@@ -68,7 +69,7 @@ class ConfigClient:
         else:
             return self.handle_default(key, default)
 
-    def __get(self, key, lookup_key, properties):
+    def __get(self, key, lookup_key, properties, context=Context.get_current()):
         self.init_future.result(self.options.connection_timeout_seconds)
         if not self.init_future.done():
             if self.options.on_connection_failure == "RAISE":
@@ -79,7 +80,7 @@ class ConfigClient:
                 f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have."
             )
             self.init_lock.release_write()
-        return self.config_resolver.get(key, lookup_key, properties)
+        return self.config_resolver.get(key, lookup_key, properties, context=context)
 
     def handle_default(self, key, default):
         if default != "NO_DEFAULT_PROVIDED":

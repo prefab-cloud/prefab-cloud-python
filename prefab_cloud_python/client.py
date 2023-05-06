@@ -1,4 +1,5 @@
 import functools
+from .context import Context
 from .config_client import ConfigClient
 from .feature_flag_client import FeatureFlagClient
 import prefab_pb2 as Prefab
@@ -23,21 +24,24 @@ class Client:
                 % (options.prefab_api_url, options.prefab_grpc_url, options.http_secure)
             )
 
-    def get(self, key, default="NO_DEFAULT_PROVIDED", lookup_key=None, properties={}):
+        self.context().clear()
+        self.config_client()
+
+    def get(self, key, default="NO_DEFAULT_PROVIDED", lookup_key=None, properties={}, context=Context.get_current()):
         if self.is_ff(key):
             if default == "NO_DEFAULT_PROVIDED":
                 default = None
             return self.feature_flag_client().get(
-                key, lookup_key=lookup_key, attributes=properties, default=default
+                key, lookup_key=lookup_key, attributes=properties, default=default, context=context
             )
         else:
             return self.config_client().get(
-                key, default=default, properties=properties, lookup_key=lookup_key
+                key, default=default, properties=properties, lookup_key=lookup_key, context=context
             )
 
-    def enabled(self, feature_name, lookup_key=None, attributes={}):
+    def enabled(self, feature_name, lookup_key=None, attributes={}, context=Context.get_current()):
         return self.feature_flag_client().feature_is_on_for(
-            feature_name, lookup_key, attributes
+            feature_name, lookup_key, attributes, context
         )
 
     def is_ff(self, key):
@@ -47,6 +51,9 @@ class Client:
         ):
             return True
         return False
+
+    def context(self):
+        return Context.get_current()
 
     @functools.cache
     def config_client(self):

@@ -1,3 +1,5 @@
+from .context import Context
+
 class FeatureFlagClient:
     def __init__(self, base_client):
         self.base_client = base_client
@@ -5,22 +7,22 @@ class FeatureFlagClient:
     def feature_is_on(self, feature_name):
         return self.feature_is_on_for(feature_name, None)
 
-    def feature_is_on_for(self, feature_name, lookup_key, attributes={}):
+    def feature_is_on_for(self, feature_name, lookup_key=None, attributes={}, context=Context.get_current()):
         variant = self.base_client.config_client().get(
-            feature_name, False, attributes, lookup_key
+            feature_name, False, attributes, lookup_key, context=context
         )
 
         return self.is_on(variant)
 
-    def get(self, feature_name, lookup_key=None, attributes={}, default=False):
-        value = self._get(feature_name, lookup_key, attributes)
+    def get(self, feature_name, lookup_key=None, attributes={}, default=False, context=Context.get_current()):
+        value = self._get(feature_name, lookup_key, attributes, context)
         if value is None:
             return default
         return value
 
-    def _get(self, feature_name, lookup_key=None, attributes={}):
+    def _get(self, feature_name, lookup_key=None, attributes={}, context=Context.get_current()):
         return self.base_client.config_client().get(
-            feature_name, None, attributes, lookup_key
+            feature_name, None, attributes, lookup_key, context=context
         )
 
     def is_on(self, variant):

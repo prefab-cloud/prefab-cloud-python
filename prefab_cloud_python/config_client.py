@@ -60,11 +60,11 @@ class ConfigClient:
             self.start_checkpointing_thread()
             self.start_streaming()
 
-    def get(self, key, default="NO_DEFAULT_PROVIDED", properties={}, lookup_key=None, context=Context.get_current()):
-        value = self.__get(key, lookup_key, properties, context=context)
+    def get(self, key, default="NO_DEFAULT_PROVIDED", context=Context.get_current()):
+        value = self.__get(key, None, {}, context=context)
         if value is not None:
             return ConfigValueUnwrapper.unwrap(
-                value, key, properties | {"LOOKUP": lookup_key}
+                value, key, context
             )
         else:
             return self.handle_default(key, default)

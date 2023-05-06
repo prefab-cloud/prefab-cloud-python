@@ -27,21 +27,21 @@ class Client:
         self.context().clear()
         self.config_client()
 
-    def get(self, key, default="NO_DEFAULT_PROVIDED", lookup_key=None, properties={}, context=Context.get_current()):
+    def get(self, key, default="NO_DEFAULT_PROVIDED", context=Context.get_current()):
         if self.is_ff(key):
             if default == "NO_DEFAULT_PROVIDED":
                 default = None
             return self.feature_flag_client().get(
-                key, lookup_key=lookup_key, attributes=properties, default=default, context=context
+                key, default=default, context=context
             )
         else:
             return self.config_client().get(
-                key, default=default, properties=properties, lookup_key=lookup_key, context=context
+                key, default=default, context=context
             )
 
-    def enabled(self, feature_name, lookup_key=None, attributes={}, context=Context.get_current()):
+    def enabled(self, feature_name, context=Context.get_current()):
         return self.feature_flag_client().feature_is_on_for(
-            feature_name, lookup_key, attributes, context
+            feature_name, context
         )
 
     def is_ff(self, key):

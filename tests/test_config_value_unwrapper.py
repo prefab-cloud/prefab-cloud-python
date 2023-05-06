@@ -1,5 +1,6 @@
 from prefab_cloud_python.config_value_unwrapper import ConfigValueUnwrapper
 import prefab_pb2 as Prefab
+from prefab_cloud_python.context import Context
 
 config_key = "config_key"
 
@@ -46,25 +47,25 @@ class TestConfigValueUnwrapper:
         config_value = Prefab.ConfigValue(weighted_values=weighted_values)
         assert (
             ConfigValueUnwrapper.unwrap(
-                config_value, config_key, {"LOOKUP": "user:123"}
+                config_value, config_key, self.context_with_key("user:123")
             )
             == "ghi"
         )
         assert (
             ConfigValueUnwrapper.unwrap(
-                config_value, config_key, {"LOOKUP": "user:456"}
+                config_value, config_key, self.context_with_key("user:456")
             )
             == "ghi"
         )
         assert (
             ConfigValueUnwrapper.unwrap(
-                config_value, config_key, {"LOOKUP": "user:789"}
+                config_value, config_key, self.context_with_key("user:789")
             )
             == "abc"
         )
         assert (
             ConfigValueUnwrapper.unwrap(
-                config_value, config_key, {"LOOKUP": "user:012"}
+                config_value, config_key, self.context_with_key("user:012")
             )
             == "def"
         )
@@ -73,40 +74,44 @@ class TestConfigValueUnwrapper:
         config_value = Prefab.ConfigValue(weighted_values=weighted_values)
         assert (
             ConfigValueUnwrapper.unwrap(
-                config_value, config_key, {"LOOKUP": "user:123"}
+                config_value, config_key, self.context_with_key("user:123")
             )
             == "def"
         )
         assert (
             ConfigValueUnwrapper.unwrap(
-                config_value, config_key, {"LOOKUP": "user:456"}
+                config_value, config_key, self.context_with_key("user:456")
             )
             == "def"
         )
         assert (
             ConfigValueUnwrapper.unwrap(
-                config_value, config_key, {"LOOKUP": "user:789"}
+                config_value, config_key, self.context_with_key("user:789")
             )
             == "def"
         )
         assert (
             ConfigValueUnwrapper.unwrap(
-                config_value, config_key, {"LOOKUP": "user:012"}
+                config_value, config_key, self.context_with_key("user:012")
             )
             == "def"
         )
         assert (
             ConfigValueUnwrapper.unwrap(
-                config_value, config_key, {"LOOKUP": "user:103"}
+                config_value, config_key, self.context_with_key("user:103")
             )
             == "ghi"
         )
         assert (
             ConfigValueUnwrapper.unwrap(
-                config_value, config_key, {"LOOKUP": "user:119"}
+                config_value, config_key, self.context_with_key("user:119")
             )
             == "abc"
         )
+
+    @staticmethod
+    def context_with_key(key):
+        return Context({"user": {"key": key}})
 
     @staticmethod
     def build_weighted_values(values_and_weights):
@@ -117,4 +122,4 @@ class TestConfigValueUnwrapper:
             )
             weighted_values.append(weighted_value)
 
-        return Prefab.WeightedValues(weighted_values=weighted_values)
+        return Prefab.WeightedValues(weighted_values=weighted_values, hash_by_property_name="user.key")

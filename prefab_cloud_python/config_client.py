@@ -92,24 +92,13 @@ class ConfigClient:
     def load_checkpoint(self):
         if self.load_checkpoint_from_api_cdn():
             return
-        self.base_client.logger().info("load_checkpoint: fallback to GRPC API")
-        if self.load_checkpoint_from_grpc_api():
-            return
         self.base_client.logger().warn("No success loading checkpoints")
 
     def start_checkpointing_thread(self):
-        threading.Thread(target=self.checkpointing_loop).start()
+        threading.Thread(target=self.checkpointing_loop, daemon=True).start()
 
     def start_streaming(self):
-        threading.Thread(target=self.grpc_stream).start()
-
-    def grpc_stream(self):
-        channel = self.grpc_channel()
-        req = Prefab.ConfigServicePointer(start_at_id=self.config_loader.highwater_mark)
-        stub = PrefabGrpc.ConfigServiceStub(channel)
-        stream = stub.GetConfig(req, metadata=[("auth", self.options.api_key)])
-        for resp in stream:
-            self.load_configs(resp, "remote_api_grpc_stream")
+        pass
 
     def checkpointing_loop(self):
         while True:
@@ -134,22 +123,6 @@ class ConfigClient:
                 f"Checkpoint remote_cdn_api failed to load. Response {response.status}"
             )
             return False
-
-    def load_checkpoint_from_grpc_api(self):
-        try:
-            channel = self.grpc_channel()
-            request = Prefab.ConfigServicePointer(
-                start_at_id=self.config_loader.highwater_mark
-            )
-            stub = PrefabGrpc.ConfigServiceStub(channel)
-            response = stub.GetAllConfig(
-                request=request, metadata=[("auth", self.options.api_key)]
-            )
-            self.load_configs(response, "remote_api_grpc")
-        except Exception as ex:
-            self.base_client.logger().warn(
-                "Unexpected error loading GRPC checkpoint %s" % ex
-            )
 
     def load_configs(self, configs, source):
         project_id = configs.config_service_pointer.project_id

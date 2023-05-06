@@ -27,21 +27,21 @@ class Client:
         self.context().clear()
         self.config_client()
 
-    def get(self, key, default="NO_DEFAULT_PROVIDED", context=Context.get_current()):
+    def get(self, key, default="NO_DEFAULT_PROVIDED", context="NO_CONTEXT_PROVIDED"):
         if self.is_ff(key):
             if default == "NO_DEFAULT_PROVIDED":
                 default = None
             return self.feature_flag_client().get(
-                key, default=default, context=context
+                key, default=default, context=self.resolve_context_argument(context)
             )
         else:
             return self.config_client().get(
-                key, default=default, context=context
+                key, default=default, context=self.resolve_context_argument(context)
             )
 
-    def enabled(self, feature_name, context=Context.get_current()):
+    def enabled(self, feature_name, context="NO_CONTEXT_PROVIDED"):
         return self.feature_flag_client().feature_is_on_for(
-            feature_name, context
+            feature_name, context=self.resolve_context_argument(context)
         )
 
     def is_ff(self, key):
@@ -52,8 +52,17 @@ class Client:
             return True
         return False
 
+    def resolve_context_argument(self, context):
+        if context != "NO_CONTEXT_PROVIDED":
+            return context
+        return Context.get_current()
+
     def context(self):
         return Context.get_current()
+
+    def scoped_context(context):
+        print(context)
+        return Context.scope(context)
 
     @functools.cache
     def config_client(self):

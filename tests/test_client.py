@@ -48,6 +48,16 @@ class TestClient:
         assert client.enabled("user_key_match", context={"user": {"key": "abc123"}})
         assert client.enabled("user_key_match", context={"user": {"key": "xyz987"}})
 
+    def test_enabled_with_scoped_context(self, client):
+        with Client.scoped_context({"user": {"key": "jimmy"}}):
+            assert not client.enabled("user_key_match")
+
+        with Client.scoped_context({"user": {"key": "abc123"}}):
+            assert client.enabled("user_key_match")
+
+        with Client.scoped_context({"user": {"key": "xyz987"}}):
+            assert client.enabled("user_key_match")
+
     def test_ff_enabled_with_context(self, client):
         assert not client.enabled(
             "just_my_domain", context ={"user": {"domain": "gmail.com"}}
@@ -89,6 +99,16 @@ class TestClient:
             )
             == "new-version"
         )
+
+    def test_ff_get_with_scoped_context(self, client):
+        with Client.scoped_context({"user": {"domain": "gmail.com"}}):
+            assert client.get("just_my_domain") is None
+
+        with Client.scoped_context({"user": {"domain": "gmail.com"}}):
+            assert client.get("just_my_domain", default="DEFAULT") == "DEFAULT"
+
+        with Client.scoped_context({"user": {"domain": "prefab.cloud"}}):
+            assert client.get("just_my_domain") == "new-version"
 
     def test_getting_feature_flag_value(self, client):
         assert not client.enabled("flag_with_a_value")

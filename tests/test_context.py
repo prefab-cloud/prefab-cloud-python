@@ -1,9 +1,16 @@
-from prefab_cloud_python.context import Context, NamedContext, InvalidContextFormatException
+from prefab_cloud_python.context import (
+    Context,
+    NamedContext,
+    InvalidContextFormatException,
+)
 import pytest
 import re
 
 
-EXAMPLE_PROPERTIES = {'user': {'key': 'some-user-key', 'name': 'Ted'}, 'team': {'key': 'abc', 'plan': 'pro'}}
+EXAMPLE_PROPERTIES = {
+    "user": {"key": "some-user-key", "name": "Ted"},
+    "team": {"key": "abc", "plan": "pro"},
+}
 
 
 @pytest.fixture
@@ -40,7 +47,9 @@ class TestContext:
         assert context.contexts[""].get("name") == "michael"
 
         captured = capsys.readouterr()
-        assert re.compile("Prefab contexts should be a dict with a key of the context name and a value of a dict of the context").match(captured.out)
+        assert re.compile(
+            "Prefab contexts should be a dict with a key of the context name and a value of a dict of the context"
+        ).match(captured.out)
 
     def test_init_with_invalid_argument(self, setup):
         with pytest.raises(InvalidContextFormatException) as exception:
@@ -63,14 +72,22 @@ class TestContext:
         Context.set_current(context)
         assert Context.get_current().contexts["user"].get("key") == "some-user-key"
 
-        new_context = Context.merge_with_current({'user': {'key': 'brand-new', 'other': 'different'}, 'address': {'city': 'New York'}})
+        new_context = Context.merge_with_current(
+            {
+                "user": {"key": "brand-new", "other": "different"},
+                "address": {"city": "New York"},
+            }
+        )
         assert new_context.to_dict() == {
             "user": {"key": "brand-new", "other": "different"},
             "team": {"key": "abc", "plan": "pro"},
-            "address": {"city": "New York"}
+            "address": {"city": "New York"},
         }
 
-        assert Context.get_current().contexts["user"].to_dict() == {"key": "some-user-key", "name": "Ted"}
+        assert Context.get_current().contexts["user"].to_dict() == {
+            "key": "some-user-key",
+            "name": "Ted",
+        }
 
     def test_with_context(self, setup):
         assert not Context.get_current().contexts
@@ -92,8 +109,8 @@ class TestContext:
     def test_setting(self, setup):
         context = Context()
         context.set("user", {"key": "value"})
-        context['other'] = {'key': 'different', 'something': 'other'}
-        assert context['other.key'] == "different"
+        context["other"] = {"key": "different", "something": "other"}
+        assert context["other.key"] == "different"
         assert context["user.key"] == "value"
 
     def test_getting(self, setup):

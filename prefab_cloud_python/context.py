@@ -1,10 +1,13 @@
 from threading import current_thread
 
+
 class InvalidContextFormatException(Exception):
     "Raised when a provided context is neither a NamedContext nor a dict"
 
     def __init__(self, context):
-        super().__init__("Expected a NamedContext or dict, received a", str(type(context)))
+        super().__init__(
+            "Expected a NamedContext or dict, received a", str(type(context))
+        )
 
 
 class Context:
@@ -18,7 +21,9 @@ class Context:
                 if isinstance(values, dict):
                     self.contexts[str(name)] = NamedContext(name, values)
                 else:
-                    print("Prefab contexts should be a dict with a key of the context name and a value of a dict of the context")
+                    print(
+                        "Prefab contexts should be a dict with a key of the context name and a value of a dict of the context"
+                    )
                     self.contexts[""] = self.contexts.get("") or NamedContext("", {})
                     self.contexts[""].merge({name: values})
 
@@ -69,7 +74,10 @@ class Context:
         current_thread().prefab_context = context
 
     def get_current():
-        if "prefab_context" not in dir(current_thread()) or current_thread().prefab_context is None:
+        if (
+            "prefab_context" not in dir(current_thread())
+            or current_thread().prefab_context is None
+        ):
             Context.set_current(Context())
         return current_thread().prefab_context
 

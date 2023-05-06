@@ -122,4 +122,6 @@ class TestConfigValueUnwrapper:
             )
             weighted_values.append(weighted_value)
 
-        return Prefab.WeightedValues(weighted_values=weighted_values, hash_by_property_name="user.key")
+        return Prefab.WeightedValues(
+            weighted_values=weighted_values, hash_by_property_name="user.key"
+        )

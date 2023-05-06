@@ -18,9 +18,15 @@ class TestFeatureFlagClient:
         assert not ff_client.feature_is_on_for(
             "something-that-doesnt-exist", "irrelevant"
         )
-        assert not ff_client.feature_is_on_for("user_key_match", context={"user": {"key": "not-included"}})
-        assert ff_client.feature_is_on_for("user_key_match", context={"user": {"key": "abc123"}})
-        assert ff_client.feature_is_on_for("user_key_match", context={"user": {"key": "xyz987"}})
+        assert not ff_client.feature_is_on_for(
+            "user_key_match", context={"user": {"key": "not-included"}}
+        )
+        assert ff_client.feature_is_on_for(
+            "user_key_match", context={"user": {"key": "abc123"}}
+        )
+        assert ff_client.feature_is_on_for(
+            "user_key_match", context={"user": {"key": "xyz987"}}
+        )
 
     def test_get(self):
         ff_client = self.build_client()

@@ -1,5 +1,6 @@
 from .context import Context
 
+
 class FeatureFlagClient:
     def __init__(self, base_client):
         self.base_client = base_client
@@ -21,9 +22,7 @@ class FeatureFlagClient:
         return value
 
     def _get(self, feature_name, context=Context.get_current()):
-        return self.base_client.config_client().get(
-            feature_name, None, context=context
-        )
+        return self.base_client.config_client().get(feature_name, None, context=context)
 
     def is_on(self, variant):
         try:

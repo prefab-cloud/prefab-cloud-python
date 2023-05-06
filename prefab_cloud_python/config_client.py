@@ -63,9 +63,7 @@ class ConfigClient:
     def get(self, key, default="NO_DEFAULT_PROVIDED", context=Context.get_current()):
         value = self.__get(key, None, {}, context=context)
         if value is not None:
-            return ConfigValueUnwrapper.unwrap(
-                value, key, context
-            )
+            return ConfigValueUnwrapper.unwrap(value, key, context)
         else:
             return self.handle_default(key, default)
 

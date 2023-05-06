@@ -60,7 +60,7 @@ class TestClient:
 
     def test_ff_enabled_with_context(self, client):
         assert not client.enabled(
-            "just_my_domain", context ={"user": {"domain": "gmail.com"}}
+            "just_my_domain", context={"user": {"domain": "gmail.com"}}
         )
         assert not client.enabled(
             "just_my_domain", context={"user": {"domain": "prefab.cloud"}}
@@ -71,10 +71,7 @@ class TestClient:
 
     def test_ff_get_with_attributes(self, client):
         assert (
-            client.get(
-                "just_my_domain",
-                context={"user": {"domain": "gmail.com"}}
-            )
+            client.get("just_my_domain", context={"user": {"domain": "gmail.com"}})
             is None
         )
         assert (
@@ -93,10 +90,7 @@ class TestClient:
             == "new-version"
         )
         assert (
-            client.get(
-                "just_my_domain",
-                context={"user": {"domain": "example.com"}}
-            )
+            client.get("just_my_domain", context={"user": {"domain": "example.com"}})
             == "new-version"
         )
 

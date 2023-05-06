@@ -26,7 +26,9 @@ class ConfigResolver:
             return via_key["config"]
         return None
 
-    def evaluate(self, config, lookup_key, properties={}, context=Context.get_current()):
+    def evaluate(
+        self, config, lookup_key, properties={}, context=Context.get_current()
+    ):
         return CriteriaEvaluator(
             config,
             project_env_id=self.project_env_id,

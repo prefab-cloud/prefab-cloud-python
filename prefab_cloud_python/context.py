@@ -17,7 +17,7 @@ class Context:
         if isinstance(context, NamedContext):
             self.contexts[context.name] = context
         elif isinstance(context, dict):
-            for (name, values) in context.items():
+            for name, values in context.items():
                 if isinstance(values, dict):
                     self.contexts[str(name)] = NamedContext(name, values)
                 else:
@@ -61,7 +61,7 @@ class Context:
 
     def to_dict(self):
         d = {}
-        for (name, named_context) in self.contexts.items():
+        for name, named_context in self.contexts.items():
             d[name] = named_context.to_dict()
         return d
 
@@ -94,7 +94,7 @@ class NamedContext:
         return self.data.get(key)
 
     def merge(self, other={}):
-        for (key, value) in other.items():
+        for key, value in other.items():
             self.data[str(key)] = self.data.get(str(key)) or value
 
     def to_dict(self):

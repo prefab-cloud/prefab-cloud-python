@@ -15,7 +15,12 @@ user_key_match:
   {
     "feature_flag": "true",
     value: true,
-    criterion: { operator: PROP_IS_ONE_OF, values: ["abc123", "xyz987"], property: "user.key" },
+    criterion:
+      {
+        operator: PROP_IS_ONE_OF,
+        values: ["abc123", "xyz987"],
+        property: "user.key",
+      },
   }
 just_my_domain:
   {

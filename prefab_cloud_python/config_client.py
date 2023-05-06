@@ -10,7 +10,6 @@ import time
 import urllib3
 import base64
 import prefab_pb2 as Prefab
-import prefab_pb2_grpc as PrefabGrpc
 import concurrent.futures
 import functools
 

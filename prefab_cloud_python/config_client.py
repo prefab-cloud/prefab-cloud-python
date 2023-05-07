@@ -77,7 +77,7 @@ class ConfigClient:
                 f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have."
             )
             self.init_lock.release_write()
-        return self.config_resolver.get(key, lookup_key, properties, context=context)
+        return self.config_resolver.get(key, context=context)
 
     def handle_default(self, key, default):
         if default != "NO_DEFAULT_PROVIDED":

@@ -11,14 +11,14 @@ class ConfigResolver:
         self.project_env_id = 0
         self.make_local()
 
-    def get(self, key, lookup_key, properties={}, context=Context.get_current()):
+    def get(self, key, context=Context.get_current()):
         self.lock.acquire_read()
         raw_config = self.raw(key)
         self.lock.release_read()
 
         if raw_config is None:
             return None
-        return self.evaluate(raw_config, lookup_key, properties, context=context)
+        return self.evaluate(raw_config, context=context)
 
     def raw(self, key):
         via_key = self.local_store.get(key)
@@ -26,9 +26,7 @@ class ConfigResolver:
             return via_key["config"]
         return None
 
-    def evaluate(
-        self, config, lookup_key, properties={}, context=Context.get_current()
-    ):
+    def evaluate(self, config, context=Context.get_current()):
         return CriteriaEvaluator(
             config,
             project_env_id=self.project_env_id,

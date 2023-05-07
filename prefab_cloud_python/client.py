@@ -61,7 +61,6 @@ class Client:
         return Context.get_current()
 
     def scoped_context(context):
-        print(context)
         return Context.scope(context)
 
     @functools.cache

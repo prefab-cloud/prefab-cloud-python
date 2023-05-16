@@ -26,7 +26,7 @@ structlog.configure(
 
 
 class BootstrappingConfigClient:
-    def get(self, _key, default=None):
+    def get(self, _key, default=None, context=None):
         bootstrap_log_level = os.environ.get("PREFAB_LOG_CLIENT_BOOTSTRAP_LOG_LEVEL")
         if bootstrap_log_level is not None:
             return bootstrap_log_level.upper()

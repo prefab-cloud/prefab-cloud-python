@@ -1,3 +1,4 @@
+from .context import Context
 import prefab_pb2 as Prefab
 import re
 import os
@@ -58,13 +59,18 @@ def log_or_drop(_, method, event_dict):
 
 
 def get_severity(location, config_client):
+    context = Context.get_current() or {}
     default = Prefab.LogLevel.Value("WARN")
-    closest_log_level = config_client.get(LOG_LEVEL_BASE_KEY, default=default)
+    closest_log_level = config_client.get(
+        LOG_LEVEL_BASE_KEY, default=default, context=context
+    )
 
     path_segs = location.split(".")
     for i, _ in enumerate(path_segs):
         next_search_path = ".".join([LOG_LEVEL_BASE_KEY, *path_segs[: i + 1]])
-        next_level = config_client.get(next_search_path, default=closest_log_level)
+        next_level = config_client.get(
+            next_search_path, default=closest_log_level, context=context
+        )
         if next_level is not None:
             closest_log_level = next_level
     return prefab_to_python_log_levels[closest_log_level]

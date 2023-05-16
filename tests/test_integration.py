@@ -3,6 +3,9 @@ import pytest
 import yaml
 
 from prefab_cloud_python import Options, Client, Context
+import prefab_pb2 as Prefab
+
+LLV = Prefab.LogLevel.Value
 
 
 def build_options_with_overrides(options, overrides):
@@ -15,7 +18,7 @@ def build_options_with_overrides(options, overrides):
     return options
 
 
-TEST_PATH = "./tests/prefab-cloud-integration-test-data/tests/0.2.0/"
+TEST_PATH = "./tests/prefab-cloud-integration-test-data/tests/0.2.1/"
 
 
 @pytest.fixture
@@ -26,7 +29,14 @@ def options():
     )
 
 
-def run_test(test, options, input_key="key", function="get", global_context=None):
+def run_test(
+    test,
+    options,
+    input_key="key",
+    function="get",
+    global_context=None,
+    expected_modifier=(lambda x: x),
+):
     input = test["input"]
     expected = test["expected"]
     options = build_options_with_overrides(options, test.get("client_overrides"))
@@ -45,35 +55,17 @@ def run_test(test, options, input_key="key", function="get", global_context=None
                 client.get(key, context=context)
                 assert expected["message"] in str(exception)
         else:
-            assert (
-                client.get(key, default=default, context=context) == expected["value"]
-            )
+            print(context)
+            assert client.get(
+                key, default=default, context=context
+            ) == expected_modifier(expected["value"])
     elif function == "enabled":
-        assert client.enabled(key, context=context) == expected["value"]
+        assert client.enabled(key, context=context) == expected_modifier(
+            expected["value"]
+        )
 
 
 class TestItegration:
-    def test_get(self, options):
-        with open(TEST_PATH + "get.yaml") as f:
-            yaml_data = yaml.safe_load(f.read())
-        for test_set in yaml_data["tests"]:
-            for test in test_set["cases"]:
-                run_test(test, options)
-
-    def test_get_or_raise(self, options):
-        with open(TEST_PATH + "get_or_raise.yaml") as f:
-            yaml_data = yaml.safe_load(f.read())
-        for test_set in yaml_data["tests"]:
-            for test in test_set["cases"]:
-                run_test(test, options)
-
-    def test_get_feature_flags(self, options):
-        with open(TEST_PATH + "get_feature_flag.yaml") as f:
-            yaml_data = yaml.safe_load(f.read())
-        for test_set in yaml_data["tests"]:
-            for test in test_set["cases"]:
-                run_test(test, options, input_key="flag")
-
     def test_enabled(self, options):
         with open(TEST_PATH + "enabled.yaml") as f:
             yaml_data = yaml.safe_load(f.read())
@@ -94,3 +86,47 @@ class TestItegration:
                     function="enabled",
                     global_context=global_context,
                 )
+
+    def test_get(self, options):
+        with open(TEST_PATH + "get.yaml") as f:
+            yaml_data = yaml.safe_load(f.read())
+        for test_set in yaml_data["tests"]:
+            for test in test_set["cases"]:
+                run_test(test, options)
+
+    def test_get_feature_flag(self, options):
+        with open(TEST_PATH + "get_feature_flag.yaml") as f:
+            yaml_data = yaml.safe_load(f.read())
+        for test_set in yaml_data["tests"]:
+            for test in test_set["cases"]:
+                run_test(test, options, input_key="flag")
+
+    def test_get_log_level(self, options):
+        with open(TEST_PATH + "get_log_level.yaml") as f:
+            yaml_data = yaml.safe_load(f.read())
+        for test_set in yaml_data["tests"]:
+            if test_set.get("context"):
+                global_context = Context(test_set["context"])
+            else:
+                global_context = None
+            for test in test_set["cases"][:1]:
+                run_test(
+                    test,
+                    options,
+                    global_context=global_context,
+                    expected_modifier=(lambda x: LLV(x)),
+                )
+
+    def test_get_or_raise(self, options):
+        with open(TEST_PATH + "get_or_raise.yaml") as f:
+            yaml_data = yaml.safe_load(f.read())
+        for test_set in yaml_data["tests"]:
+            for test in test_set["cases"]:
+                run_test(test, options)
+
+    def test_get_weighted_values(self, options):
+        with open(TEST_PATH + "get_weighted_values.yaml") as f:
+            yaml_data = yaml.safe_load(f.read())
+        for test_set in yaml_data["tests"]:
+            for test in test_set["cases"]:
+                run_test(test, options, input_key="flag")

@@ -15,6 +15,7 @@ pyyaml = "^6.0.0"
 mmh3 = "^3.0.0"
 urllib3 = "^2.0"
 structlog = "^22.3"
+sseclient-py = "^1.7.2"
 
 [build-system]
 requires = ["poetry-core"]

@@ -8,6 +8,7 @@ import grpc
 import threading
 import time
 import urllib3
+import sseclient
 import base64
 import prefab_pb2 as Prefab
 import concurrent.futures
@@ -95,7 +96,27 @@ class ConfigClient:
         threading.Thread(target=self.checkpointing_loop, daemon=True).start()
 
     def start_streaming(self):
-        pass
+        threading.Thread(target=self.streaming_loop, daemon=True).start()
+
+    def streaming_loop(self):
+        url = "%s/api/v1/sse/config" % self.options.prefab_api_url
+        auth = "%s:%s" % ("authuser", self.options.api_key)
+        token = base64.b64encode(auth.encode("utf-8")).decode("ascii")
+        headers = {
+            "x-prefab-start-at-id": self.config_loader.highwater_mark,
+            "Authorization": "Basic %s" % token,
+        }
+        response = urllib3.PoolManager().request(
+            "GET", url, headers=headers, preload_content=False
+        )
+
+        client = sseclient.SSEClient(response)
+
+        for event in client.events():
+            if event.data:
+                self.base_client.logger().info("Loading data from SSE stream")
+                configs = Prefab.Configs.FromString(base64.b64decode(event.data))
+                self.load_configs(configs, "sse_streaming")
 
     def checkpointing_loop(self):
         while True:

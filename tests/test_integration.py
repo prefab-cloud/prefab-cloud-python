@@ -55,7 +55,6 @@ def run_test(
                 client.get(key, context=context)
                 assert expected["message"] in str(exception)
         else:
-            print(context)
             assert client.get(
                 key, default=default, context=context
             ) == expected_modifier(expected["value"])

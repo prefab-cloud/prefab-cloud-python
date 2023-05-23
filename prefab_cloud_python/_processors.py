@@ -33,16 +33,29 @@ def clean_event_dict(_, __, event_dict):
     event_dict.pop("config_client")
     event_dict.pop("log_prefix")
     event_dict.pop("log_boundary")
+    event_dict.pop("log_path_collector")
+    if "skip_collector" in event_dict:
+        event_dict.pop("skip_collector")
+    if "internal_path" in event_dict:
+        event_dict.pop("internal_path")
     return event_dict
 
 
 def set_location(_, __, event_dict):
-    event_dict["location"] = get_path(
-        event_dict["pathname"],
-        event_dict["func_name"],
-        event_dict["log_prefix"],
-        event_dict["log_boundary"],
-    )
+    if "internal_path" in event_dict:
+        if event_dict["internal_path"]:
+            event_dict["location"] = (
+                "cloud.prefab.client.python.%s" % event_dict["internal_path"]
+            )
+        else:
+            event_dict["location"] = "cloud.prefab.client.python"
+    else:
+        event_dict["location"] = get_path(
+            event_dict["pathname"],
+            event_dict["func_name"],
+            event_dict["log_prefix"],
+            event_dict["log_boundary"],
+        )
     return event_dict
 
 
@@ -55,6 +68,10 @@ def log_or_drop(_, method, event_dict):
     if closest_log_level > called_method_level:
         raise DropEvent
 
+    if event_dict["log_path_collector"] and not event_dict["skip_collector"]:
+        event_dict["log_path_collector"].push(
+            event_dict["location"], Prefab.LogLevel.Name(called_method_level)
+        )
     return event_dict
 
 

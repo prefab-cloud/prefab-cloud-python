@@ -25,9 +25,10 @@ class ConfigLoader:
             self.api_config.pop(config.key)
         else:
             if existing_config:
-                self.base_client.logger().debug(
+                self.base_client.logger.log_internal(
+                    "debug",
                     "Replace %s with value from %s %s -> %s"
-                    % (config.key, source, existing_config["config"].id, config.id)
+                    % (config.key, source, existing_config["config"].id, config.id),
                 )
             self.api_config[config.key] = {"source": source, "config": config}
         self.highwater_mark = max([config.id, self.highwater_mark])

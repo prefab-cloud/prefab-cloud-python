@@ -233,3 +233,27 @@ class TestOptionsOnConnectionFailure:
         with extended_env({"PREFAB_DATASOURCES": "LOCAL_ONLY"}):
             options = Options(on_connection_failure="WHATEVER")
             assert options.on_connection_failure == "RETURN"
+
+
+class TestOptionsLogCollection:
+    def test_has_a_default(self):
+        with extended_env({"PREFAB_API_KEY": "2-test-api-key"}):
+            options = Options()
+            assert options.collect_logs is True
+            assert options.collect_max_paths == 1000
+            assert options.collect_sync_interval is None
+
+    def test_can_be_set(self):
+        with extended_env({"PREFAB_API_KEY": "2-test-api-key"}):
+            options = Options(collect_max_paths=100, collect_sync_interval=1000)
+            assert options.collect_max_paths == 100
+            assert options.collect_sync_interval == 1000
+
+    def test_is_zero_if_local_only(self):
+        options = Options(prefab_datasources="LOCAL_ONLY", collect_max_paths=100)
+        assert options.collect_max_paths == 0
+
+    def test_is_zero_if_collect_logs_is_false(self):
+        with extended_env({"PREFAB_API_KEY": "2-test-api-key"}):
+            options = Options(collect_logs=False, collect_max_paths=100)
+            assert options.collect_max_paths == 0

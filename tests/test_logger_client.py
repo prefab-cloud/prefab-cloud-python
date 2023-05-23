@@ -91,7 +91,7 @@ class TestLoggerClient:
         ) == Prefab.LogLevel.Value("WARN")
 
     def test_capture_output(self, client, capsys):
-        logger = client.logger()
+        logger = client.logger
 
         logger.warn("ok")
 
@@ -104,7 +104,7 @@ class TestLoggerClient:
         assert location_pattern.match(captured.out)
 
     def test_no_output_for_lower_log_level(self, client, capsys):
-        logger = client.logger()
+        logger = client.logger
 
         logger.debug("ok")
 
@@ -120,7 +120,7 @@ class TestLoggerClient:
         )
         client = Client(options)
 
-        logger = client.logger()
+        logger = client.logger
 
         logger.warn("ok")
 
@@ -186,7 +186,7 @@ class TestLoggerClient:
         }
         client.config_client().config_resolver.project_env_id = project_env_id
 
-        logger = client.logger()
+        logger = client.logger
 
         with Client.scoped_context({}):
             logger.debug("Test debug")
@@ -298,7 +298,7 @@ class TestLoggerClient:
         }
         client.config_client().config_resolver.project_env_id = project_env_id
 
-        logger = client.logger()
+        logger = client.logger
 
         with Client.scoped_context({}):
             logger.debug("Test debug")

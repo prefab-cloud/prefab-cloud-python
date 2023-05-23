@@ -32,7 +32,8 @@ class FeatureFlagClient:
                 return variant
             return variant.bool
         except Exception:
-            self.base_client.logger().info(
-                f"is_on methods only work for boolean feature flag variants. This feature flag's variant is '{variant}'. Returning False"
+            self.base_client.logger.log_internal(
+                "info",
+                f"is_on methods only work for boolean feature flag variants. This feature flag's variant is '{variant}'. Returning False",
             )
             return False

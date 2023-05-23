@@ -34,10 +34,11 @@ class BootstrappingConfigClient:
 
 
 class LoggerClient:
-    def __init__(self, log_prefix=None, log_boundary=None):
+    def __init__(self, log_prefix=None, log_boundary=None, log_path_collector=None):
         self.log_prefix = log_prefix
         self.log_boundary = log_boundary
         self.config_client = BootstrappingConfigClient()
+        self.log_path_collector = log_path_collector
 
     def debug(self, msg):
         self.configured_logger().debug(msg)
@@ -54,6 +55,12 @@ class LoggerClient:
     def critical(self, msg):
         self.configured_logger().critical(msg)
 
+    def log_internal(self, level, msg, path=None):
+        internal_logger = self.configured_logger().bind(
+            skip_collector=True, internal_path=path
+        )
+        getattr(internal_logger, level)(msg)
+
     def set_config_client(self, config_client):
         self.config_client = config_client
 
@@ -66,4 +73,6 @@ class LoggerClient:
             config_client=self.config_client,
             log_prefix=self.log_prefix,
             log_boundary=self.log_boundary,
+            log_path_collector=self.log_path_collector,
+            skip_collector=False,
         )

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "prefab-cloud-python"
-version = "0.2.0"
+version = "0.2.2"
 description = ""
 authors = ["Michael Berkowitz <michael.berkowitz@gmail.com>"]
 readme = "README.md"
@@ -16,6 +16,7 @@ mmh3 = "^3.0.0"
 urllib3 = "^2.0"
 structlog = "^22.3"
 sseclient-py = "^1.7.2"
+timecop = "^0.5.0dev"
 
 [build-system]
 requires = ["poetry-core"]

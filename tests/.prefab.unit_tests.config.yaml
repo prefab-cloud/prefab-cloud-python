@@ -40,6 +40,7 @@ nested:
 
 log-level:
   prefab.tests: debug
+  prefab_cloud_python.tests.test_log_path_collector: debug
   app:
     _: error
     controller:

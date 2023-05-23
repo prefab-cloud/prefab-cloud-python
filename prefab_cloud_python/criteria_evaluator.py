@@ -64,8 +64,8 @@ class CriteriaEvaluator:
         if criterion.operator == OPS.ALWAYS_TRUE:
             return True
 
-        self.base_client.logger().info(
-            f"Unknown criterion operator {criterion.operator}"
+        self.base_client.logger.log_internal(
+            "info", f"Unknown criterion operator {criterion.operator}"
         )
         return False
 

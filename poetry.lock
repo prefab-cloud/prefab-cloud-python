@@ -374,6 +374,17 @@ tests = ["coverage[toml]", "freezegun (>=0.2.8)", "pretend", "pytest (>=6.0)", "
 typing = ["mypy", "rich", "twisted"]
 
 [[package]]
+name = "timecop"
+version = "0.5.0dev"
+description = "Enables time travel. A port of Ruby's gem of the same name."
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "timecop-0.5.0dev.tar.gz", hash = "sha256:8d8700de00724f947274c53c78af8f52759ef53ad143f721c3e17ac1352a717d"},
+]
+
+[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
@@ -406,4 +417,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">= 3.10, < 4"
-content-hash = "d92d74d7577f7e632a887a5adfe9696ed1efa2788110ce65ca2fded737e33d1e"
+content-hash = "cb22468f282b841d186b4ba88aae43c0f043cb03e8a33851aff7e6c558e38e1e"

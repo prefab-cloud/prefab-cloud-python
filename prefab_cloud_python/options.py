@@ -49,6 +49,9 @@ class Options:
         http_secure=None,
         on_no_default="RAISE",
         on_connection_failure="RETURN",
+        collect_logs=True,
+        collect_max_paths=1000,
+        collect_sync_interval=None,
     ):
         self.prefab_datasources = Options.__validate_datasource(prefab_datasources)
         self.__set_api_key(api_key or os.environ.get("PREFAB_API_KEY"))
@@ -77,6 +80,8 @@ class Options:
         self.__set_url_for_api_cdn()
         self.__set_on_no_default(on_no_default)
         self.__set_on_connection_failure(on_connection_failure)
+        self.__set_log_collection(collect_logs, collect_max_paths, self.is_local_only())
+        self.collect_sync_interval = collect_sync_interval
 
     def is_local_only(self):
         return self.prefab_datasources == "LOCAL_ONLY"
@@ -164,3 +169,10 @@ class Options:
             self.on_connection_failure = input
         else:
             self.on_connection_failure = "RETURN"
+
+    def __set_log_collection(self, collect_logs, collect_max_paths, is_local_only):
+        self.collect_logs = collect_logs
+        if not collect_logs or is_local_only:
+            self.collect_max_paths = 0
+        else:
+            self.collect_max_paths = collect_max_paths

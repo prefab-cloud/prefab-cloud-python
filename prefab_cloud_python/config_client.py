@@ -83,9 +83,7 @@ class ConfigClient:
         self.base_client.logger.log_internal("warn", "No success loading checkpoints")
 
     def start_checkpointing_thread(self):
-        self.checkpointing_thread = threading.Thread(
-            target=self.checkpointing_loop
-        )  # , daemon=True).start()
+        self.checkpointing_thread = threading.Thread(target=self.checkpointing_loop)
         self.checkpointing_thread.daemon = True
         self.checkpointing_thread.start()
 

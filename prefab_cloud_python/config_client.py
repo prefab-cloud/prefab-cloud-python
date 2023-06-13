@@ -62,6 +62,12 @@ class ConfigClient:
 
     def get(self, key, default="NO_DEFAULT_PROVIDED", context=Context.get_current()):
         value = self.__get(key, None, {}, context=context)
+
+        if isinstance(context, Context):
+            self.base_client.context_shape_aggregator.push(context)
+        elif not isinstance(context, str):
+            self.base_client.context_shape_aggregator.push(Context(context))
+
         if value is not None:
             return ConfigValueUnwrapper.unwrap(value, key, context)
         else:
@@ -69,17 +75,18 @@ class ConfigClient:
 
     def __get(self, key, lookup_key, properties, context=Context.get_current()):
         try:
-            with self.init_lock.read_locked():
-                return self.config_resolver.get(key, context=context)
+            self.init_lock.acquire_read(self.options.connection_timeout_seconds)
         except Exception:
             if self.options.on_connection_failure == "RAISE":
                 raise InitializationTimeoutException(
                     self.options.connection_timeout_seconds, key
                 )
-            self.base_client.logger.warn(
-                f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have."
+            self.base_client.logger.log_internal(
+                "warn",
+                f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have.",
             )
             self.init_lock.release_write()
+        finally:
             return self.config_resolver.get(key, context=context)
 
     def handle_default(self, key, default):

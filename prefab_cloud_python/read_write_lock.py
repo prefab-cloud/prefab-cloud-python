@@ -1,4 +1,5 @@
 import threading
+from contextlib import contextmanager
 
 
 # source: https://www.oreilly.com/library/view/python-cookbook/0596001673/ch06s04.html
@@ -29,6 +30,15 @@ class ReadWriteLock:
                 self._read_ready.notify_all()
         finally:
             self._read_ready.release()
+
+    @contextmanager
+    def read_locked(self):
+        """This method is designed to be used via the `with` statement."""
+        try:
+            self.acquire_read()
+            yield
+        finally:
+            self.release_read()
 
     def acquire_write(self):
         """Acquire a write lock. Blocks until there are no

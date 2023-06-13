@@ -68,7 +68,19 @@ class ConfigClient:
             return self.handle_default(key, default)
 
     def __get(self, key, lookup_key, properties, context=Context.get_current()):
-        return self.config_resolver.get(key, context=context)
+        try:
+            with self.init_lock.read_locked():
+                return self.config_resolver.get(key, context=context)
+        except Exception:
+            if self.options.on_connection_failure == "RAISE":
+                raise InitializationTimeoutException(
+                    self.options.connection_timeout_seconds, key
+                )
+            self.base_client.logger().warn(
+                f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have."
+            )
+            self.init_lock.release_write()
+            return self.config_resolver.get(key, context=context)
 
     def handle_default(self, key, default):
         if default != "NO_DEFAULT_PROVIDED":
@@ -164,6 +176,7 @@ class ConfigClient:
             return
         self.base_client.logger.log_internal("info", f"Unlocked config via {source}")
         self.init_lock.release_write()
+        self.base_client.logger.set_config_client(self)
 
     @functools.cache
     def grpc_channel(self):

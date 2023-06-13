@@ -30,11 +30,16 @@ class Client:
         self.api_url = options.prefab_api_url
         self.grpc_url = options.prefab_grpc_url
         if options.is_local_only():
-            self.logger.info("Prefab running in local-only mode")
+            self.logger.log_internal("info", "Prefab running in local-only mode")
         else:
-            self.logger.info(
+            self.logger.log_internal(
+                "info",
                 "Prefab connecting to %s and %s, secure %s"
-                % (options.prefab_api_url, options.prefab_grpc_url, options.http_secure)
+                % (
+                    options.prefab_api_url,
+                    options.prefab_grpc_url,
+                    options.http_secure,
+                ),
             )
 
         self.context().clear()
@@ -79,7 +84,6 @@ class Client:
     @functools.cache
     def config_client(self):
         client = ConfigClient(self, timeout=5.0)
-        self.logger.set_config_client(client)
         return client
 
     @functools.cache

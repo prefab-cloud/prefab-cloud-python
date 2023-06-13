@@ -2,7 +2,8 @@ import functools
 from .context import Context
 from .config_client import ConfigClient
 from .feature_flag_client import FeatureFlagClient
-from .log_path_collector import LogPathCollector
+from .context_shape_aggregator import ContextShapeAggregator
+from .log_path_aggregator import LogPathAggregator
 from .logger_client import LoggerClient
 import base64
 import prefab_pb2 as Prefab
@@ -18,14 +19,22 @@ class Client:
     def __init__(self, options):
         self.options = options
         self.instance_hash = str(uuid.uuid4())
-        self.log_path_collector = LogPathCollector(
+        self.log_path_aggregator = LogPathAggregator(
             self, self.options.collect_max_paths, self.options.collect_sync_interval
         )
         self.logger = LoggerClient(
-            self.options.log_prefix, self.options.log_boundary, self.log_path_collector
+            self.options.log_prefix, self.options.log_boundary, self.log_path_aggregator
         )
-        self.log_path_collector.client = self
-        self.log_path_collector.start_periodic_sync()
+        self.log_path_aggregator.client = self
+
+        self.context_shape_aggregator = ContextShapeAggregator(
+            self, self.options.collect_max_shapes, self.options.collect_sync_interval
+        )
+
+        if not options.is_local_only():
+            self.log_path_aggregator.start_periodic_sync()
+            self.context_shape_aggregator.start_periodic_sync()
+
         self.namespace = options.namespace
         self.api_url = options.prefab_api_url
         self.grpc_url = options.prefab_grpc_url

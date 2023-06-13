@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.5.0] - 2023-06-24
+
+- Add ContextShape and ContextShapeAggregator
+- Rename LogPathCollector to LogPathAggregator
+
 ## [0.4.0] - 2023-06-24
 
 - Better handling for non-valid yaml in YamlParser

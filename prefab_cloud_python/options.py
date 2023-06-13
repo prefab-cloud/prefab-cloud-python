@@ -51,6 +51,7 @@ class Options:
         on_connection_failure="RETURN",
         collect_logs=True,
         collect_max_paths=1000,
+        collect_max_shapes=10_000,
         collect_sync_interval=None,
     ):
         self.prefab_datasources = Options.__validate_datasource(prefab_datasources)
@@ -82,6 +83,7 @@ class Options:
         self.__set_on_connection_failure(on_connection_failure)
         self.__set_log_collection(collect_logs, collect_max_paths, self.is_local_only())
         self.collect_sync_interval = collect_sync_interval
+        self.collect_max_shapes = collect_max_shapes
 
     def is_local_only(self):
         return self.prefab_datasources == "LOCAL_ONLY"

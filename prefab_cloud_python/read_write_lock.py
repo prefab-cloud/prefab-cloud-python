@@ -12,10 +12,10 @@ class ReadWriteLock:
         self._readers = 0
         self._write_locked = False
 
-    def acquire_read(self):
+    def acquire_read(self, timeout=1):
         """Acquire a read lock. Blocks only if a thread has
         acquired the write lock."""
-        self._read_ready.acquire()
+        self._read_ready.acquire(timeout)
         try:
             self._readers += 1
         finally:

@@ -5,7 +5,7 @@ import time
 import timecop
 
 
-class TestLogPathCollection:
+class TestLogPathAggregator:
     def test_sync(self):
         with timecop.freeze(time.time()):
             options = Options(
@@ -15,6 +15,7 @@ class TestLogPathCollection:
                 prefab_envs=["unit_tests"],
                 prefab_config_classpath_dir="tests",
                 namespace="this.is.a.namespace",
+                connection_timeout_seconds=0,
                 log_boundary="..",
             )
             client = Client(options)
@@ -33,14 +34,14 @@ class TestLogPathCollection:
 
             client.post = funcType(new_post, client)
 
-            client.log_path_collector.sync()
+            client.log_path_aggregator.sync()
 
             assert requests == [
                 "/api/v1/known-loggers",
                 Prefab.Loggers(
                     loggers=[
                         Prefab.Logger(
-                            logger_name="prefab_cloud_python.tests.test_log_path_collector.test_sync",
+                            logger_name="prefab_cloud_python.tests.test_log_path_aggregator.test_sync",
                             infos=2,
                             errors=3,
                         )

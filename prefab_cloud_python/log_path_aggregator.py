@@ -4,7 +4,7 @@ import prefab_pb2 as Prefab
 import threading
 
 
-class LogPathCollector:
+class LogPathAggregator:
     def __init__(self, client, max_paths, sync_interval):
         self.client = client
         self.max_paths = max_paths

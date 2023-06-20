@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.2] - 2023-06-20
+
+- Allow using latest urllib 1.x version to avoid forcing users to upgrade to urllib 2+
+
 ## [0.3.1] - 2023-06-12
 
 - Ensure `LoggerClient.config_client` is not set until the config client has initialized successfully

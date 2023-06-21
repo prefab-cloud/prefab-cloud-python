@@ -71,7 +71,8 @@ class ConfigClient:
         try:
             with self.init_lock.read_locked():
                 return self.config_resolver.get(key, context=context)
-        except Exception:
+        except Exception as e:
+            self.base_client.logger.error("caught one")
             if self.options.on_connection_failure == "RAISE":
                 raise InitializationTimeoutException(
                     self.options.connection_timeout_seconds, key
@@ -79,7 +80,8 @@ class ConfigClient:
             self.base_client.logger.warn(
                 f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have."
             )
-            self.init_lock.release_write()
+            if self.init_lock._write_locked:
+                self.init_lock.release_write()  # TODO: should we even be unlocking?
             return self.config_resolver.get(key, context=context)
 
     def handle_default(self, key, default):

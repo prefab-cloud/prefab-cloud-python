@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Better handling for non-valid yaml in YamlParser
+
 ## [0.3.3] - 2023-06-21
 
 - Move `pytest` and `timecop` to dev dependencies

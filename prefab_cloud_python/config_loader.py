@@ -53,14 +53,12 @@ class ConfigLoader:
         loaded_config = {}
         for env in envs:
             loaded_config.update(
-                ConfigLoader.__load_glob(
-                    os.path.join(dir, ".prefab.%s.config.yaml" % env)
-                )
+                self.__load_glob(os.path.join(dir, ".prefab.%s.config.yaml" % env))
             )
         return loaded_config
 
-    def __load_glob(filepath):
+    def __load_glob(self, filepath):
         rtn = {}
         for file in glob.glob(filepath):
-            rtn = rtn | YamlParser(file).data
+            rtn = rtn | YamlParser(file, self.base_client).data
         return rtn

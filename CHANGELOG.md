@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Better handling for non-valid yaml in YamlParser
+- Switch to using https://buf.build/ for generating protos
 
 ## [0.3.3] - 2023-06-21
 

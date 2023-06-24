@@ -1,3 +1,6 @@
 #!/usr/bin/env bash
+
+# https://buf.build/docs/installation
+
 cp ../prefab-cloud/prefab.proto .
-python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. ./prefab.proto
+buf generate

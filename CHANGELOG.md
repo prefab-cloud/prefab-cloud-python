@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [0.4.0] - 2023-06-24
 
 - Better handling for non-valid yaml in YamlParser
 - Switch to using https://buf.build/ for generating protos

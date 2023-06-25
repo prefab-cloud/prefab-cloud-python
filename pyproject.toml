@@ -24,6 +24,7 @@ sseclient-py = "^1.7.2"
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.1"
 timecop = "^0.5.0dev"
+mypy = "^1.4.1"
 
 [build-system]
 requires = ["poetry-core"]

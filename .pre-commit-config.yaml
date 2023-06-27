@@ -49,3 +49,5 @@ repos:
         additional_dependencies:
           - types-protobuf
           - types-pyyaml
+          - types-requests
+          - google-api-python-client

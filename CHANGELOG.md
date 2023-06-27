@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unpublished]
+
+- Migrate from a direct dependency on `urllib3` to using `requests`
+
 ## [0.5.0] - 2023-06-24
 
 - Add ContextShape and ContextShapeAggregator

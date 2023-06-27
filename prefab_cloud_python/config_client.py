@@ -7,7 +7,7 @@ from .context import Context
 import grpc
 import threading
 import time
-import urllib3
+import requests
 import sseclient
 import base64
 import prefab_pb2 as Prefab
@@ -116,12 +116,10 @@ class ConfigClient:
         auth = "%s:%s" % ("authuser", self.options.api_key)
         token = base64.b64encode(auth.encode("utf-8")).decode("ascii")
         headers = {
-            "x-prefab-start-at-id": self.config_loader.highwater_mark,
+            "x-prefab-start-at-id": f"{self.config_loader.highwater_mark}",
             "Authorization": "Basic %s" % token,
         }
-        response = urllib3.PoolManager().request(
-            "GET", url, headers=headers, preload_content=False
-        )
+        response = self.base_client.session.get(url, headers=headers, stream=True)
 
         client = sseclient.SSEClient(response)
 
@@ -146,15 +144,15 @@ class ConfigClient:
         auth = "%s:%s" % ("authuser", self.options.api_key)
         token = base64.b64encode(auth.encode("utf-8")).decode("ascii")
         headers = {"Authorization": "Basic %s" % token}
-        response = urllib3.PoolManager().request("GET", url, headers=headers)
-        if response.status == 200:
-            configs = Prefab.Configs.FromString(response.data)
+        response = requests.get(url, headers=headers)
+        if response.ok:
+            configs = Prefab.Configs.FromString(response.content)
             self.load_configs(configs, "remote_api_cdn")
             return True
         else:
             self.base_client.logger.log_internal(
                 "info",
-                f"Checkpoint remote_cdn_api failed to load. Response {response.status}",
+                f"Checkpoint remote_cdn_api failed to load. Response {response.status_code}",
             )
             return False
 

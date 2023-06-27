@@ -8,7 +8,7 @@ from .logger_client import LoggerClient
 import base64
 import prefab_pb2 as Prefab
 import uuid
-import urllib3
+import requests
 
 
 class Client:
@@ -38,6 +38,7 @@ class Client:
         self.namespace = options.namespace
         self.api_url = options.prefab_api_url
         self.grpc_url = options.prefab_grpc_url
+        self.session = requests.Session()
         if options.is_local_only():
             self.logger.log_internal("info", "Prefab running in local-only mode")
         else:
@@ -108,7 +109,6 @@ class Client:
             "Accept": "application/x-protobuf",
             "Authorization": f"Basic {auth_token}",
         }
-        pool_manager = urllib3.PoolManager(headers=headers)
 
         endpoint = self.options.prefab_api_url.strip("/") + "/" + path.strip("/")
-        pool_manager.request("POST", endpoint, body=body.SerializeToString())
+        self.session.post(endpoint, headers=headers, data=body.SerializeToString())

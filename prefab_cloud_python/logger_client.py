@@ -3,26 +3,27 @@ import os
 from ._processors import clean_event_dict, set_location, log_or_drop
 
 
-structlog.configure(
-    processors=[
-        structlog.contextvars.merge_contextvars,
-        structlog.processors.add_log_level,
-        structlog.processors.StackInfoRenderer(),
-        structlog.dev.set_exc_info,
-        structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S", utc=False),
-        structlog.processors.CallsiteParameterAdder(
-            [
-                structlog.processors.CallsiteParameter.PATHNAME,
-                structlog.processors.CallsiteParameter.FUNC_NAME,
-            ],
-            additional_ignores=["prefab_cloud_python.logger_client"],
-        ),
-        set_location,
-        log_or_drop,
-        clean_event_dict,
-        structlog.dev.ConsoleRenderer(),
-    ]
-)
+def apply_structlog_config():
+    structlog.configure(
+        processors=[
+            structlog.contextvars.merge_contextvars,
+            structlog.processors.add_log_level,
+            structlog.processors.StackInfoRenderer(),
+            structlog.dev.set_exc_info,
+            structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S", utc=False),
+            structlog.processors.CallsiteParameterAdder(
+                [
+                    structlog.processors.CallsiteParameter.PATHNAME,
+                    structlog.processors.CallsiteParameter.FUNC_NAME,
+                ],
+                additional_ignores=["prefab_cloud_python.logger_client"],
+            ),
+            set_location,
+            log_or_drop,
+            clean_event_dict,
+            structlog.dev.ConsoleRenderer(),
+        ]
+    )
 
 
 class BootstrappingConfigClient:
@@ -69,6 +70,9 @@ class LoggerClient:
         return event_dict
 
     def configured_logger(self):
+        if not structlog.is_configured():
+            apply_structlog_config()
+
         return structlog.get_logger().bind(
             config_client=self.config_client,
             log_prefix=self.log_prefix,

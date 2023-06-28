@@ -1,6 +1,6 @@
 import structlog
 import os
-from ._processors import clean_event_dict, set_location, log_or_drop
+from ._processors import clean_event_dict, set_location
 
 
 def apply_structlog_config():
@@ -19,7 +19,7 @@ def apply_structlog_config():
                 additional_ignores=["prefab_cloud_python.logger_client"],
             ),
             set_location,
-            log_or_drop,
+            # log_or_drop,
             clean_event_dict,
             structlog.dev.ConsoleRenderer(),
         ]

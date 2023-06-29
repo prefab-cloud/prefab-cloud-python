@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- Configure `structlog` for the LoggerClient less eagerly
+
 ## [0.5.1] - 2023-06-28
 
 - Migrate from a direct dependency on `urllib3` to using `requests`

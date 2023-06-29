@@ -2,27 +2,24 @@ import structlog
 import os
 from ._processors import clean_event_dict, set_location, log_or_drop
 
-
-structlog.configure(
-    processors=[
-        structlog.contextvars.merge_contextvars,
-        structlog.processors.add_log_level,
-        structlog.processors.StackInfoRenderer(),
-        structlog.dev.set_exc_info,
-        structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S", utc=False),
-        structlog.processors.CallsiteParameterAdder(
-            [
-                structlog.processors.CallsiteParameter.PATHNAME,
-                structlog.processors.CallsiteParameter.FUNC_NAME,
-            ],
-            additional_ignores=["prefab_cloud_python.logger_client"],
-        ),
-        set_location,
-        log_or_drop,
-        clean_event_dict,
-        structlog.dev.ConsoleRenderer(),
-    ]
-)
+PROCESSORS = [
+    structlog.contextvars.merge_contextvars,
+    structlog.processors.add_log_level,
+    structlog.processors.StackInfoRenderer(),
+    structlog.dev.set_exc_info,
+    structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S", utc=False),
+    structlog.processors.CallsiteParameterAdder(
+        [
+            structlog.processors.CallsiteParameter.PATHNAME,
+            structlog.processors.CallsiteParameter.FUNC_NAME,
+        ],
+        additional_ignores=["prefab_cloud_python.logger_client"],
+    ),
+    set_location,
+    log_or_drop,
+    clean_event_dict,
+    structlog.dev.ConsoleRenderer(),
+]
 
 
 class BootstrappingConfigClient:
@@ -39,6 +36,8 @@ class LoggerClient:
         self.log_boundary = log_boundary
         self.config_client = BootstrappingConfigClient()
         self.log_path_aggregator = log_path_aggregator
+        self.base_logger = structlog.get_logger()
+        self.base_logger._processors = PROCESSORS
 
     def debug(self, msg):
         self.configured_logger().debug(msg)
@@ -69,7 +68,7 @@ class LoggerClient:
         return event_dict
 
     def configured_logger(self):
-        return structlog.get_logger().bind(
+        return self.base_logger.bind(
             config_client=self.config_client,
             log_prefix=self.log_prefix,
             log_boundary=self.log_boundary,

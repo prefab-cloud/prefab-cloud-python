@@ -10,6 +10,8 @@ import prefab_pb2 as Prefab
 import uuid
 import requests
 
+REQUEST_TIMEOUT = 5
+
 
 class Client:
     max_sleep_sec = 10
@@ -103,4 +105,9 @@ class Client:
         }
 
         endpoint = self.options.prefab_api_url.strip("/") + "/" + path.strip("/")
-        self.session.post(endpoint, headers=headers, data=body.SerializeToString())
+        self.session.post(
+            endpoint,
+            headers=headers,
+            data=body.SerializeToString(),
+            timeout=REQUEST_TIMEOUT,
+        )

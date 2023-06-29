@@ -6,11 +6,10 @@ import google
 
 OPS = Prefab.Criterion.CriterionOperator
 
-logger = logging.getLogger()
-
 
 class CriteriaEvaluator:
     def __init__(self, config, project_env_id, resolver, base_client):
+        self.logger = logging.getLogger()
         self.config = config
         self.project_env_id = project_env_id
         self.resolver = resolver
@@ -68,7 +67,7 @@ class CriteriaEvaluator:
         if criterion.operator == OPS.ALWAYS_TRUE:
             return True
 
-        logger.info(f"Unknown criterion operator {criterion.operator}")
+        self.logger.info(f"Unknown criterion operator {criterion.operator}")
         return False
 
     def matches(self, criterion, value, properties):

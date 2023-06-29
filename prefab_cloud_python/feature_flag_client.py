@@ -1,8 +1,4 @@
-import logging
-
 from .context import Context
-
-logger = logging.getLogger()
 
 
 class FeatureFlagClient:
@@ -36,7 +32,7 @@ class FeatureFlagClient:
                 return variant
             return variant.bool
         except Exception:
-            logger.info(
+            self.logger.info(
                 f"is_on methods only work for boolean feature flag variants. This feature flag's variant is '{variant}'. Returning False",
             )
             return False

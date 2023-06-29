@@ -10,8 +10,6 @@ import prefab_pb2 as Prefab
 import uuid
 import requests
 
-logger = logging.getLogger()
-
 
 class Client:
     max_sleep_sec = 10
@@ -19,6 +17,7 @@ class Client:
     no_default_provided = "NO_DEFAULT_PROVIDED"
 
     def __init__(self, options):
+        self.logger = logging.getLogger()
         self.options = options
         self.instance_hash = str(uuid.uuid4())
 
@@ -34,9 +33,9 @@ class Client:
         self.grpc_url = options.prefab_grpc_url
         self.session = requests.Session()
         if options.is_local_only():
-            logger.info("Prefab running in local-only mode")
+            self.logger.info("Prefab running in local-only mode")
         else:
-            logger.info(
+            self.logger.info(
                 "Prefab connecting to %s and %s, secure %s"
                 % (
                     options.prefab_api_url,

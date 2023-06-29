@@ -4,11 +4,10 @@ import os
 from .yaml_parser import YamlParser
 import prefab_pb2 as Prefab
 
-logger = logging.getLogger()
-
 
 class ConfigLoader:
     def __init__(self, base_client):
+        self.logger = logging.getLogger()
         self.base_client = base_client
         self.options = base_client.options
         self.highwater_mark = 0
@@ -28,7 +27,7 @@ class ConfigLoader:
             self.api_config.pop(config.key)
         else:
             if existing_config:
-                logger.debug(
+                self.logger.debug(
                     "Replace %s with value from %s %s -> %s"
                     % (config.key, source, existing_config["config"].id, config.id),
                 )

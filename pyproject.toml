@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "prefab-cloud-python"
-version = "0.5.0"
+version = "0.5.1"
 description = "Python client for Prefab Feature Flags, Dynamic log levels, and Config as a Service: https://www.prefab.cloud"
 license = "MIT"
 authors = ["Michael Berkowitz <michael.berkowitz@gmail.com>"]

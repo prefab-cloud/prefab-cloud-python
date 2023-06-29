@@ -1,6 +1,5 @@
 from prefab_cloud_python import Options, Client
 from prefab_cloud_python.config_client import MissingDefaultException
-import prefab_pb2 as Prefab
 import pytest
 
 
@@ -12,7 +11,6 @@ class TestConfigClient:
         assert config_client.get("sample_int") == 123
         assert config_client.get("sample_double") == 12.12
         assert config_client.get("sample_bool")
-        assert config_client.get("log-level.app") == Prefab.LogLevel.Value("ERROR")
 
     def test_get_with_default(self):
         config_client = self.build_config_client()

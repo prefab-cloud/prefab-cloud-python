@@ -1,3 +1,5 @@
+import logging
+
 from .config_loader import ConfigLoader
 from .config_resolver import ConfigResolver
 from .read_write_lock import ReadWriteLock
@@ -12,6 +14,8 @@ import sseclient
 import base64
 import prefab_pb2 as Prefab
 import functools
+
+logger = logging.getLogger()
 
 
 class InitializationTimeoutException(Exception):
@@ -32,7 +36,7 @@ If you'd prefer returning `None` rather than raising when this occurs, modify th
 
 class ConfigClient:
     def __init__(self, base_client, timeout):
-        base_client.logger.log_internal("info", "Initializing ConfigClient")
+        logger.info("Initializing ConfigClient")
         self.base_client = base_client
         self.options = base_client.options
         self.timeout = timeout
@@ -45,13 +49,9 @@ class ConfigClient:
         self.config_loader = ConfigLoader(base_client)
         self.config_resolver = ConfigResolver(base_client, self.config_loader)
 
-        self.base_client.logger.log_internal(
-            "debug", "Initialize ConfigClient: acquire write lock"
-        )
+        logger.debug("Initialize ConfigClient: acquire write lock")
         self.init_lock.acquire_write()
-        self.base_client.logger.log_internal(
-            "debug", "Initialize ConfigClient: acquired write lock"
-        )
+        logger.debug("Initialize ConfigClient: acquired write lock")
 
         if self.options.is_local_only():
             self.finish_init("local only")
@@ -81,9 +81,8 @@ class ConfigClient:
                 raise InitializationTimeoutException(
                     self.options.connection_timeout_seconds, key
                 )
-            self.base_client.logger.log_internal(
-                "warn",
-                f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have.",
+            logger.warn(
+                f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have."
             )
             self.init_lock.release_write()
         finally:
@@ -99,7 +98,7 @@ class ConfigClient:
     def load_checkpoint(self):
         if self.load_checkpoint_from_api_cdn():
             return
-        self.base_client.logger.log_internal("warn", "No success loading checkpoints")
+        logger.warning("No success loading checkpoints")
 
     def start_checkpointing_thread(self):
         self.checkpointing_thread = threading.Thread(target=self.checkpointing_loop)
@@ -125,9 +124,7 @@ class ConfigClient:
 
         for event in client.events():
             if event.data:
-                self.base_client.logger.log_internal(
-                    "info", "Loading data from SSE stream"
-                )
+                logger.info("Loading data from SSE stream")
                 configs = Prefab.Configs.FromString(base64.b64decode(event.data))
                 self.load_configs(configs, "sse_streaming")
 
@@ -137,7 +134,7 @@ class ConfigClient:
                 self.load_checkpoint()
                 time.sleep(self.checkpoint_freq_secs)
             except Exception:
-                self.base_client.logger.log_internal("info", "Issue Checkpointing")
+                logger.info("Issue Checkpointing")
 
     def load_checkpoint_from_api_cdn(self):
         url = "%s/api/v1/configs/0" % self.options.url_for_api_cdn
@@ -150,8 +147,7 @@ class ConfigClient:
             self.load_configs(configs, "remote_api_cdn")
             return True
         else:
-            self.base_client.logger.log_internal(
-                "info",
+            logger.info(
                 f"Checkpoint remote_cdn_api failed to load. Response {response.status_code}",
             )
             return False
@@ -164,14 +160,12 @@ class ConfigClient:
         for config in configs.configs:
             self.config_loader.set(config, source)
         if self.config_loader.highwater_mark > starting_highwater_mark:
-            self.base_client.logger.log_internal(
-                "info",
-                f"Found new checkpoint with highwater id {self.config_loader.highwater_mark} from {source} in project {project_id} environment: {project_env_id} and namespace {self.base_client.options.namespace}",
+            logger.info(
+                f"Found new checkpoint with highwater id {self.config_loader.highwater_mark} from {source} in project {project_id} environment: {project_env_id} and namespace {self.base_client.options.namespace}"
             )
         else:
-            self.base_client.logger.log_internal(
-                "debug",
-                f"Checkpoint with highwater id {self.config_loader.highwater_mark} from {source}. No changes.",
+            logger.debug(
+                f"Checkpoint with highwater id {self.config_loader.highwater_mark} from {source}. No changes."
             )
         self.config_resolver.update()
         self.finish_init(source)
@@ -179,9 +173,8 @@ class ConfigClient:
     def finish_init(self, source):
         if not self.init_lock._write_locked:
             return
-        self.base_client.logger.log_internal("info", f"Unlocked config via {source}")
+        logger.info(f"Unlocked config via {source}")
         self.init_lock.release_write()
-        self.base_client.logger.set_config_client(self)
 
     @functools.cache
     def grpc_channel(self):

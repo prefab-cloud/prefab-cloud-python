@@ -1,7 +1,10 @@
 import glob
+import logging
 import os
 from .yaml_parser import YamlParser
 import prefab_pb2 as Prefab
+
+logger = logging.getLogger()
 
 
 class ConfigLoader:
@@ -25,8 +28,7 @@ class ConfigLoader:
             self.api_config.pop(config.key)
         else:
             if existing_config:
-                self.base_client.logger.log_internal(
-                    "debug",
+                logger.debug(
                     "Replace %s with value from %s %s -> %s"
                     % (config.key, source, existing_config["config"].id, config.id),
                 )

@@ -1,5 +1,9 @@
+import logging
+
 from .config_parser import ConfigParser
 import yaml
+
+logger = logging.getLogger()
 
 
 class YamlParser:
@@ -23,7 +27,5 @@ class YamlParser:
                 self.data = config
         except FileNotFoundError:
             if self.base_client:
-                self.base_client.logger.log_internal(
-                    "warn", f"YamlParser could not find {self.filename} to parse"
-                )
+                logger.warning(f"YamlParser could not find {self.filename} to parse")
             return

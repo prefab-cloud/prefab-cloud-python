@@ -1,8 +1,12 @@
+import logging
+
 from .config_value_unwrapper import ConfigValueUnwrapper
 import prefab_pb2 as Prefab
 import google
 
 OPS = Prefab.Criterion.CriterionOperator
+
+logger = logging.getLogger()
 
 
 class CriteriaEvaluator:
@@ -64,9 +68,7 @@ class CriteriaEvaluator:
         if criterion.operator == OPS.ALWAYS_TRUE:
             return True
 
-        self.base_client.logger.log_internal(
-            "info", f"Unknown criterion operator {criterion.operator}"
-        )
+        logger.info(f"Unknown criterion operator {criterion.operator}")
         return False
 
     def matches(self, criterion, value, properties):

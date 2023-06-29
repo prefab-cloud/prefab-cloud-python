@@ -1,7 +1,11 @@
+import logging
+
 from .context_shape import ContextShape
 import prefab_pb2 as Prefab
 import time
 import threading
+
+logger = logging.getLogger()
 
 
 class ContextShapeAggregator:
@@ -34,17 +38,13 @@ class ContextShapeAggregator:
 
     def sync(self):
         if len(self.data) > 0:
-            self.client.logger.log_internal(
-                "debug", "Syncing %s shapes" % len(self.data)
-            )
+            logger.debug("Syncing %s shapes" % len(self.data))
             self.flush()
 
     def flush(self):
         to_ship = self.prepare_data()
 
-        self.client.logger.log_internal(
-            "debug", "Uploading stats for %s context shapes" % len(to_ship)
-        )
+        logger.debug("Uploading stats for %s context shapes" % len(to_ship))
 
         shapes = []
         for name in sorted(to_ship.keys()):
@@ -59,9 +59,8 @@ class ContextShapeAggregator:
         self.sync_thread.start()
 
     def sync_loop(self):
-        self.client.logger.log_internal(
-            "debug",
-            f"Initialized context shape collection instance_hash={self.client.instance_hash} max_shapes={self.max_shapes}",
+        logger.debug(
+            f"Initialized context shape collection instance_hash={self.client.instance_hash} max_shapes={self.max_shapes}"
         )
         while True:
             time.sleep(self.sync_interval)

@@ -1,7 +1,5 @@
 import prefab_pb2 as Prefab
 
-from prefab_cloud_python._processors import LOG_LEVEL_BASE_KEY
-
 
 class MissingFeatureFlagValueException(Exception):
     "Raised when a feature flag is missing a value"
@@ -111,11 +109,7 @@ class ConfigParser:
 
     def value_from(key, value):
         if isinstance(value, str):
-            if key.startswith(LOG_LEVEL_BASE_KEY):
-                log_level = ConfigParser.parse_log_level(value)
-                return {"log_level": log_level}
-            else:
-                return {"string": value}
+            return {"string": value}
         elif isinstance(value, bool):
             return {"bool": value}
         elif isinstance(value, int):
@@ -127,11 +121,7 @@ class ConfigParser:
 
     def feature_flag_variant_from(key, value):
         if isinstance(value, str):
-            if key.startswith(LOG_LEVEL_BASE_KEY):
-                log_level = ConfigParser.parse_log_level(value)
-                return Prefab.ConfigValue(log_level=log_level)
-            else:
-                return Prefab.ConfigValue(string=value)
+            return Prefab.ConfigValue(string=value)
         elif isinstance(value, bool):
             return Prefab.ConfigValue(bool=value)
         elif isinstance(value, int):

@@ -17,28 +17,6 @@ class TestConfigLoader:
         )
         self.assert_correct_config(loader, "nested.values", "string", "top level")
 
-        self.assert_correct_config(
-            loader, "log-level.app", "log_level", Prefab.LogLevel.Value("ERROR")
-        )
-        self.assert_correct_config(
-            loader,
-            "log-level.app.controller.hello",
-            "log_level",
-            Prefab.LogLevel.Value("WARN"),
-        )
-        self.assert_correct_config(
-            loader,
-            "log-level.app.controller.hello.index",
-            "log_level",
-            Prefab.LogLevel.Value("INFO"),
-        )
-        self.assert_correct_config(
-            loader,
-            "log-level.invalid",
-            "log_level",
-            Prefab.LogLevel.Value("NOT_SET_LOG_LEVEL"),
-        )
-
     def test_calc_config_without_unit_tests(self):
         options = Options(
             prefab_config_classpath_dir="tests", prefab_datasources="LOCAL_ONLY"

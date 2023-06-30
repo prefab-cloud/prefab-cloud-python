@@ -50,3 +50,4 @@ repos:
           - types-protobuf
           - types-pyyaml
           - types-requests
+          - google-api-python-client

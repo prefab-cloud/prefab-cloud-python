@@ -7,10 +7,10 @@ from .log_path_aggregator import LogPathAggregator
 from .logger_client import LoggerClient
 from .options import Options
 from typing import Optional
-import base64
 import prefab_pb2 as Prefab
 import uuid
 import requests
+from urllib.parse import urljoin
 
 
 ConfigValueType = Optional[int | float | bool | str | list[str]]
@@ -113,19 +113,17 @@ class Client:
     def feature_flag_client(self) -> FeatureFlagClient:
         return FeatureFlagClient(self)
 
-    def post(self, path: str, body: PostBodyType) -> None:
-        auth = "%s:%s" % ("authuser", self.options.api_key)
-        auth_token = base64.b64encode(auth.encode("utf-8")).decode("ascii")
-
+    def post(self, path: str, body: PostBodyType) -> requests.models.Response:
         headers = {
             "Content-Type": "application/x-protobuf",
             "Accept": "application/x-protobuf",
-            "Authorization": f"Basic {auth_token}",
         }
 
-        endpoint = (
-            self.options.prefab_api_url.strip("/") + "/" + path.strip("/")
-            if self.options.prefab_api_url
-            else ""
+        endpoint = urljoin(self.options.prefab_api_url or "", path)
+
+        return self.session.post(
+            endpoint,
+            headers=headers,
+            data=body.SerializeToString(),
+            auth=("authuser", self.options.api_key or ""),
         )
-        self.session.post(endpoint, headers=headers, data=body.SerializeToString())

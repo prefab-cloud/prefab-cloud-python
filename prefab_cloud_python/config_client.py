@@ -7,7 +7,6 @@ from .context import Context
 import grpc
 import threading
 import time
-import requests
 import sseclient
 import base64
 import prefab_pb2 as Prefab
@@ -113,13 +112,12 @@ class ConfigClient:
 
     def streaming_loop(self):
         url = "%s/api/v1/sse/config" % self.options.prefab_api_url
-        auth = "%s:%s" % ("authuser", self.options.api_key)
-        token = base64.b64encode(auth.encode("utf-8")).decode("ascii")
         headers = {
             "x-prefab-start-at-id": f"{self.config_loader.highwater_mark}",
-            "Authorization": "Basic %s" % token,
         }
-        response = self.base_client.session.get(url, headers=headers, stream=True)
+        response = self.base_client.session.get(
+            url, headers=headers, stream=True, auth=("authuser", self.options.apk_key)
+        )
 
         client = sseclient.SSEClient(response)
 
@@ -141,10 +139,9 @@ class ConfigClient:
 
     def load_checkpoint_from_api_cdn(self):
         url = "%s/api/v1/configs/0" % self.options.url_for_api_cdn
-        auth = "%s:%s" % ("authuser", self.options.api_key)
-        token = base64.b64encode(auth.encode("utf-8")).decode("ascii")
-        headers = {"Authorization": "Basic %s" % token}
-        response = requests.get(url, headers=headers)
+        response = self.base_client.session.get(
+            url, auth=("authuser", self.options.api_key)
+        )
         if response.ok:
             configs = Prefab.Configs.FromString(response.content)
             self.load_configs(configs, "remote_api_cdn")

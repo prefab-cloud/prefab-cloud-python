@@ -33,13 +33,11 @@ class LoggerFilter:
         self.prefix = prefix
 
     def filter(self, record):
-        path = self.get_path(
-            record.pathname, record.funcName, self.prefix, self.log_boundary
-        )
+        path = self.get_path(record.pathname, record.funcName)
         record.msg = "{path}: {msg}".format(path=path, msg=record.getMessage())
         return self.should_log_message(record, path)
 
-    def get_path(self, path, func_name):  # , prefix=None, log_boundary=None):
+    def get_path(self, path, func_name):
         if "site-packages" in path:
             path = path.split("site-packages/")[-1]
         else:

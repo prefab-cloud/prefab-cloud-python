@@ -55,8 +55,11 @@ class Client:
 
         self.context().clear()
         self.config_client()
-        self.logger_filter = LoggerFilter(self.config_client(), prefix=self.options.log_prefix, log_boundary = self.options.log_boundary)
-
+        self.logger_filter = LoggerFilter(
+            self.config_client(),
+            prefix=self.options.log_prefix,
+            log_boundary=self.options.log_boundary,
+        )
 
     def get(self, key, default="NO_DEFAULT_PROVIDED", context="NO_CONTEXT_PROVIDED"):
         if self.is_ff(key):

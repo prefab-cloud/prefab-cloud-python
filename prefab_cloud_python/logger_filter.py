@@ -29,22 +29,23 @@ python_to_prefab_log_levels = {
 class LoggerFilter:
     def __init__(self, config_client, log_boundary=None, prefix=None):
         self.config_client = config_client
-        self.log_boundary = log_boundary
+        self.log_boundary = log_boundary or os.environ.get("HOME")
+        self.log_path_aggregator = config_client.base_client.log_path_aggregator
         self.prefix = prefix
 
     def filter(self, record):
-        path = self.get_path(record.pathname, record.funcName)
+        path = self.get_path(os.path.abspath(record.pathname), record.funcName)
         record.msg = "{path}: {msg}".format(path=path, msg=record.getMessage())
+        called_method_level = python_to_prefab_log_levels[record.levelname.lower()]
+        self.log_path_aggregator.push(path, Prefab.LogLevel.Name(called_method_level))
+
         return self.should_log_message(record, path)
 
     def get_path(self, path, func_name):
         if "site-packages" in path:
             path = path.split("site-packages/")[-1]
         else:
-            if self.log_boundary is not None:
-                path = path.replace(self.log_boundary, "")
-            else:
-                path = path.replace(os.environ.get("HOME"), "")
+            path = path.replace(self.log_boundary, "")
             path = [segment for segment in path.split("/") if segment]
             path = ".".join(path)
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.6.0] - 2023-11-14
+
+- Loosen version requirements to allow Python 3.9
+
 ## [0.5.1] - 2023-06-28
 
 - Migrate from a direct dependency on `urllib3` to using `requests`

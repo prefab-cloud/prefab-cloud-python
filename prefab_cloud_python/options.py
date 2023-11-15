@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from urllib.parse import urlparse
+from typing import Optional, Union
 
 
 class MissingApiKeyException(Exception):
@@ -47,25 +48,25 @@ VALID_ON_CONNECTION_FAILURE = ("RETURN", "RAISE")
 class Options:
     def __init__(
         self,
-        api_key: str | None = None,
-        prefab_api_url: str | None = None,
-        prefab_grpc_url: str | None = None,
-        prefab_datasources: str | None = None,
+        api_key: Optional[str] = None,
+        prefab_api_url: Optional[str] = None,
+        prefab_grpc_url: Optional[str] = None,
+        prefab_datasources: Optional[str] = None,
         logdev: str = "STDIO",
-        log_prefix: str | None = None,
-        log_boundary: str | None = None,
+        log_prefix: Optional[str] = None,
+        log_boundary: Optional[str] = None,
         namespace: str = "",
         connection_timeout_seconds: int = 10,
-        prefab_config_override_dir: str | None = os.environ.get("HOME"),
+        prefab_config_override_dir: Optional[str] = os.environ.get("HOME"),
         prefab_config_classpath_dir: str = ".",
         prefab_envs: list[str] = [],
-        http_secure: bool | None = None,
+        http_secure: Optional[bool] = None,
         on_no_default: str = "RAISE",
         on_connection_failure: str = "RETURN",
         collect_logs: bool = True,
         collect_max_paths: int = 1000,
         collect_max_shapes: int = 10_000,
-        collect_sync_interval: int | None = None,
+        collect_sync_interval: Optional[int] = None,
     ) -> None:
         self.prefab_datasources = Options.__validate_datasource(prefab_datasources)
         self.__set_api_key(api_key or os.environ.get("PREFAB_API_KEY"))
@@ -113,7 +114,7 @@ class Options:
                 self.url_for_api_cdn = None  # TODO: should we warn?
 
     @staticmethod
-    def __validate_datasource(datasource: str | None) -> str:
+    def __validate_datasource(datasource: Optional[str]) -> str:
         if os.getenv("PREFAB_DATASOURCES") == "LOCAL_ONLY":
             default = "LOCAL_ONLY"
         else:
@@ -124,7 +125,7 @@ class Options:
         else:
             return default
 
-    def __set_api_key(self, api_key: str | None) -> None:
+    def __set_api_key(self, api_key: Optional[str]) -> None:
         if self.prefab_datasources == "LOCAL_ONLY":
             self.api_key = None
             return
@@ -136,7 +137,7 @@ class Options:
             raise InvalidApiKeyException(api_key)
         self.api_key = api_key
 
-    def __set_api_url(self, api_url: str | None) -> None:
+    def __set_api_url(self, api_url: Optional[str]) -> None:
         if self.prefab_datasources == "LOCAL_ONLY":
             self.prefab_api_url = None
             return
@@ -148,7 +149,7 @@ class Options:
         else:
             raise InvalidApiUrlException(api_url)
 
-    def __set_grpc_url(self, grpc_url: str | None) -> None:
+    def __set_grpc_url(self, grpc_url: Optional[str]) -> None:
         if self.prefab_datasources == "LOCAL_ONLY":
             self.prefab_grpc_url = None
             return
@@ -168,7 +169,7 @@ class Options:
         return all_envs
 
     @staticmethod
-    def __parse_envs(envs: list[str] | str | None) -> list[str]:
+    def __parse_envs(envs: Optional[Union[list[str], str]]) -> list[str]:
         if isinstance(envs, list):
             return envs
         if isinstance(envs, str):

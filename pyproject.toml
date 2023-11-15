@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "prefab-cloud-python"
-version = "0.5.1"
+version = "0.6.0"
 description = "Python client for Prefab Feature Flags, Dynamic log levels, and Config as a Service: https://www.prefab.cloud"
 license = "MIT"
 authors = ["Michael Berkowitz <michael.berkowitz@gmail.com>"]
@@ -12,7 +12,7 @@ documentation = "https://docs.prefab.cloud/docs/python-sdk/python"
 packages = [{include = "prefab_cloud_python"}, {include = "prefab_pb2.py"}, {include = "prefab_pb2_grpc.py"}]
 
 [tool.poetry.dependencies]
-python = ">= 3.10, < 4"
+python = ">= 3.9, < 4"
 grpcio = "^1.51.3"
 grpcio-tools = "^1.51.3"
 pyyaml = "^6.0.0"

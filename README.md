@@ -2,9 +2,9 @@
 
 Python client for prefab.cloud, providing Config, FeatureFlags as a Service
 
-**Note: This library is under active development and not quite ready for production usage**
+**Note: This library is under active development**
 
-[Sign up to be notified when this library releases](https://forms.gle/2qsjMFvjGnkTnA9T8)
+[Sign up to be notified about updates](https://forms.gle/2qsjMFvjGnkTnA9T8)
 
 ## Example usage
 
@@ -31,4 +31,4 @@ result = client.enabled("my-first-feature-flag", context=context)
 print("my-first-feature-flag is:", result)
 ```
 
-See full documentation https://docs.prefab.cloud/docs/python-sdk/python
+See full documentation https://docs.prefab.cloud/docs/sdks/python

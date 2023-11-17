@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "prefab-cloud-python"
-version = "0.6.0"
+version = "0.7.0"
 description = "Python client for Prefab Feature Flags, Dynamic log levels, and Config as a Service: https://www.prefab.cloud"
 license = "MIT"
 authors = ["Michael Berkowitz <michael.berkowitz@gmail.com>"]
@@ -25,6 +25,7 @@ grpcio-tools = ">= 1.48.4"
 pytest = "^7.2.1"
 timecop = "^0.5.0dev"
 mypy = "^1.4.1"
+pre-commit = "^3.5.0"
 
 [build-system]
 requires = ["poetry-core"]

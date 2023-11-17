@@ -63,6 +63,7 @@ class Options:
         http_secure: Optional[bool] = None,
         on_no_default: str = "RAISE",
         on_connection_failure: str = "RETURN",
+        x_use_local_cache: bool = False,
         collect_logs: bool = True,
         collect_max_paths: int = 1000,
         collect_max_shapes: int = 10_000,
@@ -89,6 +90,7 @@ class Options:
         self.prefab_envs = Options.__construct_prefab_envs(prefab_envs)
         self.stats = None
         self.shared_cache = None
+        self.use_local_cache = x_use_local_cache
         self.__set_url_for_api_cdn()
         self.__set_on_no_default(on_no_default)
         self.__set_on_connection_failure(on_connection_failure)
@@ -128,6 +130,7 @@ class Options:
     def __set_api_key(self, api_key: Optional[str]) -> None:
         if self.prefab_datasources == "LOCAL_ONLY":
             self.api_key = None
+            self.api_key_id = "local"
             return
 
         if api_key is None:
@@ -136,6 +139,7 @@ class Options:
         if "-" not in api_key:
             raise InvalidApiKeyException(api_key)
         self.api_key = api_key
+        self.api_key_id = api_key.split("-")[0]
 
     def __set_api_url(self, api_url: Optional[str]) -> None:
         if self.prefab_datasources == "LOCAL_ONLY":

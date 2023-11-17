@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.7.0] - 2023-12-22
+
+- Set and load from local cache when specified
+
 ## [0.6.0] - 2023-11-14
 
 - Loosen version requirements to allow Python 3.9

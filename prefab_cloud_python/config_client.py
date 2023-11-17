@@ -3,6 +3,7 @@ from .config_resolver import ConfigResolver
 from .read_write_lock import ReadWriteLock
 from .config_value_unwrapper import ConfigValueUnwrapper
 from .context import Context
+from google.protobuf.json_format import MessageToJson, Parse
 
 import grpc
 import threading
@@ -12,6 +13,10 @@ import sseclient
 import base64
 import prefab_pb2 as Prefab
 import functools
+import os
+
+
+STALE_CACHE_WARN_HOURS = 5
 
 
 class InitializationTimeoutException(Exception):
@@ -52,6 +57,8 @@ class ConfigClient:
         self.base_client.logger.log_internal(
             "debug", "Initialize ConfigClient: acquired write lock"
         )
+
+        self.set_cache_path()
 
         if self.options.is_local_only():
             self.finish_init("local only")
@@ -148,6 +155,7 @@ class ConfigClient:
         if response.ok:
             configs = Prefab.Configs.FromString(response.content)
             self.load_configs(configs, "remote_api_cdn")
+            self.cache_configs(configs)
             return True
         else:
             self.base_client.logger.log_internal(
@@ -176,12 +184,54 @@ class ConfigClient:
         self.config_resolver.update()
         self.finish_init(source)
 
+    def cache_configs(self, configs):
+        if not self.options.use_local_cache:
+            return
+        with open(self.cache_path, "w") as f:
+            f.write(MessageToJson(configs))
+            self.base_client.logger.log_internal(
+                "debug", f"Cached configs to {self.cache_path}"
+            )
+
+    def load_cache(self):
+        if not self.options.use_local_cache:
+            return
+        with open(self.cache_path, "r") as f:
+            configs = Parse(f.read(), Prefab.Configs())
+            self.load_configs(configs, "cache")
+
+            hours_old = round(
+                (time.mktime(time.localtime()) - os.path.getmtime(self.cache_path))
+                / 3600,
+                2,
+            )
+            if hours_old > STALE_CACHE_WARN_HOURS:
+                self.base_client.logger.log_internal(
+                    "info", f"Stale Cache Load: {hours_old} hours old"
+                )
+
     def finish_init(self, source):
         if not self.init_lock._write_locked:
             return
         self.base_client.logger.log_internal("info", f"Unlocked config via {source}")
         self.init_lock.release_write()
         self.base_client.logger.set_config_client(self)
+
+    def set_cache_path(self):
+        dir = os.environ.get(
+            "XDG_CACHE_HOME", os.path.join(os.environ["HOME"], ".cache")
+        )
+        file_name = f"prefab.cache.{self.base_client.options.api_key_id}.json"
+        self.cache_path = os.path.join(dir, file_name)
+
+    @property
+    def cache_path(self):
+        os.makedirs(os.path.dirname(self._cache_path), exist_ok=True)
+        return self._cache_path
+
+    @cache_path.setter
+    def cache_path(self, path):
+        self._cache_path = path
 
     @functools.cache
     def grpc_channel(self):

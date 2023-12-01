@@ -186,7 +186,7 @@ protobuf = ["grpcio-tools (>=1.54.2)"]
 name = "grpcio-tools"
 version = "1.54.2"
 description = "Protobuf code generator for gRPC"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -402,7 +402,7 @@ testing = ["pytest", "pytest-benchmark"]
 name = "protobuf"
 version = "4.23.1"
 description = ""
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -520,7 +520,7 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 name = "setuptools"
 version = "67.8.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -618,5 +618,5 @@ zstd = ["zstandard (>=0.18.0)"]
 
 [metadata]
 lock-version = "2.0"
-python-versions = ">= 3.10, < 4"
-content-hash = "28c4e38bb212f5f2afb1cc873af1c29e783ebe560651ebc9fcfc93532a5b1aaf"
+python-versions = ">= 3.9, < 4"
+content-hash = "bfa9cd5f0791a49ff706b0973e2d2caa7f0ce9f4556e2be03ffe48179f7c7d21"

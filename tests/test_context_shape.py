@@ -36,6 +36,9 @@ class TestContextShape:
             "log_level",
             "weighted_values",
             "int_range",
+            "provided",
+            "confidential",
+            "decrypt_with",
         ]
 
         supported = list(

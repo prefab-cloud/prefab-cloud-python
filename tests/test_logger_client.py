@@ -371,3 +371,44 @@ class TestLoggerClient:
             assert_logged(
                 capsys, "error", "Test error", "my.own.prefix.*tests.test_logger"
             )
+
+    def test_add_context_keys(self, client):
+        logger = client.logger
+        assert len(logger.context_keys) == 0
+
+        logger.add_context_keys("user.name", "role.admin", "company.name")
+
+        assert logger.context_keys == { "user.name", "role.admin", "company.name" }
+
+    def test_context_keys_are_a_unique_set(self, client):
+        logger = client.logger
+        logger.add_context_keys("user.name", "role.admin", "company.name")
+
+        assert logger.context_keys == { "user.name", "role.admin", "company.name" }
+
+        logger.add_context_keys("user.name", "user.role")
+
+        assert logger.context_keys == { "user.name", "role.admin", "company.name", "user.role" }
+
+
+    # def test_with_context_keys(self, client):
+    #     logger = client.logger
+    #     logger.add_context_keys("company.name")
+    #
+    #     assert logger.context_keys == { "company.name" }
+    #
+    #     with Client.scoped_context_keys("user.name", "role.admin"):
+    #         assert logger.context_keys == { "company.name", "user.name", "role.admin" }
+    #
+    #     assert logger.context_keys == { "company.name" }
+
+    def test_structured_logger_with_context_keys(self, client, capsys):
+        pass
+        # with Client.scoped_context({"user": {"name": "michael", "job": "developer", "admin": False}, "company": { "name": "Prefab"}}):
+        #     client.logger.add_context_keys("user.name", "company.name", "user.admin")
+        #
+        #     client.logger.error("UH OH")
+        #
+        #     assert_logged(
+        #         capsys, "error", "UH OH company.name=Prefab user.admin=False user.name=michael", "tests.test_logger"
+        #     )

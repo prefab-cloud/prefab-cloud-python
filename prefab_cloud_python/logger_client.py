@@ -39,6 +39,16 @@ class LoggerClient:
         self.log_boundary = log_boundary
         self.config_client = BootstrappingConfigClient()
         self.log_path_aggregator = log_path_aggregator
+        self.context_keys = set([])
+
+    def add_context_keys(self, *keys):
+        self.context_keys.update(keys)
+
+    def scoped_context_keys(self, *keys):
+        old_context_keys = self.context_keys
+        self.add_context_keys(keys)
+        yield
+        self.context_keys = old_context_keys
 
     def debug(self, msg):
         self.configured_logger().debug(msg)

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add ConfigValueWrapper
+
 ## [0.7.0] - 2023-12-22
 
 - Set and load from local cache when specified

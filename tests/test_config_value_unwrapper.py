@@ -3,6 +3,7 @@ from prefab_cloud_python.config_value_unwrapper import (
     ConfigValueUnwrapper,
     EnvVarParseException,
 )
+from prefab_cloud_python.encryption import Encryption
 import prefab_pb2 as Prefab
 from prefab_cloud_python.context import Context
 import os
@@ -11,8 +12,21 @@ from contextlib import contextmanager
 
 CONFIG = Prefab.Config(key="config_key")
 EMPTY_CONTEXT = Context()
+DECRYPTION_KEY_NAME = "decryption.key"
+DECRYPTION_KEY_VALUE = Encryption.generate_new_hex_key()
 
 VTV = Prefab.Config.ValueType.Value
+
+
+class MockResolver:
+    def __init__(self, client):
+        self.base_client = client
+
+    def get(self, key):
+        if key == DECRYPTION_KEY_NAME:
+            return DECRYPTION_KEY_VALUE
+        else:
+            raise Exception("unexpected key")
 
 
 def client():
@@ -204,6 +218,17 @@ class TestConfigValueUnwrapper:
             TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT) == ""
         )
 
+    def test_unwrapping_encrypted_values_decrypts(self):
+        clear_text = "very secret stuff"
+        encrypted = Encryption(DECRYPTION_KEY_VALUE).encrypt(clear_text)
+        config_value = Prefab.ConfigValue(
+            string=encrypted, decrypt_with=DECRYPTION_KEY_NAME
+        )
+        assert (
+            TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT)
+            == clear_text
+        )
+
     def test_coerce(self):
         assert (
             ConfigValueUnwrapper.coerce_into_type("string", CONFIG, "ENV") == "string"
@@ -271,7 +296,7 @@ class TestConfigValueUnwrapper:
     @staticmethod
     def unwrap(config_value, config, context):
         return ConfigValueUnwrapper.deepest_value(
-            config_value, config, client().config_client().config_resolver, context
+            config_value, config, MockResolver(client()), context
         ).unwrap()
 
     @staticmethod

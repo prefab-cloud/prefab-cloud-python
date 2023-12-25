@@ -1,6 +1,7 @@
 from .weighted_value_resolver import WeightedValueResolver
 from .config_value_wrapper import ConfigValueWrapper
 from .context import Context
+from .encryption import Encryption
 import prefab_pb2 as Prefab
 import yaml
 import os
@@ -37,7 +38,7 @@ class UnknownProvidedSourceException(Exception):
 class ConfigValueUnwrapper:
     def __init__(self, value, resolver, weighted_value_index=None):
         self.value = value
-        self.resolve = resolver
+        self.resolver = resolver
         self.weighted_value_index = weighted_value_index
 
     def deepest_value(config_value, config, resolver, context=Context.get_current()):
@@ -83,11 +84,24 @@ class ConfigValueUnwrapper:
         type = self.value.WhichOneof("type")
 
         if type in ["int", "string", "double", "bool", "log_level"]:
-            return getattr(self.value, type)
+            raw = getattr(self.value, type)
         elif type == "string_list":
-            return self.value.string_list.values
+            raw = self.value.string_list.values
         else:
             raise UnknownConfigValueTypeException(type)
+
+        if self.value.decrypt_with != "":
+            decryption_key = self.resolver.get(self.value.decrypt_with)
+            if decryption_key is None:
+                self.resolver.base_client.logger.log_internal(
+                    "warn",
+                    f"No value for decryption key {self.value.decrypt_with} found.",
+                )
+                return ""
+            else:
+                return Encryption(decryption_key).decrypt(raw)
+        else:
+            return raw
 
     def coerce_into_type(value_string, config, env_var_name):
         try:

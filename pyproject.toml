@@ -12,6 +12,7 @@ documentation = "https://docs.prefab.cloud/docs/python-sdk/python"
 packages = [{include = "prefab_cloud_python"}, {include = "prefab_pb2.py"}, {include = "prefab_pb2_grpc.py"}]
 
 [tool.poetry.dependencies]
+cryptography = ">= 41.0.7"
 grpcio = ">= 1.48.4"
 python = ">= 3.9, < 4"
 pyyaml = "^6.0.0"

@@ -4,6 +4,7 @@
 
 - Add support for reading config from a local JSON datafile [#42]
 - Add support for setting and using default contexts [#43]
+- Add support for encrypted config values [#44]
 
 ## [0.8.0] - 2024-01-12
 

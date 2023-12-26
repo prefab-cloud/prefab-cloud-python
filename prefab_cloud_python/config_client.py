@@ -76,7 +76,10 @@ class ConfigClient:
             self.base_client.context_shape_aggregator.push(Context(context))
 
         if value is not None:
-            return ConfigValueUnwrapper.unwrap(value, key, context)
+            raw_config = self.config_resolver.raw(key)
+            return ConfigValueUnwrapper.deepest_value(
+                value, raw_config, self.config_resolver, context
+            ).unwrap()
         else:
             return self.handle_default(key, default)
 

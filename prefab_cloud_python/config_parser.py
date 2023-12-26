@@ -24,6 +24,8 @@ class ConfigParser:
     def parse_dict(key, value, config, source):
         if value.get("feature_flag") is not None:
             config[key] = ConfigParser.feature_flag_config(key, value, source)
+        elif value.get("type") == "provided":
+            config[key] = ConfigParser.provided_config(key, value, source)
         else:
             for nest_key in value:
                 nest_value = value[nest_key]
@@ -51,6 +53,20 @@ class ConfigParser:
                     )
                 ],
             ),
+        }
+
+    def provided_config(key, value, source):
+        value = Prefab.ConfigValue(
+            provided=Prefab.Provided(source="ENV_VAR", lookup=value["lookup"]),
+            confidential=value.get("confidential"),
+        )
+
+        row = Prefab.ConfigRow(values=[Prefab.ConditionalValue(value=value)])
+
+        return {
+            "source": source,
+            "match": value.provided.lookup,
+            "config": Prefab.Config(config_type="CONFIG", key=key, rows=[row]),
         }
 
     def feature_flag_config(key, value, source):

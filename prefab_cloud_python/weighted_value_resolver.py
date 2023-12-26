@@ -18,7 +18,7 @@ class WeightedValueResolver:
 
         index = self.variant_index(percent)
 
-        return self.weights[index]
+        return (self.weights[index], index)
 
     def user_percent(self):
         to_hash = "%s%s" % (self.key, self.context_hash_value)

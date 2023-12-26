@@ -70,9 +70,9 @@ class CriteriaEvaluator:
         return False
 
     def matches(self, criterion, value, properties):
-        criterion_value_or_values = ConfigValueUnwrapper.unwrap(
+        criterion_value_or_values = ConfigValueUnwrapper.deepest_value(
             criterion.value_to_match, self.config.key, properties
-        )
+        ).unwrap()
         if isinstance(
             criterion_value_or_values, google._upb._message.RepeatedScalarContainer
         ):

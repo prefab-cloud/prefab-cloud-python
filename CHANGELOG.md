@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add support for `provided` config values via ENV vars
 - Add `ConfigValueWrapper`
 
 ## [0.7.0] - 2023-12-22

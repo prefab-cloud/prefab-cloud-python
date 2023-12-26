@@ -1,9 +1,20 @@
 from prefab_cloud_python.config_parser import ConfigParser
 from prefab_cloud_python.config_value_unwrapper import ConfigValueUnwrapper
 import prefab_pb2 as Prefab
+import os
+from contextlib import contextmanager
 
 file_name = "example-config.yaml"
 default_match = "default"
+
+
+@contextmanager
+def extended_env(new_env_vars):
+    old_env = os.environ.copy()
+    os.environ.update(new_env_vars)
+    yield
+    os.environ.clear()
+    os.environ.update(old_env)
 
 
 class TestConfigParser:
@@ -70,4 +81,32 @@ class TestConfigParser:
         value_row = config.rows[0].values[0]
 
         assert isinstance(value_row.value.weighted_values, Prefab.WeightedValues)
-        assert ConfigValueUnwrapper.unwrap(value_row.value, key, {}) == "sample value"
+        assert (
+            ConfigValueUnwrapper.deepest_value(value_row.value, config, {}).unwrap()
+            == "sample value"
+        )
+
+    def test_parse_provided_value(self):
+        with extended_env({"LOOKUP_ENV": "from env"}):
+            key = "test_provided"
+            value = {"type": "provided", "source": "ENV_VAR", "lookup": "LOOKUP_ENV"}
+            parsed = ConfigParser.parse(key, value, {}, file_name)[key]
+
+            config = parsed["config"]
+
+            assert parsed["source"] == file_name
+            assert parsed["match"] == "LOOKUP_ENV"
+            assert config.config_type == Prefab.ConfigType.Value("CONFIG")
+            assert config.key == key
+            assert len(config.rows) == 1
+            assert len(config.rows[0].values) == 1
+
+            value_row = config.rows[0].values[0]
+            provided = value_row.value.provided
+            assert provided.source == Prefab.ProvidedSource.Value("ENV_VAR")
+            assert provided.lookup == "LOOKUP_ENV"
+
+            assert (
+                ConfigValueUnwrapper.deepest_value(value_row.value, config, {}).unwrap()
+                == "from env"
+            )

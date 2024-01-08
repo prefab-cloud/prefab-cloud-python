@@ -1,35 +1,14 @@
 import structlog
 import os
-from ._processors import clean_event_dict, set_location, log_or_drop
-from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_PREFAB_CONFIG_CLIENT
-from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_LOG_PREFIX
-from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_LOG_BOUNDARY
-from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR
-from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR
-from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH
-from .constants import STRUCTLOG_CALLSITE_IGNORES
+from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_PREFAB_CONFIG_CLIENT
+from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_LOG_PREFIX
+from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_LOG_BOUNDARY
+from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR
+from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR
+from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH
 
 
-structlog.configure(
-    processors=[
-        structlog.contextvars.merge_contextvars,
-        structlog.processors.add_log_level,
-        structlog.processors.StackInfoRenderer(),
-        structlog.dev.set_exc_info,
-        structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S", utc=False),
-        structlog.processors.CallsiteParameterAdder(
-            [
-                structlog.processors.CallsiteParameter.PATHNAME,
-                structlog.processors.CallsiteParameter.FUNC_NAME,
-            ],
-            additional_ignores=STRUCTLOG_CALLSITE_IGNORES,
-        ),
-        set_location,
-        log_or_drop,
-        clean_event_dict,
-        structlog.dev.ConsoleRenderer(),
-    ]
-)
+
 
 
 class BootstrappingConfigClient:

@@ -4,12 +4,12 @@ import re
 import os
 from structlog import DropEvent
 from structlog.processors import CallsiteParameter
-from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_PREFAB_CONFIG_CLIENT
-from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_LOG_PREFIX
-from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_LOG_BOUNDARY
-from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR
-from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR
-from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH
+from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_PREFAB_CONFIG_CLIENT
+from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_LOG_PREFIX
+from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_LOG_BOUNDARY
+from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR
+from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR
+from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH
 
 LOG_LEVEL_BASE_KEY = "log-level"
 LOCATION_KEY = "location"

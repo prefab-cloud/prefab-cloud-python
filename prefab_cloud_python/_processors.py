@@ -3,8 +3,16 @@ import prefab_pb2 as Prefab
 import re
 import os
 from structlog import DropEvent
+from structlog.processors import CallsiteParameter
+from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_PREFAB_CONFIG_CLIENT
+from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_LOG_PREFIX
+from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_LOG_BOUNDARY
+from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR
+from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR
+from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH
 
 LOG_LEVEL_BASE_KEY = "log-level"
+LOCATION_KEY = "location"
 
 LLV = Prefab.LogLevel.Value
 
@@ -28,46 +36,46 @@ python_to_prefab_log_levels = {
 
 
 def clean_event_dict(_, __, event_dict):
-    event_dict.pop("pathname")
-    event_dict.pop("func_name")
-    event_dict.pop("config_client")
-    event_dict.pop("log_prefix")
-    event_dict.pop("log_boundary")
-    event_dict.pop("log_path_aggregator")
-    if "skip_aggregator" in event_dict:
-        event_dict.pop("skip_aggregator")
-    if "internal_path" in event_dict:
-        event_dict.pop("internal_path")
+    event_dict.pop(CallsiteParameter.PATHNAME.value)
+    event_dict.pop(CallsiteParameter.FUNC_NAME.value)
+    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_PREFAB_CONFIG_CLIENT)
+    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_LOG_PREFIX)
+    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_LOG_BOUNDARY)
+    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR)
+    if STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR in event_dict:
+        event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR)
+    if STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH in event_dict:
+        event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH)
     return event_dict
 
 
 def set_location(_, __, event_dict):
-    if "internal_path" in event_dict:
-        if event_dict["internal_path"]:
-            event_dict["location"] = (
-                "cloud.prefab.client.python.%s" % event_dict["internal_path"]
+    if STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH in event_dict:
+        if event_dict[STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH]:
+            event_dict[LOCATION_KEY] = (
+                "cloud.prefab.client.python.%s" % event_dict[STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH]
             )
         else:
-            event_dict["location"] = "cloud.prefab.client.python"
+            event_dict[LOCATION_KEY] = "cloud.prefab.client.python"
     else:
-        event_dict["location"] = get_path(
-            event_dict["pathname"],
-            event_dict["func_name"],
-            event_dict["log_prefix"],
-            event_dict["log_boundary"],
+        event_dict[LOCATION_KEY] = get_path(
+            event_dict[CallsiteParameter.PATHNAME.value],
+            event_dict[CallsiteParameter.FUNC_NAME.value],
+            event_dict[STRUCTLOG_EVENT_DICT_KEY_LOG_PREFIX],
+            event_dict[STRUCTLOG_EVENT_DICT_KEY_LOG_BOUNDARY],
         )
     return event_dict
 
 
 def log_or_drop(_, method, event_dict):
-    location = event_dict["location"]
-    config_client = event_dict["config_client"]
+    location = event_dict[LOCATION_KEY]
+    config_client = event_dict[STRUCTLOG_EVENT_DICT_KEY_PREFAB_CONFIG_CLIENT]
     closest_log_level = get_severity(location, config_client)
     called_method_level = python_to_prefab_log_levels[method]
 
-    if event_dict["log_path_aggregator"] and not event_dict["skip_aggregator"]:
-        event_dict["log_path_aggregator"].push(
-            event_dict["location"], Prefab.LogLevel.Name(called_method_level)
+    if event_dict[STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR] and not event_dict[STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR]:
+        event_dict[STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR].push(
+            event_dict[LOCATION_KEY], Prefab.LogLevel.Name(called_method_level)
         )
 
     if closest_log_level > called_method_level:

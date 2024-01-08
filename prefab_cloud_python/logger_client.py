@@ -1,6 +1,13 @@
 import structlog
 import os
 from ._processors import clean_event_dict, set_location, log_or_drop
+from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_PREFAB_CONFIG_CLIENT
+from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_LOG_PREFIX
+from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_LOG_BOUNDARY
+from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR
+from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR
+from .internal_contants import STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH
+from .constants import STRUCTLOG_CALLSITE_IGNORES
 
 
 structlog.configure(
@@ -15,7 +22,7 @@ structlog.configure(
                 structlog.processors.CallsiteParameter.PATHNAME,
                 structlog.processors.CallsiteParameter.FUNC_NAME,
             ],
-            additional_ignores=["prefab_cloud_python.logger_client"],
+            additional_ignores=STRUCTLOG_CALLSITE_IGNORES,
         ),
         set_location,
         log_or_drop,
@@ -56,8 +63,12 @@ class LoggerClient:
         self.configured_logger().critical(msg)
 
     def log_internal(self, level, msg, path=None):
+        logger_binding = {
+            STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR: True,
+            STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH: path
+        }
         internal_logger = self.configured_logger().bind(
-            skip_aggregator=True, internal_path=path
+            **logger_binding
         )
         getattr(internal_logger, level)(msg)
 
@@ -65,14 +76,16 @@ class LoggerClient:
         self.config_client = config_client
 
     def add_config_client(self, _, __, event_dict):
-        event_dict["config_client"] = self.config_client
+        event_dict[STRUCTLOG_EVENT_DICT_KEY_PREFAB_CONFIG_CLIENT] = self.config_client
         return event_dict
 
     def configured_logger(self):
-        return structlog.get_logger().bind(
-            config_client=self.config_client,
-            log_prefix=self.log_prefix,
-            log_boundary=self.log_boundary,
-            log_path_aggregator=self.log_path_aggregator,
-            skip_aggregator=False,
-        )
+        logger_binding = {
+            STRUCTLOG_EVENT_DICT_KEY_PREFAB_CONFIG_CLIENT: self.config_client,
+            STRUCTLOG_EVENT_DICT_KEY_LOG_PREFIX: self.log_prefix,
+            STRUCTLOG_EVENT_DICT_KEY_LOG_BOUNDARY: self.log_boundary,
+            STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR: self.log_path_aggregator,
+            STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR: False
+
+        }
+        return structlog.get_logger().bind(** logger_binding)

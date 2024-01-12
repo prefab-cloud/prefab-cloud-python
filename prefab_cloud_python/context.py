@@ -56,6 +56,12 @@ class Context:
         original.merge(value)
         self.contexts[str(key)] = original
 
+    def merge_default(self, defaults):
+        for name in defaults.keys():
+            self.merge(name, defaults[name])
+
+        return self
+
     def clear(self):
         self.contexts = {}
 

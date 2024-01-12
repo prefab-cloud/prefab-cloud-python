@@ -53,7 +53,8 @@ def set_location(_, __, event_dict):
     if STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH in event_dict:
         if event_dict[STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH]:
             event_dict[LOCATION_KEY] = (
-                "cloud.prefab.client.python.%s" % event_dict[STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH]
+                "cloud.prefab.client.python.%s"
+                % event_dict[STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH]
             )
         else:
             event_dict[LOCATION_KEY] = "cloud.prefab.client.python"
@@ -73,7 +74,10 @@ def log_or_drop(_, method, event_dict):
     closest_log_level = get_severity(location, config_client)
     called_method_level = python_to_prefab_log_levels[method]
 
-    if event_dict[STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR] and not event_dict[STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR]:
+    if (
+        event_dict[STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR]
+        and not event_dict[STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR]
+    ):
         event_dict[STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR].push(
             event_dict[LOCATION_KEY], Prefab.LogLevel.Name(called_method_level)
         )

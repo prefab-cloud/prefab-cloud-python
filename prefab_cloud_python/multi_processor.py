@@ -1,4 +1,3 @@
-import structlog
 class MultiProcessor:
     def __init__(self, processors):
         self.processors = processors

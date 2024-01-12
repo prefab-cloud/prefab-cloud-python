@@ -33,6 +33,7 @@ print("my-first-feature-flag is:", result)
 
 See full documentation https://docs.prefab.cloud/docs/sdks/python
 
+<<<<<<< HEAD
 ## Development
 
 1. Ensure that `poetry` is installed: https://python-poetry.org/docs/#installation
@@ -70,8 +71,7 @@ poetry run pytest tests/name_of_test_file.py
 4. `git tag <version> && git push --tags`
 5. `poetry release --build`
    1. To do this you will need an [pypi.org](https://pypi.org) account, and to be added to this project (ask Michael for an invitation)
-
-
+ 
 ## StructLog Configuration
 
 ### Simple Usage
@@ -85,9 +85,9 @@ default_structlog_setup()
 
 ### Using With Existing Structlog
 
-We have a structlog processor that can be mixed into your existing structlog configuration. 
+We have a structlog processor that can be mixed into your existing structlog configuration.
 
-The code below is an example configuration. ___See the note below about CallSiteParameterAdder___
+The code below is an example configuration. **_See the note below about CallSiteParameterAdder_**
 
 ```python
 import structlog
@@ -114,7 +114,6 @@ structlog.configure(
         ]
     )
 ```
-
 
 #### CallSiteParameterAdder
 

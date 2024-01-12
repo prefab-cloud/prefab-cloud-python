@@ -3,9 +3,12 @@ from ._processors import clean_event_dict, set_location, log_or_drop
 import structlog
 from .constants import STRUCTLOG_CALLSITE_IGNORES
 
+
 def create_prefab_structlog_processor():
     return MultiProcessor([set_location, log_or_drop, clean_event_dict])
-def default_structlog_setup():
+
+
+def default_structlog_setup(colors=True):
     structlog.configure(
         processors=[
             structlog.contextvars.merge_contextvars,
@@ -21,6 +24,6 @@ def default_structlog_setup():
                 additional_ignores=STRUCTLOG_CALLSITE_IGNORES,
             ),
             create_prefab_structlog_processor(),
-            structlog.dev.ConsoleRenderer(),
+            structlog.dev.ConsoleRenderer(colors=colors),
         ]
     )

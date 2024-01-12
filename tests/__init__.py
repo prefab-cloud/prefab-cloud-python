@@ -1,4 +1,3 @@
 from prefab_cloud_python import default_structlog_setup
-from prefab_cloud_python import STRUCTLOG_CALLSITE_IGNORES
-from prefab_cloud_python import prefab_structlog_processor
+
 default_structlog_setup()

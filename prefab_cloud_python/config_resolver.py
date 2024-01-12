@@ -9,6 +9,7 @@ class ConfigResolver:
         self.base_client = base_client
         self.config_loader = config_loader
         self.project_env_id = 0
+        self.default_context = {}
         self.make_local()
 
     def get(self, key, context=Context.get_current()):
@@ -35,10 +36,9 @@ class ConfigResolver:
         ).evaluate(self.evaluation_context(context))
 
     def evaluation_context(self, context):
-        if isinstance(context, Context):
-            return context
-        else:
-            return Context.merge_with_current(context)
+        if not isinstance(context, Context):
+            context = Context.merge_with_current(context)
+        return context.merge_default(self.default_context)
 
     def update(self):
         self.make_local()
@@ -47,3 +47,11 @@ class ConfigResolver:
         self.lock.acquire_write()
         self.local_store = self.config_loader.calc_config()
         self.lock.release_write()
+
+    @property
+    def default_context(self):
+        return self._default_context
+
+    @default_context.setter
+    def default_context(self, value):
+        self._default_context = value

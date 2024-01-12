@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- Add support for reading config from a local JSON datafile
+- Add support for reading config from a local JSON datafile [#42]
+- Add support for setting and using default contexts [#43]
 
 ## [0.8.0] - 2024-01-12
 

@@ -183,6 +183,17 @@ class ConfigClient:
         project_env_id = configs.config_service_pointer.project_env_id
         self.config_resolver.project_env_id = project_env_id
         starting_highwater_mark = self.config_loader.highwater_mark
+
+        default_contexts = {}
+        if configs.default_context and configs.default_context.contexts is not None:
+            for context in configs.default_context.contexts:
+                values = {}
+                for k, v in context.values.items():
+                    values[k] = ConfigValueUnwrapper(v, self.config_resolver).unwrap()
+                default_contexts[context.type] = values
+
+        self.config_resolver.default_context = default_contexts
+
         for config in configs.configs:
             self.config_loader.set(config, source)
         if self.config_loader.highwater_mark > starting_highwater_mark:

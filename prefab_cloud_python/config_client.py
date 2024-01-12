@@ -62,6 +62,8 @@ class ConfigClient:
 
         if self.options.is_local_only():
             self.finish_init("local only")
+        elif self.options.has_datafile():
+            self.load_json_file(self.options.datafile)
         else:
             self.load_checkpoint()
             self.start_checkpointing_thread()
@@ -226,6 +228,11 @@ class ConfigClient:
         except OSError as e:
             self.base_client.logger.log_internal("info", e)
             return False
+
+    def load_json_file(self, datafile):
+        with open(datafile) as f:
+            configs = Parse(f.read(), Prefab.Configs())
+            self.load_configs(configs, "datafile")
 
     def finish_init(self, source):
         if not self.init_lock._write_locked:

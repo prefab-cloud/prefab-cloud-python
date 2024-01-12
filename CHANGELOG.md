@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add support for reading config from a local JSON datafile
+
 ## [0.8.0] - 2024-01-12
 
 - Add support for `provided` config values via ENV vars

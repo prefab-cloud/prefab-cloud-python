@@ -9,8 +9,8 @@ class ConfigLoader:
         self.base_client = base_client
         self.options = base_client.options
         self.highwater_mark = 0
-        self.__load_classpath_config()
-        self.__load_local_overrides()
+        self.classpath_config = self.__load_classpath_config()
+        self.local_overrides = self.__load_local_overrides()
         self.api_config = {}
 
     def calc_config(self):
@@ -40,12 +40,16 @@ class ConfigLoader:
         return configs
 
     def __load_classpath_config(self):
+        if self.options.has_datafile():
+            return {}
         classpath_dir = self.options.prefab_config_classpath_dir
-        self.classpath_config = self.__load_config_from(classpath_dir)
+        return self.__load_config_from(classpath_dir)
 
     def __load_local_overrides(self):
+        if self.options.has_datafile():
+            return {}
         override_dir = self.options.prefab_config_override_dir
-        self.local_overrides = self.__load_config_from(override_dir)
+        return self.__load_config_from(override_dir)
 
     def __load_config_from(self, dir):
         envs = self.options.prefab_envs

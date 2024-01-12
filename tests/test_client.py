@@ -37,6 +37,11 @@ class TestClient:
 
         assert client.get("missing_value") is None
 
+    def test_loading_from_datafile(self):
+        options = Options(x_datafile="tests/prefab.datafile.json")
+        client = Client(options)
+        assert client.get("foo.str") == "hello!"
+
     def test_enabled(self, client):
         assert not client.enabled("does_not_exist")
         assert client.enabled("enabled_flag")

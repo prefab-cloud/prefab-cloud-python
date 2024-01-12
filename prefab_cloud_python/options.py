@@ -64,12 +64,14 @@ class Options:
         on_no_default: str = "RAISE",
         on_connection_failure: str = "RETURN",
         x_use_local_cache: bool = False,
+        x_datafile: Optional[str] = None,
         collect_logs: bool = True,
         collect_max_paths: int = 1000,
         collect_max_shapes: int = 10_000,
         collect_sync_interval: Optional[int] = None,
     ) -> None:
         self.prefab_datasources = Options.__validate_datasource(prefab_datasources)
+        self.datafile = x_datafile
         self.__set_api_key(api_key or os.environ.get("PREFAB_API_KEY"))
         self.__set_api_url(
             prefab_api_url
@@ -101,6 +103,9 @@ class Options:
     def is_local_only(self) -> bool:
         return self.prefab_datasources == "LOCAL_ONLY"
 
+    def has_datafile(self) -> bool:
+        return self.datafile is not None
+
     def __set_url_for_api_cdn(self) -> None:
         if self.prefab_datasources == "LOCAL_ONLY":
             self.url_for_api_cdn = None
@@ -128,7 +133,7 @@ class Options:
             return default
 
     def __set_api_key(self, api_key: Optional[str]) -> None:
-        if self.prefab_datasources == "LOCAL_ONLY":
+        if self.is_local_only() or self.has_datafile():
             self.api_key = None
             self.api_key_id = "local"
             return

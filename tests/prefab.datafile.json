@@ -1,0 +1,25 @@
+{
+  "configs": [
+    {
+      "id": "1",
+      "projectId": "350",
+      "key": "foo.str",
+      "changedBy": {
+        "email": "michael.berkowitz@gmail.com"
+      },
+      "rows": [
+        {
+          "values": [
+            {
+              "value": {
+                "string": "hello!"
+              }
+            }
+          ]
+        }
+      ],
+      "configType": "CONFIG",
+      "valueType": "STRING"
+    }
+  ]
+}

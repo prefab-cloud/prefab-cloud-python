@@ -32,3 +32,29 @@ print("my-first-feature-flag is:", result)
 ```
 
 See full documentation https://docs.prefab.cloud/docs/sdks/python
+
+## Development
+
+1. Ensure that `poetry` is installed: https://python-poetry.org/docs/#installation
+2. From the root of this directory, run `poetry install` to ensure dependencies are installed
+3. `poetry run python` to open a Python REPL with access to the project dependencies
+
+### Running tests
+
+To run all tests, including integration tests
+
+```bash
+poetry run pytest tests
+```
+
+To run only local tests and skip integration tests
+
+```bash
+poetry run pytest tests -k "not integration"
+```
+
+To run only one specific test file
+
+```bash
+poetry run pytest tests/name_of_test_file.py
+```

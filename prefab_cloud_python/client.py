@@ -55,11 +55,6 @@ class Client:
 
         self.context().clear()
         self.config_client()
-        self.logger_filter = LoggerFilter(
-            self.config_client(),
-            prefix=self.options.log_prefix,
-            log_boundary=self.options.log_boundary,
-        )
 
     def get(self, key, default="NO_DEFAULT_PROVIDED", context="NO_CONTEXT_PROVIDED"):
         if self.is_ff(key):
@@ -118,3 +113,10 @@ class Client:
 
         endpoint = self.options.prefab_api_url.strip("/") + "/" + path.strip("/")
         self.session.post(endpoint, headers=headers, data=body.SerializeToString())
+
+    def logging_filter(self):
+        return LoggerFilter(
+            self.config_client(),
+            prefix=self.options.log_prefix,
+            log_boundary=self.options.log_boundary,
+        )

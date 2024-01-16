@@ -1,15 +1,21 @@
+from __future__ import annotations
 import functools
-from .context import Context
+from .context import Context, ScopedContext
 from .config_client import ConfigClient
 from .feature_flag_client import FeatureFlagClient
 from .context_shape_aggregator import ContextShapeAggregator
 from .log_path_aggregator import LogPathAggregator
 from .logger_client import LoggerClient
 from .logger_filter import LoggerFilter
-import base64
+from .options import Options
+from typing import Optional, Union
 import prefab_pb2 as Prefab
 import uuid
 import requests
+from urllib.parse import urljoin
+
+ConfigValueType = Optional[Union[int, float, bool, str, list[str]]]
+PostBodyType = Union[Prefab.Loggers, Prefab.ContextShapes]
 
 
 class Client:
@@ -17,7 +23,7 @@ class Client:
     base_sleep_sec = 0.5
     no_default_provided = "NO_DEFAULT_PROVIDED"
 
-    def __init__(self, options):
+    def __init__(self, options: Options) -> None:
         self.options = options
         self.instance_hash = str(uuid.uuid4())
         self.log_path_aggregator = LogPathAggregator(
@@ -56,7 +62,12 @@ class Client:
         self.context().clear()
         self.config_client()
 
-    def get(self, key, default="NO_DEFAULT_PROVIDED", context="NO_CONTEXT_PROVIDED"):
+    def get(
+        self,
+        key: str,
+        default: ConfigValueType = "NO_DEFAULT_PROVIDED",
+        context: str | Context = "NO_CONTEXT_PROVIDED",
+    ) -> ConfigValueType:
         if self.is_ff(key):
             if default == "NO_DEFAULT_PROVIDED":
                 default = None
@@ -68,12 +79,14 @@ class Client:
                 key, default=default, context=self.resolve_context_argument(context)
             )
 
-    def enabled(self, feature_name, context="NO_CONTEXT_PROVIDED"):
+    def enabled(
+        self, feature_name: str, context: str | Context = "NO_CONTEXT_PROVIDED"
+    ) -> bool:
         return self.feature_flag_client().feature_is_on_for(
             feature_name, context=self.resolve_context_argument(context)
         )
 
-    def is_ff(self, key):
+    def is_ff(self, key: str) -> bool:
         raw = self.config_client().config_resolver.raw(key)
         if raw is not None and raw.config_type == Prefab.ConfigType.Value(
             "FEATURE_FLAG"
@@ -81,38 +94,40 @@ class Client:
             return True
         return False
 
-    def resolve_context_argument(self, context):
+    def resolve_context_argument(self, context: str | Context) -> Context:
         if context != "NO_CONTEXT_PROVIDED":
             return context
         return Context.get_current()
 
-    def context(self):
+    def context(self) -> Context:
         return Context.get_current()
 
-    def scoped_context(context):
+    def scoped_context(context: Context) -> ScopedContext:
         return Context.scope(context)
 
     @functools.cache
-    def config_client(self):
+    def config_client(self) -> ConfigClient:
         client = ConfigClient(self, timeout=5.0)
         return client
 
     @functools.cache
-    def feature_flag_client(self):
+    def feature_flag_client(self) -> FeatureFlagClient:
         return FeatureFlagClient(self)
 
-    def post(self, path, body):
-        auth = "%s:%s" % ("authuser", self.options.api_key)
-        auth_token = base64.b64encode(auth.encode("utf-8")).decode("ascii")
-
+    def post(self, path: str, body: PostBodyType) -> requests.models.Response:
         headers = {
             "Content-Type": "application/x-protobuf",
             "Accept": "application/x-protobuf",
-            "Authorization": f"Basic {auth_token}",
         }
 
-        endpoint = self.options.prefab_api_url.strip("/") + "/" + path.strip("/")
-        self.session.post(endpoint, headers=headers, data=body.SerializeToString())
+        endpoint = urljoin(self.options.prefab_api_url or "", path)
+
+        return self.session.post(
+            endpoint,
+            headers=headers,
+            data=body.SerializeToString(),
+            auth=("authuser", self.options.api_key or ""),
+        )
 
     def logging_filter(self):
         return LoggerFilter(

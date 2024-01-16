@@ -8,7 +8,6 @@ from google.protobuf.json_format import MessageToJson, Parse
 import grpc
 import threading
 import time
-import requests
 import sseclient
 import base64
 import prefab_pb2 as Prefab
@@ -127,13 +126,12 @@ class ConfigClient:
 
     def streaming_loop(self):
         url = "%s/api/v1/sse/config" % self.options.prefab_api_url
-        auth = "%s:%s" % ("authuser", self.options.api_key)
-        token = base64.b64encode(auth.encode("utf-8")).decode("ascii")
         headers = {
             "x-prefab-start-at-id": f"{self.config_loader.highwater_mark}",
-            "Authorization": "Basic %s" % token,
         }
-        response = self.base_client.session.get(url, headers=headers, stream=True)
+        response = self.base_client.session.get(
+            url, headers=headers, stream=True, auth=("authuser", self.options.api_key)
+        )
 
         client = sseclient.SSEClient(response)
 
@@ -155,26 +153,17 @@ class ConfigClient:
 
     def load_checkpoint_from_api_cdn(self):
         url = "%s/api/v1/configs/0" % self.options.url_for_api_cdn
-        auth = "%s:%s" % ("authuser", self.options.api_key)
-        token = base64.b64encode(auth.encode("utf-8")).decode("ascii")
-        headers = {"Authorization": "Basic %s" % token}
-        try:
-            response = requests.get(url, headers=headers, timeout=10)
-            if response.ok:
-                configs = Prefab.Configs.FromString(response.content)
-                self.load_configs(configs, "remote_api_cdn")
-                self.cache_configs(configs)
-                return True
-            else:
-                self.base_client.logger.log_internal(
-                    "info",
-                    f"Checkpoint remote_cdn_api failed to load. Response {response.status_code}",
-                )
-                return False
-        except requests.exceptions.RequestException as e:
+        response = self.base_client.session.get(
+            url, auth=("authuser", self.options.api_key)
+        )
+        if response.ok:
+            configs = Prefab.Configs.FromString(response.content)
+            self.load_configs(configs, "remote_api_cdn")
+            return True
+        else:
             self.base_client.logger.log_internal(
                 "info",
-                f"Checkpoint remote_cdn_api failed to load: {e.__class__.__name__}",
+                "Checkpoint remote_cdn_api failed to load",
             )
             return False
 

@@ -61,10 +61,12 @@ poetry run pytest tests/name_of_test_file.py
 
 ### Releasing
 
-1. On a branch
-    1. Update the version in `pyproject.toml`
-    2. Update `CHANGELOG.md`
-2. Merge the branch
-3. `git tag <version> && git push --tags`
-4. `poetry release --build`
-    1. To do this you will need an [pypi.org](https://pypi.org) account, and to be added to this project (ask Michael for an invitation)
+1. Run pre-commit hooks to check and fix formatting, other rule enforcement.
+   `poetry run pre-commit run --show-diff-on-failure --color=always --all-files`
+2. On a branch
+   1. Update the version in `pyproject.toml`
+   2. Update `CHANGELOG.md`
+3. Merge the branch
+4. `git tag <version> && git push --tags`
+5. `poetry release --build`
+   1. To do this you will need an [pypi.org](https://pypi.org) account, and to be added to this project (ask Michael for an invitation)

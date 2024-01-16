@@ -8,12 +8,10 @@ from .logger_client import LoggerClient
 from .logger_filter import LoggerFilter
 from .options import Options
 from typing import Optional
-import base64
 import prefab_pb2 as Prefab
 import uuid
 import requests
 from urllib.parse import urljoin
-
 
 ConfigValueType = Optional[int | float | bool | str | list[str]]
 PostBodyType = Prefab.Loggers | Prefab.ContextShapes
@@ -128,10 +126,11 @@ class Client:
             headers=headers,
             data=body.SerializeToString(),
             auth=("authuser", self.options.api_key or ""),
+        )
 
     def logging_filter(self):
         return LoggerFilter(
             self.config_client(),
             prefix=self.options.log_prefix,
-            log_boundary=self.options.log_boundary
+            log_boundary=self.options.log_boundary,
         )

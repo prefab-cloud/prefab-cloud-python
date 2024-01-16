@@ -5,6 +5,7 @@ from .feature_flag_client import FeatureFlagClient
 from .context_shape_aggregator import ContextShapeAggregator
 from .log_path_aggregator import LogPathAggregator
 from .logger_client import LoggerClient
+from .logger_filter import LoggerFilter
 import base64
 import prefab_pb2 as Prefab
 import uuid
@@ -112,3 +113,10 @@ class Client:
 
         endpoint = self.options.prefab_api_url.strip("/") + "/" + path.strip("/")
         self.session.post(endpoint, headers=headers, data=body.SerializeToString())
+
+    def logging_filter(self):
+        return LoggerFilter(
+            self.config_client(),
+            prefix=self.options.log_prefix,
+            log_boundary=self.options.log_boundary,
+        )

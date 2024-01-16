@@ -163,7 +163,7 @@ class ConfigClient:
         else:
             self.base_client.logger.log_internal(
                 "info",
-                f"Checkpoint remote_cdn_api failed to load: {e.__class__.__name__}",
+                "Checkpoint remote_cdn_api failed to load",
             )
             return False
 

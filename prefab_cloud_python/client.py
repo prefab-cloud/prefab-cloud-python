@@ -1,3 +1,4 @@
+from __future__ import annotations
 import functools
 from .context import Context, ScopedContext
 from .config_client import ConfigClient

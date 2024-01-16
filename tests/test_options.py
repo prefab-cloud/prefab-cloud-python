@@ -25,18 +25,21 @@ class TestOptionsApiKey:
     def test_valid_api_key_from_input(self):
         options = Options(api_key="1-dev-api-key")
         assert options.api_key == "1-dev-api-key"
+        assert options.api_key_id == "1"
 
     def test_valid_api_key_from_env(self):
         with extended_env({"PREFAB_API_KEY": "2-test-api-key"}):
             options = Options()
 
             assert options.api_key == "2-test-api-key"
+            assert options.api_key_id == "2"
 
     def test_api_key_from_input_overrides_env(self):
         with extended_env({"PREFAB_API_KEY": "2-test-api-key"}):
             options = Options(api_key="3-dev-api-key")
 
             assert options.api_key == "3-dev-api-key"
+            assert options.api_key_id == "3"
 
     def test_missing_api_key_error(self):
         with pytest.raises(MissingApiKeyException) as context:
@@ -53,6 +56,7 @@ class TestOptionsApiKey:
         with extended_env({"PREFAB_DATASOURCES": "LOCAL_ONLY"}):
             options = Options(api_key="bad_api_key")
             assert options.api_key is None
+            assert options.api_key_id == "local"
 
     def test_api_key_doesnt_matter_local_only(self):
         options = Options(api_key="bad_api_key", prefab_datasources="LOCAL_ONLY")

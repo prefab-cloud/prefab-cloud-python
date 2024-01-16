@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.9.0] - 2024-01-13
+
+- Add support for reading config from a local JSON datafile [#42]
+- Add support for setting and using default contexts [#43]
+- Add support for encrypted config values [#44]
+
+## [0.8.0] - 2024-01-12
+
+- Add support for `provided` config values via ENV vars
+- Add `ConfigValueWrapper`
+
+## [0.7.0] - 2023-12-22
+
+- Set and load from local cache when specified
+
+## [0.6.0] - 2023-11-14
+
+- Loosen version requirements to allow Python 3.9
+
 ## [0.5.1] - 2023-06-28
 
 - Migrate from a direct dependency on `urllib3` to using `requests`

@@ -18,6 +18,21 @@ else:
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
+class _ProvidedSource:
+    ValueType = typing.NewType("ValueType", builtins.int)
+    V: typing_extensions.TypeAlias = ValueType
+
+class _ProvidedSourceEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_ProvidedSource.ValueType], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+    PROVIDED_SOURCE_NOT_SET: _ProvidedSource.ValueType  # 0
+    ENV_VAR: _ProvidedSource.ValueType  # 1
+
+class ProvidedSource(_ProvidedSource, metaclass=_ProvidedSourceEnumTypeWrapper): ...
+
+PROVIDED_SOURCE_NOT_SET: ProvidedSource.ValueType  # 0
+ENV_VAR: ProvidedSource.ValueType  # 1
+global___ProvidedSource = ProvidedSource
+
 class _ConfigType:
     ValueType = typing.NewType("ValueType", builtins.int)
     V: typing_extensions.TypeAlias = ValueType
@@ -31,6 +46,7 @@ class _ConfigTypeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._Enu
     LOG_LEVEL: _ConfigType.ValueType  # 3
     SEGMENT: _ConfigType.ValueType  # 4
     LIMIT_DEFINITION: _ConfigType.ValueType  # 5
+    DELETED: _ConfigType.ValueType  # 6
 
 class ConfigType(_ConfigType, metaclass=_ConfigTypeEnumTypeWrapper): ...
 
@@ -41,6 +57,7 @@ FEATURE_FLAG: ConfigType.ValueType  # 2
 LOG_LEVEL: ConfigType.ValueType  # 3
 SEGMENT: ConfigType.ValueType  # 4
 LIMIT_DEFINITION: ConfigType.ValueType  # 5
+DELETED: ConfigType.ValueType  # 6
 global___ConfigType = ConfigType
 
 class _LogLevel:
@@ -130,6 +147,9 @@ class ConfigValue(google.protobuf.message.Message):
     LOG_LEVEL_FIELD_NUMBER: builtins.int
     STRING_LIST_FIELD_NUMBER: builtins.int
     INT_RANGE_FIELD_NUMBER: builtins.int
+    PROVIDED_FIELD_NUMBER: builtins.int
+    CONFIDENTIAL_FIELD_NUMBER: builtins.int
+    DECRYPT_WITH_FIELD_NUMBER: builtins.int
     int: builtins.int
     string: builtins.str
     bytes: builtins.bytes
@@ -144,6 +164,12 @@ class ConfigValue(google.protobuf.message.Message):
     def string_list(self) -> global___StringList: ...
     @property
     def int_range(self) -> global___IntRange: ...
+    @property
+    def provided(self) -> global___Provided: ...
+    confidential: builtins.bool
+    """don't log or telemetry this value"""
+    decrypt_with: builtins.str
+    """key name to decrypt with"""
     def __init__(
         self,
         *,
@@ -157,12 +183,44 @@ class ConfigValue(google.protobuf.message.Message):
         log_level: global___LogLevel.ValueType = ...,
         string_list: global___StringList | None = ...,
         int_range: global___IntRange | None = ...,
+        provided: global___Provided | None = ...,
+        confidential: builtins.bool | None = ...,
+        decrypt_with: builtins.str | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["bool", b"bool", "bytes", b"bytes", "double", b"double", "int", b"int", "int_range", b"int_range", "limit_definition", b"limit_definition", "log_level", b"log_level", "string", b"string", "string_list", b"string_list", "type", b"type", "weighted_values", b"weighted_values"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["bool", b"bool", "bytes", b"bytes", "double", b"double", "int", b"int", "int_range", b"int_range", "limit_definition", b"limit_definition", "log_level", b"log_level", "string", b"string", "string_list", b"string_list", "type", b"type", "weighted_values", b"weighted_values"]) -> None: ...
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["type", b"type"]) -> typing_extensions.Literal["int", "string", "bytes", "double", "bool", "weighted_values", "limit_definition", "log_level", "string_list", "int_range"] | None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_confidential", b"_confidential", "_decrypt_with", b"_decrypt_with", "bool", b"bool", "bytes", b"bytes", "confidential", b"confidential", "decrypt_with", b"decrypt_with", "double", b"double", "int", b"int", "int_range", b"int_range", "limit_definition", b"limit_definition", "log_level", b"log_level", "provided", b"provided", "string", b"string", "string_list", b"string_list", "type", b"type", "weighted_values", b"weighted_values"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_confidential", b"_confidential", "_decrypt_with", b"_decrypt_with", "bool", b"bool", "bytes", b"bytes", "confidential", b"confidential", "decrypt_with", b"decrypt_with", "double", b"double", "int", b"int", "int_range", b"int_range", "limit_definition", b"limit_definition", "log_level", b"log_level", "provided", b"provided", "string", b"string", "string_list", b"string_list", "type", b"type", "weighted_values", b"weighted_values"]) -> None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_confidential", b"_confidential"]) -> typing_extensions.Literal["confidential"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_decrypt_with", b"_decrypt_with"]) -> typing_extensions.Literal["decrypt_with"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["type", b"type"]) -> typing_extensions.Literal["int", "string", "bytes", "double", "bool", "weighted_values", "limit_definition", "log_level", "string_list", "int_range", "provided"] | None: ...
 
 global___ConfigValue = ConfigValue
+
+@typing_extensions.final
+class Provided(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    SOURCE_FIELD_NUMBER: builtins.int
+    LOOKUP_FIELD_NUMBER: builtins.int
+    source: global___ProvidedSource.ValueType
+    lookup: builtins.str
+    """eg MY_ENV_VAR"""
+    def __init__(
+        self,
+        *,
+        source: global___ProvidedSource.ValueType | None = ...,
+        lookup: builtins.str | None = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_lookup", b"_lookup", "_source", b"_source", "lookup", b"lookup", "source", b"source"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_lookup", b"_lookup", "_source", b"_source", "lookup", b"lookup", "source", b"source"]) -> None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_lookup", b"_lookup"]) -> typing_extensions.Literal["lookup"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_source", b"_source"]) -> typing_extensions.Literal["source"] | None: ...
+
+global___Provided = Provided
 
 @typing_extensions.final
 class IntRange(google.protobuf.message.Message):
@@ -248,29 +306,102 @@ class WeightedValues(google.protobuf.message.Message):
 global___WeightedValues = WeightedValues
 
 @typing_extensions.final
+class ApiKeyMetadata(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    KEY_ID_FIELD_NUMBER: builtins.int
+    USER_ID_FIELD_NUMBER: builtins.int
+    key_id: builtins.str
+    """numeric currently, but making it string will be more flexible over time"""
+    user_id: builtins.str
+    """ditto"""
+    def __init__(
+        self,
+        *,
+        key_id: builtins.str | None = ...,
+        user_id: builtins.str | None = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_key_id", b"_key_id", "_user_id", b"_user_id", "key_id", b"key_id", "user_id", b"user_id"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_key_id", b"_key_id", "_user_id", b"_user_id", "key_id", b"key_id", "user_id", b"user_id"]) -> None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_key_id", b"_key_id"]) -> typing_extensions.Literal["key_id"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_user_id", b"_user_id"]) -> typing_extensions.Literal["user_id"] | None: ...
+
+global___ApiKeyMetadata = ApiKeyMetadata
+
+@typing_extensions.final
 class Configs(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     CONFIGS_FIELD_NUMBER: builtins.int
     CONFIG_SERVICE_POINTER_FIELD_NUMBER: builtins.int
+    APIKEY_METADATA_FIELD_NUMBER: builtins.int
+    DEFAULT_CONTEXT_FIELD_NUMBER: builtins.int
+    KEEP_ALIVE_FIELD_NUMBER: builtins.int
     @property
     def configs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Config]: ...
     @property
     def config_service_pointer(self) -> global___ConfigServicePointer: ...
+    @property
+    def apikey_metadata(self) -> global___ApiKeyMetadata: ...
+    @property
+    def default_context(self) -> global___ContextSet: ...
+    keep_alive: builtins.bool
     def __init__(
         self,
         *,
         configs: collections.abc.Iterable[global___Config] | None = ...,
         config_service_pointer: global___ConfigServicePointer | None = ...,
+        apikey_metadata: global___ApiKeyMetadata | None = ...,
+        default_context: global___ContextSet | None = ...,
+        keep_alive: builtins.bool | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["config_service_pointer", b"config_service_pointer"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["config_service_pointer", b"config_service_pointer", "configs", b"configs"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_apikey_metadata", b"_apikey_metadata", "_default_context", b"_default_context", "_keep_alive", b"_keep_alive", "apikey_metadata", b"apikey_metadata", "config_service_pointer", b"config_service_pointer", "default_context", b"default_context", "keep_alive", b"keep_alive"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_apikey_metadata", b"_apikey_metadata", "_default_context", b"_default_context", "_keep_alive", b"_keep_alive", "apikey_metadata", b"apikey_metadata", "config_service_pointer", b"config_service_pointer", "configs", b"configs", "default_context", b"default_context", "keep_alive", b"keep_alive"]) -> None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_apikey_metadata", b"_apikey_metadata"]) -> typing_extensions.Literal["apikey_metadata"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_default_context", b"_default_context"]) -> typing_extensions.Literal["default_context"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_keep_alive", b"_keep_alive"]) -> typing_extensions.Literal["keep_alive"] | None: ...
 
 global___Configs = Configs
 
 @typing_extensions.final
 class Config(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    class _ValueType:
+        ValueType = typing.NewType("ValueType", builtins.int)
+        V: typing_extensions.TypeAlias = ValueType
+
+    class _ValueTypeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[Config._ValueType.ValueType], builtins.type):  # noqa: F821
+        DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+        NOT_SET_VALUE_TYPE: Config._ValueType.ValueType  # 0
+        """proto null"""
+        INT: Config._ValueType.ValueType  # 1
+        STRING: Config._ValueType.ValueType  # 2
+        BYTES: Config._ValueType.ValueType  # 3
+        DOUBLE: Config._ValueType.ValueType  # 4
+        BOOL: Config._ValueType.ValueType  # 5
+        LIMIT_DEFINITION: Config._ValueType.ValueType  # 7
+        LOG_LEVEL: Config._ValueType.ValueType  # 9
+        STRING_LIST: Config._ValueType.ValueType  # 10
+        INT_RANGE: Config._ValueType.ValueType  # 11
+
+    class ValueType(_ValueType, metaclass=_ValueTypeEnumTypeWrapper): ...
+    NOT_SET_VALUE_TYPE: Config.ValueType.ValueType  # 0
+    """proto null"""
+    INT: Config.ValueType.ValueType  # 1
+    STRING: Config.ValueType.ValueType  # 2
+    BYTES: Config.ValueType.ValueType  # 3
+    DOUBLE: Config.ValueType.ValueType  # 4
+    BOOL: Config.ValueType.ValueType  # 5
+    LIMIT_DEFINITION: Config.ValueType.ValueType  # 7
+    LOG_LEVEL: Config.ValueType.ValueType  # 9
+    STRING_LIST: Config.ValueType.ValueType  # 10
+    INT_RANGE: Config.ValueType.ValueType  # 11
 
     ID_FIELD_NUMBER: builtins.int
     PROJECT_ID_FIELD_NUMBER: builtins.int
@@ -279,7 +410,9 @@ class Config(google.protobuf.message.Message):
     ROWS_FIELD_NUMBER: builtins.int
     ALLOWABLE_VALUES_FIELD_NUMBER: builtins.int
     CONFIG_TYPE_FIELD_NUMBER: builtins.int
-    DRAFTID_FIELD_NUMBER: builtins.int
+    DRAFT_ID_FIELD_NUMBER: builtins.int
+    VALUE_TYPE_FIELD_NUMBER: builtins.int
+    SEND_TO_CLIENT_SDK_FIELD_NUMBER: builtins.int
     id: builtins.int
     project_id: builtins.int
     key: builtins.str
@@ -290,7 +423,10 @@ class Config(google.protobuf.message.Message):
     @property
     def allowable_values(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ConfigValue]: ...
     config_type: global___ConfigType.ValueType
-    draftId: builtins.int
+    draft_id: builtins.int
+    value_type: global___Config.ValueType.ValueType
+    send_to_client_sdk: builtins.bool
+    """default value of a boolean in proto3 is false"""
     def __init__(
         self,
         *,
@@ -301,11 +437,13 @@ class Config(google.protobuf.message.Message):
         rows: collections.abc.Iterable[global___ConfigRow] | None = ...,
         allowable_values: collections.abc.Iterable[global___ConfigValue] | None = ...,
         config_type: global___ConfigType.ValueType = ...,
-        draftId: builtins.int | None = ...,
+        draft_id: builtins.int | None = ...,
+        value_type: global___Config.ValueType.ValueType = ...,
+        send_to_client_sdk: builtins.bool = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["_draftId", b"_draftId", "changed_by", b"changed_by", "draftId", b"draftId"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["_draftId", b"_draftId", "allowable_values", b"allowable_values", "changed_by", b"changed_by", "config_type", b"config_type", "draftId", b"draftId", "id", b"id", "key", b"key", "project_id", b"project_id", "rows", b"rows"]) -> None: ...
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["_draftId", b"_draftId"]) -> typing_extensions.Literal["draftId"] | None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_draft_id", b"_draft_id", "changed_by", b"changed_by", "draft_id", b"draft_id"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_draft_id", b"_draft_id", "allowable_values", b"allowable_values", "changed_by", b"changed_by", "config_type", b"config_type", "draft_id", b"draft_id", "id", b"id", "key", b"key", "project_id", b"project_id", "rows", b"rows", "send_to_client_sdk", b"send_to_client_sdk", "value_type", b"value_type"]) -> None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_draft_id", b"_draft_id"]) -> typing_extensions.Literal["draft_id"] | None: ...
 
 global___Config = Config
 
@@ -315,15 +453,18 @@ class ChangedBy(google.protobuf.message.Message):
 
     USER_ID_FIELD_NUMBER: builtins.int
     EMAIL_FIELD_NUMBER: builtins.int
+    API_KEY_ID_FIELD_NUMBER: builtins.int
     user_id: builtins.int
     email: builtins.str
+    api_key_id: builtins.str
     def __init__(
         self,
         *,
         user_id: builtins.int = ...,
         email: builtins.str = ...,
+        api_key_id: builtins.str = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["email", b"email", "user_id", b"user_id"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["api_key_id", b"api_key_id", "email", b"email", "user_id", b"user_id"]) -> None: ...
 
 global___ChangedBy = ChangedBy
 
@@ -751,6 +892,49 @@ class Identity(google.protobuf.message.Message):
 global___Identity = Identity
 
 @typing_extensions.final
+class ConfigEvaluationMetaData(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    CONFIG_ROW_INDEX_FIELD_NUMBER: builtins.int
+    CONDITIONAL_VALUE_INDEX_FIELD_NUMBER: builtins.int
+    WEIGHTED_VALUE_INDEX_FIELD_NUMBER: builtins.int
+    TYPE_FIELD_NUMBER: builtins.int
+    ID_FIELD_NUMBER: builtins.int
+    VALUE_TYPE_FIELD_NUMBER: builtins.int
+    config_row_index: builtins.int
+    conditional_value_index: builtins.int
+    weighted_value_index: builtins.int
+    type: global___ConfigType.ValueType
+    id: builtins.int
+    value_type: global___Config.ValueType.ValueType
+    def __init__(
+        self,
+        *,
+        config_row_index: builtins.int | None = ...,
+        conditional_value_index: builtins.int | None = ...,
+        weighted_value_index: builtins.int | None = ...,
+        type: global___ConfigType.ValueType | None = ...,
+        id: builtins.int | None = ...,
+        value_type: global___Config.ValueType.ValueType | None = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_conditional_value_index", b"_conditional_value_index", "_config_row_index", b"_config_row_index", "_id", b"_id", "_type", b"_type", "_value_type", b"_value_type", "_weighted_value_index", b"_weighted_value_index", "conditional_value_index", b"conditional_value_index", "config_row_index", b"config_row_index", "id", b"id", "type", b"type", "value_type", b"value_type", "weighted_value_index", b"weighted_value_index"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_conditional_value_index", b"_conditional_value_index", "_config_row_index", b"_config_row_index", "_id", b"_id", "_type", b"_type", "_value_type", b"_value_type", "_weighted_value_index", b"_weighted_value_index", "conditional_value_index", b"conditional_value_index", "config_row_index", b"config_row_index", "id", b"id", "type", b"type", "value_type", b"value_type", "weighted_value_index", b"weighted_value_index"]) -> None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_conditional_value_index", b"_conditional_value_index"]) -> typing_extensions.Literal["conditional_value_index"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_config_row_index", b"_config_row_index"]) -> typing_extensions.Literal["config_row_index"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_id", b"_id"]) -> typing_extensions.Literal["id"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_type", b"_type"]) -> typing_extensions.Literal["type"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_value_type", b"_value_type"]) -> typing_extensions.Literal["value_type"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_weighted_value_index", b"_weighted_value_index"]) -> typing_extensions.Literal["weighted_value_index"] | None: ...
+
+global___ConfigEvaluationMetaData = ConfigEvaluationMetaData
+
+@typing_extensions.final
 class ClientConfigValue(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -758,28 +942,39 @@ class ClientConfigValue(google.protobuf.message.Message):
     STRING_FIELD_NUMBER: builtins.int
     DOUBLE_FIELD_NUMBER: builtins.int
     BOOL_FIELD_NUMBER: builtins.int
+    LOG_LEVEL_FIELD_NUMBER: builtins.int
+    STRING_LIST_FIELD_NUMBER: builtins.int
+    INT_RANGE_FIELD_NUMBER: builtins.int
+    CONFIG_EVALUATION_METADATA_FIELD_NUMBER: builtins.int
     int: builtins.int
     string: builtins.str
     double: builtins.float
     bool: builtins.bool
+    log_level: global___LogLevel.ValueType
+    @property
+    def string_list(self) -> global___StringList: ...
+    @property
+    def int_range(self) -> global___IntRange: ...
+    @property
+    def config_evaluation_metadata(self) -> global___ConfigEvaluationMetaData: ...
     def __init__(
         self,
         *,
-        int: builtins.int | None = ...,
-        string: builtins.str | None = ...,
-        double: builtins.float | None = ...,
-        bool: builtins.bool | None = ...,
+        int: builtins.int = ...,
+        string: builtins.str = ...,
+        double: builtins.float = ...,
+        bool: builtins.bool = ...,
+        log_level: global___LogLevel.ValueType = ...,
+        string_list: global___StringList | None = ...,
+        int_range: global___IntRange | None = ...,
+        config_evaluation_metadata: global___ConfigEvaluationMetaData | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["_bool", b"_bool", "_double", b"_double", "_int", b"_int", "_string", b"_string", "bool", b"bool", "double", b"double", "int", b"int", "string", b"string"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["_bool", b"_bool", "_double", b"_double", "_int", b"_int", "_string", b"_string", "bool", b"bool", "double", b"double", "int", b"int", "string", b"string"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_config_evaluation_metadata", b"_config_evaluation_metadata", "bool", b"bool", "config_evaluation_metadata", b"config_evaluation_metadata", "double", b"double", "int", b"int", "int_range", b"int_range", "log_level", b"log_level", "string", b"string", "string_list", b"string_list", "type", b"type"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_config_evaluation_metadata", b"_config_evaluation_metadata", "bool", b"bool", "config_evaluation_metadata", b"config_evaluation_metadata", "double", b"double", "int", b"int", "int_range", b"int_range", "log_level", b"log_level", "string", b"string", "string_list", b"string_list", "type", b"type"]) -> None: ...
     @typing.overload
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["_bool", b"_bool"]) -> typing_extensions.Literal["bool"] | None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_config_evaluation_metadata", b"_config_evaluation_metadata"]) -> typing_extensions.Literal["config_evaluation_metadata"] | None: ...
     @typing.overload
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["_double", b"_double"]) -> typing_extensions.Literal["double"] | None: ...
-    @typing.overload
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["_int", b"_int"]) -> typing_extensions.Literal["int"] | None: ...
-    @typing.overload
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["_string", b"_string"]) -> typing_extensions.Literal["string"] | None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["type", b"type"]) -> typing_extensions.Literal["int", "string", "double", "bool", "log_level", "string_list", "int_range"] | None: ...
 
 global___ClientConfigValue = ClientConfigValue
 
@@ -806,14 +1001,27 @@ class ConfigEvaluations(google.protobuf.message.Message):
         def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "value", b"value"]) -> None: ...
 
     VALUES_FIELD_NUMBER: builtins.int
+    APIKEY_METADATA_FIELD_NUMBER: builtins.int
+    DEFAULT_CONTEXT_FIELD_NUMBER: builtins.int
     @property
     def values(self) -> google.protobuf.internal.containers.MessageMap[builtins.str, global___ClientConfigValue]: ...
+    @property
+    def apikey_metadata(self) -> global___ApiKeyMetadata: ...
+    @property
+    def default_context(self) -> global___ContextSet: ...
     def __init__(
         self,
         *,
         values: collections.abc.Mapping[builtins.str, global___ClientConfigValue] | None = ...,
+        apikey_metadata: global___ApiKeyMetadata | None = ...,
+        default_context: global___ContextSet | None = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["values", b"values"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_apikey_metadata", b"_apikey_metadata", "_default_context", b"_default_context", "apikey_metadata", b"apikey_metadata", "default_context", b"default_context"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_apikey_metadata", b"_apikey_metadata", "_default_context", b"_default_context", "apikey_metadata", b"apikey_metadata", "default_context", b"default_context", "values", b"values"]) -> None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_apikey_metadata", b"_apikey_metadata"]) -> typing_extensions.Literal["apikey_metadata"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_default_context", b"_default_context"]) -> typing_extensions.Literal["default_context"] | None: ...
 
 global___ConfigEvaluations = ConfigEvaluations
 
@@ -1110,3 +1318,307 @@ class EvaluatedKeys(google.protobuf.message.Message):
     def WhichOneof(self, oneof_group: typing_extensions.Literal["_namespace", b"_namespace"]) -> typing_extensions.Literal["namespace"] | None: ...
 
 global___EvaluatedKeys = EvaluatedKeys
+
+@typing_extensions.final
+class EvaluatedConfig(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    KEY_FIELD_NUMBER: builtins.int
+    CONFIG_VERSION_FIELD_NUMBER: builtins.int
+    RESULT_FIELD_NUMBER: builtins.int
+    CONTEXT_FIELD_NUMBER: builtins.int
+    TIMESTAMP_FIELD_NUMBER: builtins.int
+    key: builtins.str
+    config_version: builtins.int
+    @property
+    def result(self) -> global___ConfigValue: ...
+    @property
+    def context(self) -> global___ContextSet: ...
+    timestamp: builtins.int
+    def __init__(
+        self,
+        *,
+        key: builtins.str = ...,
+        config_version: builtins.int = ...,
+        result: global___ConfigValue | None = ...,
+        context: global___ContextSet | None = ...,
+        timestamp: builtins.int = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["context", b"context", "result", b"result"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["config_version", b"config_version", "context", b"context", "key", b"key", "result", b"result", "timestamp", b"timestamp"]) -> None: ...
+
+global___EvaluatedConfig = EvaluatedConfig
+
+@typing_extensions.final
+class EvaluatedConfigs(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    CONFIGS_FIELD_NUMBER: builtins.int
+    @property
+    def configs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___EvaluatedConfig]: ...
+    def __init__(
+        self,
+        *,
+        configs: collections.abc.Iterable[global___EvaluatedConfig] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["configs", b"configs"]) -> None: ...
+
+global___EvaluatedConfigs = EvaluatedConfigs
+
+@typing_extensions.final
+class ConfigEvaluationCounter(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    class _Reason:
+        ValueType = typing.NewType("ValueType", builtins.int)
+        V: typing_extensions.TypeAlias = ValueType
+
+    class _ReasonEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[ConfigEvaluationCounter._Reason.ValueType], builtins.type):  # noqa: F821
+        DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+        UNKNOWN: ConfigEvaluationCounter._Reason.ValueType  # 0
+
+    class Reason(_Reason, metaclass=_ReasonEnumTypeWrapper): ...
+    UNKNOWN: ConfigEvaluationCounter.Reason.ValueType  # 0
+
+    COUNT_FIELD_NUMBER: builtins.int
+    CONFIG_ID_FIELD_NUMBER: builtins.int
+    SELECTED_INDEX_FIELD_NUMBER: builtins.int
+    SELECTED_VALUE_FIELD_NUMBER: builtins.int
+    CONFIG_ROW_INDEX_FIELD_NUMBER: builtins.int
+    CONDITIONAL_VALUE_INDEX_FIELD_NUMBER: builtins.int
+    WEIGHTED_VALUE_INDEX_FIELD_NUMBER: builtins.int
+    REASON_FIELD_NUMBER: builtins.int
+    count: builtins.int
+    config_id: builtins.int
+    selected_index: builtins.int
+    """index into the allowed-values list in the config"""
+    @property
+    def selected_value(self) -> global___ConfigValue: ...
+    config_row_index: builtins.int
+    """which row matched"""
+    conditional_value_index: builtins.int
+    """which ConditionalValue in the row matched?"""
+    weighted_value_index: builtins.int
+    """index into the weighted value array"""
+    reason: global___ConfigEvaluationCounter.Reason.ValueType
+    def __init__(
+        self,
+        *,
+        count: builtins.int = ...,
+        config_id: builtins.int | None = ...,
+        selected_index: builtins.int | None = ...,
+        selected_value: global___ConfigValue | None = ...,
+        config_row_index: builtins.int | None = ...,
+        conditional_value_index: builtins.int | None = ...,
+        weighted_value_index: builtins.int | None = ...,
+        reason: global___ConfigEvaluationCounter.Reason.ValueType = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_conditional_value_index", b"_conditional_value_index", "_config_id", b"_config_id", "_config_row_index", b"_config_row_index", "_selected_index", b"_selected_index", "_selected_value", b"_selected_value", "_weighted_value_index", b"_weighted_value_index", "conditional_value_index", b"conditional_value_index", "config_id", b"config_id", "config_row_index", b"config_row_index", "selected_index", b"selected_index", "selected_value", b"selected_value", "weighted_value_index", b"weighted_value_index"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_conditional_value_index", b"_conditional_value_index", "_config_id", b"_config_id", "_config_row_index", b"_config_row_index", "_selected_index", b"_selected_index", "_selected_value", b"_selected_value", "_weighted_value_index", b"_weighted_value_index", "conditional_value_index", b"conditional_value_index", "config_id", b"config_id", "config_row_index", b"config_row_index", "count", b"count", "reason", b"reason", "selected_index", b"selected_index", "selected_value", b"selected_value", "weighted_value_index", b"weighted_value_index"]) -> None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_conditional_value_index", b"_conditional_value_index"]) -> typing_extensions.Literal["conditional_value_index"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_config_id", b"_config_id"]) -> typing_extensions.Literal["config_id"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_config_row_index", b"_config_row_index"]) -> typing_extensions.Literal["config_row_index"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_selected_index", b"_selected_index"]) -> typing_extensions.Literal["selected_index"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_selected_value", b"_selected_value"]) -> typing_extensions.Literal["selected_value"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_weighted_value_index", b"_weighted_value_index"]) -> typing_extensions.Literal["weighted_value_index"] | None: ...
+
+global___ConfigEvaluationCounter = ConfigEvaluationCounter
+
+@typing_extensions.final
+class ConfigEvaluationSummary(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    KEY_FIELD_NUMBER: builtins.int
+    TYPE_FIELD_NUMBER: builtins.int
+    COUNTERS_FIELD_NUMBER: builtins.int
+    key: builtins.str
+    type: global___ConfigType.ValueType
+    """type of config eval"""
+    @property
+    def counters(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ConfigEvaluationCounter]: ...
+    def __init__(
+        self,
+        *,
+        key: builtins.str = ...,
+        type: global___ConfigType.ValueType = ...,
+        counters: collections.abc.Iterable[global___ConfigEvaluationCounter] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["counters", b"counters", "key", b"key", "type", b"type"]) -> None: ...
+
+global___ConfigEvaluationSummary = ConfigEvaluationSummary
+
+@typing_extensions.final
+class ConfigEvaluationSummaries(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    START_FIELD_NUMBER: builtins.int
+    END_FIELD_NUMBER: builtins.int
+    SUMMARIES_FIELD_NUMBER: builtins.int
+    start: builtins.int
+    end: builtins.int
+    @property
+    def summaries(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ConfigEvaluationSummary]: ...
+    def __init__(
+        self,
+        *,
+        start: builtins.int = ...,
+        end: builtins.int = ...,
+        summaries: collections.abc.Iterable[global___ConfigEvaluationSummary] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["end", b"end", "start", b"start", "summaries", b"summaries"]) -> None: ...
+
+global___ConfigEvaluationSummaries = ConfigEvaluationSummaries
+
+@typing_extensions.final
+class LoggersTelemetryEvent(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    LOGGERS_FIELD_NUMBER: builtins.int
+    START_AT_FIELD_NUMBER: builtins.int
+    END_AT_FIELD_NUMBER: builtins.int
+    @property
+    def loggers(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Logger]: ...
+    start_at: builtins.int
+    end_at: builtins.int
+    def __init__(
+        self,
+        *,
+        loggers: collections.abc.Iterable[global___Logger] | None = ...,
+        start_at: builtins.int = ...,
+        end_at: builtins.int = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["end_at", b"end_at", "loggers", b"loggers", "start_at", b"start_at"]) -> None: ...
+
+global___LoggersTelemetryEvent = LoggersTelemetryEvent
+
+@typing_extensions.final
+class TelemetryEvent(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    SUMMARIES_FIELD_NUMBER: builtins.int
+    EXAMPLE_CONTEXTS_FIELD_NUMBER: builtins.int
+    CLIENT_STATS_FIELD_NUMBER: builtins.int
+    LOGGERS_FIELD_NUMBER: builtins.int
+    CONTEXT_SHAPES_FIELD_NUMBER: builtins.int
+    @property
+    def summaries(self) -> global___ConfigEvaluationSummaries: ...
+    @property
+    def example_contexts(self) -> global___ExampleContexts: ...
+    @property
+    def client_stats(self) -> global___ClientStats: ...
+    @property
+    def loggers(self) -> global___LoggersTelemetryEvent: ...
+    @property
+    def context_shapes(self) -> global___ContextShapes: ...
+    def __init__(
+        self,
+        *,
+        summaries: global___ConfigEvaluationSummaries | None = ...,
+        example_contexts: global___ExampleContexts | None = ...,
+        client_stats: global___ClientStats | None = ...,
+        loggers: global___LoggersTelemetryEvent | None = ...,
+        context_shapes: global___ContextShapes | None = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["client_stats", b"client_stats", "context_shapes", b"context_shapes", "example_contexts", b"example_contexts", "loggers", b"loggers", "payload", b"payload", "summaries", b"summaries"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["client_stats", b"client_stats", "context_shapes", b"context_shapes", "example_contexts", b"example_contexts", "loggers", b"loggers", "payload", b"payload", "summaries", b"summaries"]) -> None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["payload", b"payload"]) -> typing_extensions.Literal["summaries", "example_contexts", "client_stats", "loggers", "context_shapes"] | None: ...
+
+global___TelemetryEvent = TelemetryEvent
+
+@typing_extensions.final
+class TelemetryEvents(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    INSTANCE_HASH_FIELD_NUMBER: builtins.int
+    EVENTS_FIELD_NUMBER: builtins.int
+    instance_hash: builtins.str
+    """random UUID generated on startup - represents the server so we can aggregate"""
+    @property
+    def events(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___TelemetryEvent]: ...
+    def __init__(
+        self,
+        *,
+        instance_hash: builtins.str = ...,
+        events: collections.abc.Iterable[global___TelemetryEvent] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["events", b"events", "instance_hash", b"instance_hash"]) -> None: ...
+
+global___TelemetryEvents = TelemetryEvents
+
+@typing_extensions.final
+class TelemetryEventsResponse(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    SUCCESS_FIELD_NUMBER: builtins.int
+    success: builtins.bool
+    def __init__(
+        self,
+        *,
+        success: builtins.bool = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["success", b"success"]) -> None: ...
+
+global___TelemetryEventsResponse = TelemetryEventsResponse
+
+@typing_extensions.final
+class ExampleContexts(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    EXAMPLES_FIELD_NUMBER: builtins.int
+    @property
+    def examples(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ExampleContext]: ...
+    def __init__(
+        self,
+        *,
+        examples: collections.abc.Iterable[global___ExampleContext] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["examples", b"examples"]) -> None: ...
+
+global___ExampleContexts = ExampleContexts
+
+@typing_extensions.final
+class ExampleContext(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    TIMESTAMP_FIELD_NUMBER: builtins.int
+    CONTEXTSET_FIELD_NUMBER: builtins.int
+    timestamp: builtins.int
+    @property
+    def contextSet(self) -> global___ContextSet: ...
+    def __init__(
+        self,
+        *,
+        timestamp: builtins.int = ...,
+        contextSet: global___ContextSet | None = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["contextSet", b"contextSet"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["contextSet", b"contextSet", "timestamp", b"timestamp"]) -> None: ...
+
+global___ExampleContext = ExampleContext
+
+@typing_extensions.final
+class ClientStats(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    START_FIELD_NUMBER: builtins.int
+    END_FIELD_NUMBER: builtins.int
+    DROPPED_EVENT_COUNT_FIELD_NUMBER: builtins.int
+    start: builtins.int
+    end: builtins.int
+    dropped_event_count: builtins.int
+    def __init__(
+        self,
+        *,
+        start: builtins.int = ...,
+        end: builtins.int = ...,
+        dropped_event_count: builtins.int = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["dropped_event_count", b"dropped_event_count", "end", b"end", "start", b"start"]) -> None: ...
+
+global___ClientStats = ClientStats

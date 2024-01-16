@@ -9,28 +9,34 @@ class TestWeightedValueResolver:
     def test_resolving_a_single_value(self):
         weighted_values = self.build_weighted_values({"abc": 1})
 
-        resolved = WeightedValueResolver(weighted_values, key, None).resolve()
-        assert resolved.value.string == "abc"
+        value, index = WeightedValueResolver(weighted_values, key, None).resolve()
+        assert value.value.string == "abc"
+        assert index == 0
 
     def test_multiple_values_with_even_distribution(self):
         weighted_values = self.build_weighted_values({"abc": 1, "def": 1})
 
-        resolved = WeightedValueResolver(weighted_values, key, "user:001").resolve()
-        assert resolved.value.string == "abc"
+        value, index = WeightedValueResolver(weighted_values, key, "user:001").resolve()
+        assert value.value.string == "abc"
+        assert index == 0
 
-        resolved = WeightedValueResolver(weighted_values, key, "user:456").resolve()
-        assert resolved.value.string == "def"
+        value, index = WeightedValueResolver(weighted_values, key, "user:456").resolve()
+        assert value.value.string == "def"
+        assert index == 1
 
     def test_multiple_values_with_uneven_distribution(self):
         weighted_values = self.build_weighted_values({"abc": 1, "def": 98, "ghi": 1})
-        resolved = WeightedValueResolver(weighted_values, key, "user:456").resolve()
-        assert resolved.value.string == "def"
+        value, index = WeightedValueResolver(weighted_values, key, "user:456").resolve()
+        assert value.value.string == "def"
+        assert index == 1
 
-        resolved = WeightedValueResolver(weighted_values, key, "user:103").resolve()
-        assert resolved.value.string == "ghi"
+        value, index = WeightedValueResolver(weighted_values, key, "user:103").resolve()
+        assert value.value.string == "ghi"
+        assert index == 2
 
-        resolved = WeightedValueResolver(weighted_values, key, "user:119").resolve()
-        assert resolved.value.string == "abc"
+        value, index = WeightedValueResolver(weighted_values, key, "user:119").resolve()
+        assert value.value.string == "abc"
+        assert index == 0
 
     def test_distribution_simulation(self):
         weighted_values = self.build_weighted_values({"abc": 1, "def": 98, "ghi": 1})
@@ -38,7 +44,7 @@ class TestWeightedValueResolver:
         for i in range(10_000):
             resolved = WeightedValueResolver(
                 weighted_values, key, "user:%s" % i
-            ).resolve()
+            ).resolve()[0]
             result = resolved.value.string
             if results.get(result) is None:
                 results[result] = 1

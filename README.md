@@ -80,7 +80,7 @@ There's a convenience method to access an opinionated structlog setup. **No conf
 
 ```python
 from prefab_cloud_python import default_structlog_setup;
-default_structlog_setup()
+default_structlog_setup(colors=True) # true is the default, false to remove ANSI color codes
 ```
 
 ### Using With Existing Structlog
@@ -91,7 +91,7 @@ The code below is an example configuration. **_See the note below about CallSite
 
 ```python
 import structlog
-from prefab_cloud_python import prefab_structlog_processor
+from prefab_cloud_python import create_prefab_structlog_processor
 from prefab_cloud_python import STRUCTLOG_CALLSITE_IGNORES
 
 structlog.configure(
@@ -109,7 +109,7 @@ structlog.configure(
                 ],
                 additional_ignores=STRUCTLOG_CALLSITE_IGNORES,
             ),
-            prefab_structlog_processor, ## add this
+            create_prefab_structlog_processor(), ## add this
             structlog.dev.ConsoleRenderer(),
         ]
     )

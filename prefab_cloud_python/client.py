@@ -8,14 +8,14 @@ from .log_path_aggregator import LogPathAggregator
 from .logger_client import LoggerClient
 from .logger_filter import LoggerFilter
 from .options import Options
-from typing import Optional
+from typing import Optional, Union
 import prefab_pb2 as Prefab
 import uuid
 import requests
 from urllib.parse import urljoin
 
-ConfigValueType = Optional[int | float | bool | str | list[str]]
-PostBodyType = Prefab.Loggers | Prefab.ContextShapes
+ConfigValueType = Optional[Union[int, float, bool, str, list[str]]]
+PostBodyType = Union[Prefab.Loggers, Prefab.ContextShapes]
 
 
 class Client:

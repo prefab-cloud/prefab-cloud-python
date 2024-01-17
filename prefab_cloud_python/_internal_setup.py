@@ -1,11 +1,11 @@
-from .multi_processor import MultiProcessor
-from ._processors import clean_event_dict, set_location, log_or_drop
+from .structlog_multi_processor import StructlogMultiProcessor
+from ._structlog_processors import clean_event_dict, set_location, log_or_drop
 import structlog
 from .constants import STRUCTLOG_CALLSITE_IGNORES
 
 
 def create_prefab_structlog_processor():
-    return MultiProcessor([set_location, log_or_drop, clean_event_dict])
+    return StructlogMultiProcessor([set_location, log_or_drop, clean_event_dict])
 
 
 def default_structlog_setup(colors=True):

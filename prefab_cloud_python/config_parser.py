@@ -1,6 +1,6 @@
 import prefab_pb2 as Prefab
 
-from prefab_cloud_python._processors import LOG_LEVEL_BASE_KEY
+from prefab_cloud_python._structlog_processors import LOG_LEVEL_BASE_KEY
 
 
 class MissingFeatureFlagValueException(Exception):

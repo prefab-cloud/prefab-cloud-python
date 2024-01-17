@@ -33,7 +33,6 @@ print("my-first-feature-flag is:", result)
 
 See full documentation https://docs.prefab.cloud/docs/sdks/python
 
-<<<<<<< HEAD
 ## Development
 
 1. Ensure that `poetry` is installed: https://python-poetry.org/docs/#installation
@@ -71,7 +70,7 @@ poetry run pytest tests/name_of_test_file.py
 4. `git tag <version> && git push --tags`
 5. `poetry release --build`
    1. To do this you will need an [pypi.org](https://pypi.org) account, and to be added to this project (ask Michael for an invitation)
- 
+
 ## StructLog Configuration
 
 ### Simple Usage

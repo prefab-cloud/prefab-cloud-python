@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 from .config_loader import ConfigLoader
 from .config_resolver import ConfigResolver
 from .read_write_lock import ReadWriteLock
 from .config_value_unwrapper import ConfigValueUnwrapper
 from .context import Context
+from .config_resolver import Evaluation
 from google.protobuf.json_format import MessageToJson, Parse
 
 import grpc
@@ -77,14 +80,13 @@ class ConfigClient:
             self.base_client.context_shape_aggregator.push(Context(context))
 
         if value is not None:
-            raw_config = self.config_resolver.raw(key)
-            return ConfigValueUnwrapper.deepest_value(
-                value, raw_config, self.config_resolver, context
-            ).unwrap()
+            return value.unwrapped_value()
         else:
             return self.handle_default(key, default)
 
-    def __get(self, key, lookup_key, properties, context=Context.get_current()):
+    def __get(
+        self, key, lookup_key, properties, context=Context.get_current()
+    ) -> None | Evaluation:
         try:
             self.init_lock.acquire_read(self.options.connection_timeout_seconds)
         except Exception:

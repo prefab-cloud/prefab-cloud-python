@@ -41,7 +41,13 @@ class ConfigValueUnwrapper:
         self.resolver = resolver
         self.weighted_value_index = weighted_value_index
 
-    def deepest_value(config_value, config, resolver, context=Context.get_current()):
+    @staticmethod
+    def deepest_value(
+        config_value: Prefab.ConfigValue,
+        config,
+        resolver,
+        context=Context.get_current(),
+    ):
         if config_value and config_value.WhichOneof("type") == "weighted_values":
             value, index = WeightedValueResolver(
                 config_value.weighted_values.weighted_values,

@@ -2,6 +2,7 @@ import prefab_pb2 as Prefab
 
 
 class ConfigValueWrapper:
+    @staticmethod
     def wrap(value, confidential=None):
         if type(value) == int:
             return Prefab.ConfigValue(int=value, confidential=confidential)

@@ -1,4 +1,4 @@
-from prefab_cloud_python.criteria_evaluator import CriteriaEvaluator
+from prefab_cloud_python.config_resolver import CriteriaEvaluator
 from prefab_cloud_python.context import Context
 import prefab_pb2 as Prefab
 
@@ -39,7 +39,9 @@ class TestCriteriaEvaluator:
         evaluator = CriteriaEvaluator(
             config, project_env_id, resolver=None, base_client=None
         )
-        assert evaluator.evaluate(context({})).string == desired_value
+        assert (
+            evaluator.evaluate(context({})).raw_config_value().string == desired_value
+        )
 
     def test_nested_props_in(self):
         config = Prefab.Config(
@@ -72,13 +74,20 @@ class TestCriteriaEvaluator:
             config, project_env_id, resolver=None, base_client=None
         )
 
-        assert evaluator.evaluate(context({})).string == default_value
         assert (
-            evaluator.evaluate(context({"user": {"key": "wrong"}})).string
+            evaluator.evaluate(context({})).raw_config_value().string == default_value
+        )
+        assert (
+            evaluator.evaluate(context({"user": {"key": "wrong"}}))
+            .raw_config_value()
+            .string
             == default_value
         )
         assert (
-            evaluator.evaluate(context({"user": {"key": "ok"}})).string == desired_value
+            evaluator.evaluate(context({"user": {"key": "ok"}}))
+            .raw_config_value()
+            .string
+            == desired_value
         )
 
     def test_nested_props_not_in(self):
@@ -112,13 +121,20 @@ class TestCriteriaEvaluator:
             config, project_env_id, resolver=None, base_client=None
         )
 
-        assert evaluator.evaluate(context({})).string == desired_value
         assert (
-            evaluator.evaluate(context({"user": {"key": "wrong"}})).string
+            evaluator.evaluate(context({})).raw_config_value().string == desired_value
+        )
+        assert (
+            evaluator.evaluate(context({"user": {"key": "wrong"}}))
+            .raw_config_value()
+            .string
             == default_value
         )
         assert (
-            evaluator.evaluate(context({"user": {"key": "ok"}})).string == desired_value
+            evaluator.evaluate(context({"user": {"key": "ok"}}))
+            .raw_config_value()
+            .string
+            == desired_value
         )
 
     def test_prop_is_one_of(self):
@@ -152,17 +168,19 @@ class TestCriteriaEvaluator:
             config, project_env_id, resolver=None, base_client=None
         )
 
-        assert evaluator.evaluate(context({})).string == default_value
         assert (
-            evaluator.evaluate(
-                context({"user": {"email_suffix": "prefab.cloud"}})
-            ).string
+            evaluator.evaluate(context({})).raw_config_value().string == default_value
+        )
+        assert (
+            evaluator.evaluate(context({"user": {"email_suffix": "prefab.cloud"}}))
+            .raw_config_value()
+            .string
             == default_value
         )
         assert (
-            evaluator.evaluate(
-                context({"user": {"email_suffix": "hotmail.com"}})
-            ).string
+            evaluator.evaluate(context({"user": {"email_suffix": "hotmail.com"}}))
+            .raw_config_value()
+            .string
             == desired_value
         )
 
@@ -197,17 +215,19 @@ class TestCriteriaEvaluator:
             config, project_env_id, resolver=None, base_client=None
         )
 
-        assert evaluator.evaluate(context({})).string == desired_value
         assert (
-            evaluator.evaluate(
-                context({"user": {"email_suffix": "prefab.cloud"}})
-            ).string
+            evaluator.evaluate(context({})).raw_config_value().string == desired_value
+        )
+        assert (
+            evaluator.evaluate(context({"user": {"email_suffix": "prefab.cloud"}}))
+            .raw_config_value()
+            .string
             == desired_value
         )
         assert (
-            evaluator.evaluate(
-                context({"user": {"email_suffix": "hotmail.com"}})
-            ).string
+            evaluator.evaluate(context({"user": {"email_suffix": "hotmail.com"}}))
+            .raw_config_value()
+            .string
             == default_value
         )
 
@@ -242,17 +262,17 @@ class TestCriteriaEvaluator:
             config, project_env_id, resolver=None, base_client=None
         )
 
-        assert evaluator.evaluate({}).string == default_value
+        assert evaluator.evaluate({}).raw_config_value().string == default_value
         assert (
-            evaluator.evaluate(
-                context({"user": {"email": "example@prefab.cloud"}})
-            ).string
+            evaluator.evaluate(context({"user": {"email": "example@prefab.cloud"}}))
+            .raw_config_value()
+            .string
             == default_value
         )
         assert (
-            evaluator.evaluate(
-                context({"user": {"email": "example@hotmail.com"}})
-            ).string
+            evaluator.evaluate(context({"user": {"email": "example@hotmail.com"}}))
+            .raw_config_value()
+            .string
             == desired_value
         )
 
@@ -287,17 +307,17 @@ class TestCriteriaEvaluator:
             config, project_env_id, resolver=None, base_client=None
         )
 
-        assert evaluator.evaluate({}).string == desired_value
+        assert evaluator.evaluate({}).raw_config_value().string == desired_value
         assert (
-            evaluator.evaluate(
-                context({"user": {"email": "example@prefab.cloud"}})
-            ).string
+            evaluator.evaluate(context({"user": {"email": "example@prefab.cloud"}}))
+            .raw_config_value()
+            .string
             == desired_value
         )
         assert (
-            evaluator.evaluate(
-                context({"user": {"email": "example@hotmail.com"}})
-            ).string
+            evaluator.evaluate(context({"user": {"email": "example@hotmail.com"}}))
+            .raw_config_value()
+            .string
             == default_value
         )
 
@@ -378,17 +398,17 @@ class TestCriteriaEvaluator:
             base_client=None,
         )
 
-        assert evaluator.evaluate({}).string == "default_value"
+        assert evaluator.evaluate({}).raw_config_value().string == "default_value"
         assert (
-            evaluator.evaluate(
-                context({"user": {"email": "example@prefab.cloud"}})
-            ).string
+            evaluator.evaluate(context({"user": {"email": "example@prefab.cloud"}}))
+            .raw_config_value()
+            .string
             == "default_value"
         )
         assert (
-            evaluator.evaluate(
-                context({"user": {"email": "example@hotmail.com"}})
-            ).string
+            evaluator.evaluate(context({"user": {"email": "example@hotmail.com"}}))
+            .raw_config_value()
+            .string
             == "desired_value"
         )
 
@@ -451,17 +471,17 @@ class TestCriteriaEvaluator:
             base_client=None,
         )
 
-        assert evaluator.evaluate({}).string == desired_value
+        assert evaluator.evaluate({}).raw_config_value().string == desired_value
         assert (
-            evaluator.evaluate(
-                context({"user": {"email": "example@prefab.cloud"}})
-            ).string
+            evaluator.evaluate(context({"user": {"email": "example@prefab.cloud"}}))
+            .raw_config_value()
+            .string
             == desired_value
         )
         assert (
-            evaluator.evaluate(
-                context({"user": {"email": "example@hotmail.com"}})
-            ).string
+            evaluator.evaluate(context({"user": {"email": "example@hotmail.com"}}))
+            .raw_config_value()
+            .string
             == default_value
         )
 
@@ -534,17 +554,19 @@ class TestCriteriaEvaluator:
             base_client=None,
         )
 
-        assert evaluator.evaluate({}).string == default_value
+        assert evaluator.evaluate({}).raw_config_value().string == default_value
         assert (
-            evaluator.evaluate(
-                context({"user": {"email": "example@prefab.cloud"}})
-            ).string
+            evaluator.evaluate(context({"user": {"email": "example@prefab.cloud"}}))
+            .raw_config_value()
+            .string
             == default_value
         )
         assert (
             evaluator.evaluate(
                 context({"user": {"email": "example@prefab.cloud", "admin": True}})
-            ).string
+            )
+            .raw_config_value()
+            .string
             == desired_value
         )
         assert (
@@ -558,17 +580,23 @@ class TestCriteriaEvaluator:
                         }
                     }
                 )
-            ).string
+            )
+            .raw_config_value()
+            .string
             == default_value
         )
         assert (
-            evaluator.evaluate(context({"user": {"email": "example@gmail.com"}})).string
+            evaluator.evaluate(context({"user": {"email": "example@gmail.com"}}))
+            .raw_config_value()
+            .string
             == default_value
         )
         assert (
             evaluator.evaluate(
                 context({"user": {"email": "example@gmail.com", "admin": True}})
-            ).string
+            )
+            .raw_config_value()
+            .string
             == desired_value
         )
         assert (
@@ -582,7 +610,9 @@ class TestCriteriaEvaluator:
                         }
                     }
                 )
-            ).string
+            )
+            .raw_config_value()
+            .string
             == default_value
         )
 
@@ -660,17 +690,19 @@ class TestCriteriaEvaluator:
             base_client=None,
         )
 
-        assert evaluator.evaluate({}).string == default_value
+        assert evaluator.evaluate({}).raw_config_value().string == default_value
         assert (
-            evaluator.evaluate(
-                context({"user": {"email": "example@prefab.cloud"}})
-            ).string
+            evaluator.evaluate(context({"user": {"email": "example@prefab.cloud"}}))
+            .raw_config_value()
+            .string
             == desired_value
         )
         assert (
             evaluator.evaluate(
                 context({"user": {"email": "example@prefab.cloud", "admin": True}})
-            ).string
+            )
+            .raw_config_value()
+            .string
             == desired_value
         )
         assert (
@@ -684,17 +716,23 @@ class TestCriteriaEvaluator:
                         }
                     }
                 )
-            ).string
+            )
+            .raw_config_value()
+            .string
             == default_value
         )
         assert (
-            evaluator.evaluate(context({"user": {"email": "example@gmail.com"}})).string
+            evaluator.evaluate(context({"user": {"email": "example@gmail.com"}}))
+            .raw_config_value()
+            .string
             == desired_value
         )
         assert (
             evaluator.evaluate(
                 context({"user": {"email": "example@gmail.com", "admin": True}})
-            ).string
+            )
+            .raw_config_value()
+            .string
             == desired_value
         )
         assert (
@@ -708,7 +746,9 @@ class TestCriteriaEvaluator:
                         }
                     }
                 )
-            ).string
+            )
+            .raw_config_value()
+            .string
             == default_value
         )
 
@@ -743,25 +783,37 @@ class TestCriteriaEvaluator:
             config, project_env_id, resolver=None, base_client=None
         )
 
-        assert evaluator.evaluate(context({})).string == default_value
         assert (
-            evaluator.evaluate(context({"team": {"name": "prefab.cloud"}})).string
+            evaluator.evaluate(context({})).raw_config_value().string == default_value
+        )
+        assert (
+            evaluator.evaluate(context({"team": {"name": "prefab.cloud"}}))
+            .raw_config_value()
+            .string
             == default_value
         )
 
         assert (
-            evaluator.evaluate(context({"team": {"name": 1}})).string == desired_value
-        )
-        assert (
-            evaluator.evaluate(context({"team": {"name": "1"}})).string == desired_value
-        )
-
-        assert (
-            evaluator.evaluate(context({"team": {"name": True}})).string
+            evaluator.evaluate(context({"team": {"name": 1}})).raw_config_value().string
             == desired_value
         )
         assert (
-            evaluator.evaluate(context({"team": {"name": "True"}})).string
+            evaluator.evaluate(context({"team": {"name": "1"}}))
+            .raw_config_value()
+            .string
+            == desired_value
+        )
+
+        assert (
+            evaluator.evaluate(context({"team": {"name": True}}))
+            .raw_config_value()
+            .string
+            == desired_value
+        )
+        assert (
+            evaluator.evaluate(context({"team": {"name": "True"}}))
+            .raw_config_value()
+            .string
             == desired_value
         )
 

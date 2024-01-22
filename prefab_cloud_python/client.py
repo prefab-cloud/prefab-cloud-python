@@ -13,9 +13,12 @@ import prefab_pb2 as Prefab
 import uuid
 import requests
 from urllib.parse import urljoin
+from importlib.metadata import version
 
 ConfigValueType = Optional[Union[int, float, bool, str, list[str]]]
 PostBodyType = Union[Prefab.Loggers, Prefab.ContextShapes]
+Version = version("prefab-cloud-python")
+VersionHeader = "X-PrefabCloud-Client-Version"
 
 
 class Client:
@@ -46,6 +49,7 @@ class Client:
         self.api_url = options.prefab_api_url
         self.grpc_url = options.prefab_grpc_url
         self.session = requests.Session()
+        self.session.headers.update({VersionHeader: f"prefab-cloud-python-{Version}"})
         if options.is_local_only():
             self.logger.log_internal("info", "Prefab running in local-only mode")
         else:

@@ -12,6 +12,7 @@ class ContextShapeAggregator:
 
         self.start_at = time.time()
         self.data = set()
+        self.sync_thread = None
 
     def push(self, context):
         if len(self.data) >= self.max_shapes:

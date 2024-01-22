@@ -9,7 +9,7 @@ class TestLogPathAggregator:
     def test_sync(self):
         with timecop.freeze(time.time()):
             options = Options(
-                prefab_datasources="ALL",
+                prefab_datasources="LOCAL_ONLY",
                 api_key="123-development-yourapikey-SDK",
                 collect_sync_interval=1000,
                 prefab_envs=["unit_tests"],
@@ -18,6 +18,7 @@ class TestLogPathAggregator:
                 connection_timeout_seconds=0,
                 log_boundary="..",
             )
+            options.collect_max_paths = 100  # override Options LOCAL_ONLY behavior
             client = Client(options)
 
             for _ in range(2):

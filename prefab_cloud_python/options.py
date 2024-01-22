@@ -69,6 +69,7 @@ class Options:
         collect_max_paths: int = 1000,
         collect_max_shapes: int = 10_000,
         collect_sync_interval: Optional[int] = None,
+        collect_evaluation_summaries: bool = True,
     ) -> None:
         self.prefab_datasources = Options.__validate_datasource(prefab_datasources)
         self.datafile = x_datafile
@@ -99,6 +100,7 @@ class Options:
         self.__set_log_collection(collect_logs, collect_max_paths, self.is_local_only())
         self.collect_sync_interval = collect_sync_interval
         self.collect_max_shapes = collect_max_shapes
+        self.collect_evaluation_summaries = collect_evaluation_summaries
 
     def is_local_only(self) -> bool:
         return self.prefab_datasources == "LOCAL_ONLY"

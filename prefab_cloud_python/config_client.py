@@ -72,15 +72,16 @@ class ConfigClient:
             self.start_streaming()
 
     def get(self, key, default="NO_DEFAULT_PROVIDED", context=Context.get_current()):
-        value = self.__get(key, None, {}, context=context)
+        evaluation_result = self.__get(key, None, {}, context=context)
 
         if isinstance(context, Context):
             self.base_client.context_shape_aggregator.push(context)
         elif not isinstance(context, str):
             self.base_client.context_shape_aggregator.push(Context(context))
 
-        if value is not None:
-            return value.unwrapped_value()
+        if evaluation_result is not None:
+            self.base_client.telemetry_manager.record_evaluation(evaluation_result)
+            return evaluation_result.unwrapped_value()
         else:
             return self.handle_default(key, default)
 
@@ -117,13 +118,15 @@ class ConfigClient:
         self.base_client.logger.log_internal("warn", "No success loading checkpoints")
 
     def start_checkpointing_thread(self):
-        self.checkpointing_thread = threading.Thread(target=self.checkpointing_loop)
-        self.checkpointing_thread.daemon = True
+        self.checkpointing_thread = threading.Thread(
+            target=self.checkpointing_loop, daemon=True
+        )
         self.checkpointing_thread.start()
 
     def start_streaming(self):
-        self.streaming_thread = threading.Thread(target=self.streaming_loop)
-        self.streaming_thread.daemon = True
+        self.streaming_thread = threading.Thread(
+            target=self.streaming_loop, daemon=True
+        )
         self.streaming_thread.start()
 
     def streaming_loop(self):

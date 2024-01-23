@@ -20,6 +20,7 @@ mmh3 = "^3.0.0"
 requests = "^2.30.0"
 structlog = "^22.3"
 sseclient-py = "^1.7.2"
+cachetools = "^5.3.0"
 
 [tool.poetry.group.dev.dependencies]
 grpcio-tools = ">= 1.48.4"

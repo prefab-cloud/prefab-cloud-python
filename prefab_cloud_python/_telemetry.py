@@ -3,6 +3,7 @@ from queue import Queue, Full
 import time
 from enum import Enum
 from abc import ABC
+from cachetools import TTLCache
 
 from prefab_pb2 import (
     ConfigEvaluationSummary,
@@ -10,7 +11,10 @@ from prefab_pb2 import (
     ConfigEvaluationCounter,
     TelemetryEvent,
     TelemetryEvents,
+    ExampleContext as ProtoExampleContext,
+    ExampleContexts,
 )
+from . import Context, Options
 from .config_resolver import Evaluation
 from collections import defaultdict
 
@@ -48,10 +52,13 @@ class EvaluationTelemetryEvent(BaseTelemetryEvent):
 
 
 class TelemetryManager(object):
-    def __init__(self, client) -> None:
+    def __init__(self, client, options: Options) -> None:
         self.client = client
-        self.report_interval = client.options.collect_sync_interval
-        self.report_summaries = client.options.collect_evaluation_summaries
+        self.report_interval = options.collect_sync_interval
+        self.report_summaries = options.collect_evaluation_summaries
+        self.collect_example_contexts = (
+            options.context_upload_mode == Options.ContextUploadMode.PERIODIC_EXAMPLE
+        )
         self.sync_started = False
         self.event_processor = TelemetryEventProcessor(
             evaluation_event_handler=self._handle_evaluation,
@@ -60,6 +67,7 @@ class TelemetryManager(object):
         self.event_processor.start()
         self.timer = None
         self.evaluation_rollup = EvaluationRollup()
+        self.example_contexts = ContextExampleAccumulator()
 
     def start_periodic_sync(self) -> None:
         if self.report_interval:
@@ -92,21 +100,37 @@ class TelemetryManager(object):
     def _handle_evaluation(self, evaluationEvent: EvaluationTelemetryEvent) -> None:
         if self.report_summaries:
             self.evaluation_rollup.record_evaluation(evaluationEvent.evaluation)
+        if self.collect_example_contexts:
+            self.example_contexts.add(evaluationEvent.evaluation.context)
 
-    def _handle_flush(self, flushEvent: FlushTelemetryEvent) -> None:
+    def _handle_flush(self, flush_event: FlushTelemetryEvent) -> None:
         try:
+            telemetry_events = []
             if self.report_summaries:
                 current_eval_rollup = self.evaluation_rollup
                 eval_summaries = current_eval_rollup.build_telemetry()
                 self.evaluation_rollup = EvaluationRollup()
-
+                telemetry_events.append(TelemetryEvent(summaries=eval_summaries))
+            if self.collect_example_contexts:
+                current_example_contexts = (
+                    self.example_contexts.get_and_reset_contexts()
+                )
+                if current_example_contexts:
+                    telemetry_events.append(
+                        TelemetryEvent(
+                            example_contexts=ExampleContexts(
+                                examples=current_example_contexts
+                            )
+                        )
+                    )
+            if telemetry_events:
                 # TODO retry/log
                 self.client.post(
                     "/api/v1/telemetry/",
-                    TelemetryEvents(events=[TelemetryEvent(summaries=eval_summaries)]),
+                    TelemetryEvents(events=telemetry_events),
                 )
         finally:
-            flushEvent.mark_finished()
+            flush_event.mark_finished()
 
 
 class HashableProtobufWrapper:
@@ -118,6 +142,41 @@ class HashableProtobufWrapper:
 
     def __eq__(self, other):
         return self.msg.SerializeToString() == other.msg.SerializeToString()
+
+
+class ContextExampleAccumulator(object):
+    def __init__(self):
+        self.recently_seen_contexts = set()
+        self.fingerprint_cache = TTLCache(maxsize=1000, ttl=60 * 5)
+
+    def size(self):
+        return len(self.recently_seen_contexts)
+
+    def add(self, context: Context) -> None:
+        fingerprint = ContextExampleAccumulator.context_fingerprint(context)
+        if fingerprint and fingerprint not in self.fingerprint_cache:
+            self.fingerprint_cache[fingerprint] = fingerprint
+            self.recently_seen_contexts.add(
+                HashableProtobufWrapper(
+                    ProtoExampleContext(
+                        timestamp=current_time_millis(), contextSet=context.to_proto()
+                    )
+                )
+            )
+
+    def get_and_reset_contexts(self) -> [ProtoExampleContext]:
+        contexts_to_return = [item.msg for item in self.recently_seen_contexts]
+        self.recently_seen_contexts.clear()
+        return contexts_to_return
+
+    @staticmethod
+    def context_fingerprint(context: Context) -> str:
+        fingerprint_string = ""
+        for name, named_context in sorted(context.contexts.items()):
+            key = named_context.get("key")
+            if key:
+                fingerprint_string += f"{name}:{key}::"
+        return fingerprint_string
 
 
 class EvaluationRollup(object):

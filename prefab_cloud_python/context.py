@@ -85,8 +85,8 @@ class Context:
     @staticmethod
     def get_current():
         if (
-                "prefab_context" not in dir(current_thread())
-                or current_thread().prefab_context is None
+            "prefab_context" not in dir(current_thread())
+            or current_thread().prefab_context is None
         ):
             Context.set_current(Context())
         return current_thread().prefab_context
@@ -96,7 +96,10 @@ class Context:
         return Context(Context.get_current().to_dict() | new_context_attributes)
 
     def to_proto(self) -> ProtoContextSet:
-        return ProtoContextSet(contexts=[value.to_proto() for value in self.contexts.values()])
+        return ProtoContextSet(
+            contexts=[value.to_proto() for value in self.contexts.values()]
+        )
+
 
 class NamedContext:
     def __init__(self, name, data={}):

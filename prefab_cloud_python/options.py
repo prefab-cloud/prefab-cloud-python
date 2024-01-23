@@ -51,6 +51,7 @@ class Options:
         NONE = 1
         SHAPE_ONLY = 2
         PERIODIC_EXAMPLE = 3
+
     def __init__(
         self,
         api_key: Optional[str] = None,
@@ -75,7 +76,7 @@ class Options:
         collect_max_shapes: int = 10_000,
         collect_sync_interval: Optional[int] = None,
         collect_evaluation_summaries: bool = True,
-        context_upload_mode: ContextUploadMode = ContextUploadMode.PERIODIC_EXAMPLE
+        context_upload_mode: ContextUploadMode = ContextUploadMode.PERIODIC_EXAMPLE,
     ) -> None:
         self.prefab_datasources = Options.__validate_datasource(prefab_datasources)
         self.datafile = x_datafile

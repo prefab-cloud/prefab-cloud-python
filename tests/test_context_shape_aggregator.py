@@ -49,7 +49,7 @@ def client_factory_fixture():
         options.prefab_api_url = "http://api.staging-prefab.cloud"
         client = Client(options)
         Posts.clear()
-        with patch.object(client, 'post', side_effect=new_client_post):
+        with patch.object(client, "post", side_effect=new_client_post):
             yield client
 
     return contextlib.contextmanager(create_mocked_configured_instance)
@@ -111,20 +111,23 @@ class TestContextShapeAggregator:
 
             assert len(Posts) == 1
         assert Posts == [
-            ("/api/v1/context-shapes",
-            Prefab.ContextShapes(
-                shapes=[
-                    Prefab.ContextShape(
-                        name="device", field_types={"version": 1, "os": 2, "name": 2}
-                    ),
-                    Prefab.ContextShape(
-                        name="subscription",
-                        field_types={"plan": 2, "free": 5, "trial": 5},
-                    ),
-                    Prefab.ContextShape(
-                        name="user",
-                        field_types={"age": 4, "dob": 2, "email": 2, "name": 2},
-                    ),
-                ],
-            ))
+            (
+                "/api/v1/context-shapes",
+                Prefab.ContextShapes(
+                    shapes=[
+                        Prefab.ContextShape(
+                            name="device",
+                            field_types={"version": 1, "os": 2, "name": 2},
+                        ),
+                        Prefab.ContextShape(
+                            name="subscription",
+                            field_types={"plan": 2, "free": 5, "trial": 5},
+                        ),
+                        Prefab.ContextShape(
+                            name="user",
+                            field_types={"age": 4, "dob": 2, "email": 2, "name": 2},
+                        ),
+                    ],
+                ),
+            )
         ]

@@ -43,7 +43,7 @@ class Client:
             self, self.options.collect_max_shapes, self.options.collect_sync_interval
         )
 
-        self.telemetry_manager = TelemetryManager(self)
+        self.telemetry_manager = TelemetryManager(self, options)
 
         if not options.is_local_only():
             self.log_path_aggregator.start_periodic_sync()

@@ -1,5 +1,8 @@
 from threading import current_thread
 
+from prefab_cloud_python.config_value_wrapper import ConfigValueWrapper
+from prefab_pb2 import Context as ProtoContext, ContextSet as ProtoContextSet
+
 
 class InvalidContextFormatException(Exception):
     "Raised when a provided context is neither a NamedContext nor a dict"
@@ -82,8 +85,8 @@ class Context:
     @staticmethod
     def get_current():
         if (
-            "prefab_context" not in dir(current_thread())
-            or current_thread().prefab_context is None
+                "prefab_context" not in dir(current_thread())
+                or current_thread().prefab_context is None
         ):
             Context.set_current(Context())
         return current_thread().prefab_context
@@ -92,6 +95,8 @@ class Context:
     def merge_with_current(new_context_attributes):
         return Context(Context.get_current().to_dict() | new_context_attributes)
 
+    def to_proto(self) -> ProtoContextSet:
+        return ProtoContextSet(contexts=[value.to_proto() for value in self.contexts.values()])
 
 class NamedContext:
     def __init__(self, name, data={}):
@@ -107,6 +112,12 @@ class NamedContext:
 
     def to_dict(self):
         return self.data
+
+    def to_proto(self) -> ProtoContext:
+        value_dict = {}
+        for key, value in self.data.items():
+            value_dict[key] = ConfigValueWrapper.wrap(value)
+        return ProtoContext(type=self.name, values=value_dict)
 
 
 class ScopedContext(object):

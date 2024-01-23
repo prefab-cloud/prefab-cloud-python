@@ -47,7 +47,11 @@ class ConfigValueUnwrapper:
             # Unique hash for differentiation
             hash = hashlib.md5()
             hash.update(str(self.unwrap()).encode())
-            return ConfigValueUnwrapper(ConfigValueWrapper.wrap(f"{CONFIDENTIAL_PREFIX}{hash.hexdigest()[:5]}"), self.resolver, self.weighted_value_index)
+            return ConfigValueUnwrapper(
+                ConfigValueWrapper.wrap(f"{CONFIDENTIAL_PREFIX}{hash.hexdigest()[:5]}"),
+                self.resolver,
+                self.weighted_value_index,
+            )
         else:
             return self
 
@@ -56,10 +60,10 @@ class ConfigValueUnwrapper:
 
     @staticmethod
     def deepest_value(
-            config_value: Prefab.ConfigValue,
-            config,
-            resolver,
-            context=Context.get_current(),
+        config_value: Prefab.ConfigValue,
+        config,
+        resolver,
+        context=Context.get_current(),
     ):
         if config_value and config_value.WhichOneof("type") == "weighted_values":
             value, index = WeightedValueResolver(

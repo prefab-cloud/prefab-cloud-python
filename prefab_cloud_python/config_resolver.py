@@ -1,4 +1,5 @@
 from __future__ import annotations
+import functools
 
 from .read_write_lock import ReadWriteLock
 from .config_value_unwrapper import ConfigValueUnwrapper
@@ -196,17 +197,15 @@ class Evaluation:
         self.config_row_index = config_row_index
         self.context = context
         self.resolver = resolver
-        self.deepest_value = None
 
     def unwrapped_value(self):
-        return self._deepest_value().unwrap()
+        return self.deepest_value().unwrap()
 
     def raw_config_value(self):
         return self.value
 
-    def _deepest_value(self):
-        if not self.deepest_value:
-            self.deepest_value = ConfigValueUnwrapper.deepest_value(
-                self.value, self.config, self.resolver, self.context
-            )
-        return self.deepest_value
+    @functools.cache
+    def deepest_value(self):
+        return ConfigValueUnwrapper.deepest_value(
+            self.value, self.config, self.resolver, self.context
+        )

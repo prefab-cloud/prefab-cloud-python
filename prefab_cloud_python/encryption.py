@@ -10,6 +10,7 @@ class Encryption:
     def __init__(self, secret):
         self.secret = bytes.fromhex(secret)
 
+    @staticmethod
     def generate_new_hex_key():
         return secrets.token_bytes(32).hex()
 
@@ -27,5 +28,4 @@ class Encryption:
         encrypted, nonce, tag = [
             bytes.fromhex(x) for x in encrypted_string.split(SEPARATOR)
         ]
-
         return aesgcm.decrypt(nonce, encrypted + tag, None).decode("utf-8")

@@ -73,17 +73,11 @@ class ConfigClient:
 
     def get(self, key, default="NO_DEFAULT_PROVIDED", context=Context.get_current()):
         evaluation_result = self.__get(key, None, {}, context=context)
-
-        if isinstance(context, Context):
-            self.base_client.context_shape_aggregator.push(context)
-        elif not isinstance(context, str):
-            self.base_client.context_shape_aggregator.push(Context(context))
-
         if evaluation_result is not None:
             self.base_client.telemetry_manager.record_evaluation(evaluation_result)
-            return evaluation_result.unwrapped_value()
-        else:
-            return self.handle_default(key, default)
+            if evaluation_result.config:
+                return evaluation_result.unwrapped_value()
+        return self.handle_default(key, default)
 
     def __get(
         self, key, lookup_key, properties, context=Context.get_current()

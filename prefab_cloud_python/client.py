@@ -5,7 +5,6 @@ from ._telemetry import TelemetryManager
 from .context import Context, ScopedContext
 from .config_client import ConfigClient
 from .feature_flag_client import FeatureFlagClient
-from .context_shape_aggregator import ContextShapeAggregator
 from .log_path_aggregator import LogPathAggregator
 from .logger_client import LoggerClient
 from .logger_filter import LoggerFilter
@@ -38,16 +37,10 @@ class Client:
             self.options.log_prefix, self.options.log_boundary, self.log_path_aggregator
         )
         self.log_path_aggregator.client = self
-
-        self.context_shape_aggregator = ContextShapeAggregator(
-            self, self.options.collect_max_shapes, self.options.collect_sync_interval
-        )
-
         self.telemetry_manager = TelemetryManager(self, options)
 
         if not options.is_local_only():
             self.log_path_aggregator.start_periodic_sync()
-            self.context_shape_aggregator.start_periodic_sync()
             self.telemetry_manager.start_periodic_sync()
 
         self.namespace = options.namespace

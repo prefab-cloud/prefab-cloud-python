@@ -16,7 +16,7 @@ class TestFeatureFlagClient:
         ff_client = self.build_client()
 
         assert not ff_client.feature_is_on_for(
-            "something-that-doesnt-exist", "irrelevant"
+            "something-that-doesnt-exist", context={"user": {"key": "not-included"}}
         )
         assert not ff_client.feature_is_on_for(
             "user_key_match", context={"user": {"key": "not-included"}}

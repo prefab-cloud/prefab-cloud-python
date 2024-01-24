@@ -5,7 +5,6 @@ from ._telemetry import TelemetryManager
 from .context import Context, ScopedContext
 from .config_client import ConfigClient
 from .feature_flag_client import FeatureFlagClient
-from .log_path_aggregator import LogPathAggregator
 from .logger_client import LoggerClient
 from .logger_filter import LoggerFilter
 from .options import Options
@@ -30,17 +29,9 @@ class Client:
     def __init__(self, options: Options) -> None:
         self.options = options
         self.instance_hash = str(uuid.uuid4())
-        self.log_path_aggregator = LogPathAggregator(
-            self, self.options.collect_max_paths, self.options.collect_sync_interval
-        )
-        self.logger = LoggerClient(
-            self.options.log_prefix, self.options.log_boundary, self.log_path_aggregator
-        )
-        self.log_path_aggregator.client = self
+        self.logger = LoggerClient(self.options.log_prefix, self.options.log_boundary)
         self.telemetry_manager = TelemetryManager(self, options)
-
         if not options.is_local_only():
-            self.log_path_aggregator.start_periodic_sync()
             self.telemetry_manager.start_periodic_sync()
 
         self.namespace = options.namespace
@@ -132,6 +123,10 @@ class Client:
             data=body.SerializeToString(),
             auth=("authuser", self.options.api_key or ""),
         )
+
+    def record_log(self, path, severity):
+        if self.telemetry_manager:
+            self.telemetry_manager.record_log(path, severity)
 
     def logging_filter(self):
         return LoggerFilter(

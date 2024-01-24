@@ -74,12 +74,9 @@ def log_or_drop(_, method, event_dict):
     closest_log_level = get_severity(location, config_client)
     called_method_level = python_to_prefab_log_levels[method]
 
-    if (
-        event_dict[STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR]
-        and not event_dict[STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR]
-    ):
-        event_dict[STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR].push(
-            event_dict[LOCATION_KEY], Prefab.LogLevel.Name(called_method_level)
+    if config_client and not event_dict[STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR]:
+        config_client.record_log(
+            event_dict[LOCATION_KEY], called_method_level
         )
 
     if closest_log_level > called_method_level:

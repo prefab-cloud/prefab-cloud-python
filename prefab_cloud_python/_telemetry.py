@@ -19,6 +19,7 @@ from .config_resolver import Evaluation
 from collections import defaultdict
 
 from .context_shape_aggregator import ContextShapeAggregator
+from .log_path_aggregator import LogPathAggregator
 
 
 def current_time_millis() -> int:
@@ -29,6 +30,7 @@ class BaseTelemetryEvent(ABC):
     class Type(Enum):
         EVAL = 1
         FLUSH = 2
+        LOG = 3
 
     def __init__(self, event_type=Type.FLUSH, timestamp=None):
         self.event_type = event_type
@@ -53,6 +55,13 @@ class EvaluationTelemetryEvent(BaseTelemetryEvent):
         self.evaluation = evaluation
 
 
+class LogEvent(BaseTelemetryEvent):
+    def __init__(self, path: str, level):
+        super().__init__(event_type=BaseTelemetryEvent.Type.LOG)
+        self.path = path
+        self.level = level
+
+
 class TelemetryManager(object):
     def __init__(self, client, options: Options) -> None:
         self.client = client
@@ -64,10 +73,12 @@ class TelemetryManager(object):
         self.collect_context_shapes = (
             options.context_upload_mode != Options.ContextUploadMode.NONE
         )
+        self.collect_logs = options.collect_logs
         self.sync_started = False
         self.event_processor = TelemetryEventProcessor(
             evaluation_event_handler=self._handle_evaluation,
             flush_event_handler=self._handle_flush,
+            log_event_handler=self._handle_log,
         )
         self.event_processor.start()
         self.timer = None
@@ -75,6 +86,9 @@ class TelemetryManager(object):
         self.example_contexts = ContextExampleAccumulator()
         self.context_shape_aggregator = ContextShapeAggregator(
             max_shapes=options.collect_max_shapes
+        )
+        self.log_path_aggregator = LogPathAggregator(
+            client.logger, options.collect_max_paths
         )
 
     def start_periodic_sync(self) -> None:
@@ -96,6 +110,10 @@ class TelemetryManager(object):
 
     def record_evaluation(self, evaluation: Evaluation) -> None:
         self.event_processor.enqueue(EvaluationTelemetryEvent(evaluation))
+
+    def record_log(self, level, path: str) -> None:
+        if self.collect_logs:
+            self.event_processor.enqueue(LogEvent(level, path))
 
     def flush(self) -> FlushTelemetryEvent:
         flush_event = FlushTelemetryEvent()
@@ -142,6 +160,10 @@ class TelemetryManager(object):
                 if len(shapes.shapes) > 0:
                     telemetry_events.append(TelemetryEvent(context_shapes=shapes))
 
+            if self.collect_logs:
+                loggers = self.log_path_aggregator.flush()
+                if len(loggers.loggers) > 0:
+                    telemetry_events.append(TelemetryEvent(loggers=loggers))
             if telemetry_events:
                 # TODO retry/log
                 self.client.post(
@@ -150,6 +172,9 @@ class TelemetryManager(object):
                 )
         finally:
             flush_event.mark_finished()
+
+    def _handle_log(self, log_event: LogEvent) -> None:
+        self.log_path_aggregator.push(log_event.path, log_event.level)
 
 
 class HashableProtobufWrapper:
@@ -254,11 +279,17 @@ class EvaluationRollup(object):
 
 
 class TelemetryEventProcessor(object):
-    def __init__(self, evaluation_event_handler=None, flush_event_handler=None) -> None:
+    def __init__(
+        self,
+        evaluation_event_handler=None,
+        flush_event_handler=None,
+        log_event_handler=None,
+    ) -> None:
         self.thread = None
         self.queue = Queue(10000)
         self.evaluation_event_handler = evaluation_event_handler
         self.flush_event_handler = flush_event_handler
+        self.log_event_handler = log_event_handler
 
     def start(self) -> None:
         self.thread = threading.Thread(target=self.process_queue, daemon=True)
@@ -284,6 +315,11 @@ class TelemetryEventProcessor(object):
                     and self.flush_event_handler
                 ):
                     self.flush_event_handler(event)
+                elif (
+                    event.event_type == BaseTelemetryEvent.Type.LOG
+                    and self.log_event_handler
+                ):
+                    self.log_event_handler(event)
                 else:
                     raise ValueError(f"Unknown event type: {event.event_type}")
 

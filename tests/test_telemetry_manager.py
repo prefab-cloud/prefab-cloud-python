@@ -11,6 +11,7 @@ from tests.helpers import (
     sort_proto_evaluation_counters,
     MockClientForPosts,
     sort_proto_context_sets,
+    sort_proto_context_shape,
 )
 
 TIMEVAL = 1234567890.0
@@ -38,8 +39,11 @@ def options() -> Options:
         context_upload_mode=Options.ContextUploadMode.PERIODIC_EXAMPLE,
         collect_sync_interval=10,
         prefab_datasources="LOCAL_ONLY",
+        collect_logs=True,
     )
     options.prefab_api_url = "http://api.staging-prefab.cloud"
+    options.collect_logs = True
+    options.collect_max_paths = 1000
     return options
 
 
@@ -77,12 +81,15 @@ def test_telemetry(options: Options, telemetry_manager: TelemetryManager):
             context=EXAMPLE_CONTEXT2,
         )
     )
+    telemetry_manager.record_log("some/path", "INFO")
+    telemetry_manager.record_log("another/path", "WARN")
+
     telemetry_manager.flush_and_block()
     assert len(mock_client.posts) == 1
 
     post_url, uploaded_telemetry_proto = mock_client.posts[0]
 
-    assert len(uploaded_telemetry_proto.events) == 3
+    assert len(uploaded_telemetry_proto.events) == 4
 
     telemetry_events_by_type = get_telemetry_events_by_type(uploaded_telemetry_proto)
 
@@ -90,6 +97,7 @@ def test_telemetry(options: Options, telemetry_manager: TelemetryManager):
         "summaries": 1,
         "example_contexts": 1,
         "context_shapes": 1,
+        "loggers": 1,
     }
 
     config_evaluation_summary = telemetry_events_by_type["summaries"][0]
@@ -151,10 +159,12 @@ def test_telemetry(options: Options, telemetry_manager: TelemetryManager):
     context_shapes_event = telemetry_events_by_type["context_shapes"][0]
     context_shapes = context_shapes_event.shapes
     assert len(context_shapes) == 2
-    assert context_shapes == [
-        Prefab.ContextShape(name="one", field_types={"key": 2}),
-        Prefab.ContextShape(name="", field_types={"b": 2}),
-    ]
+    assert sort_proto_context_shape(context_shapes) == sort_proto_context_shape(
+        [
+            Prefab.ContextShape(name="one", field_types={"key": 2}),
+            Prefab.ContextShape(name="", field_types={"b": 2}),
+        ]
+    )
 
 
 def get_telemetry_events_by_type(telemetry_event: Prefab.TelemetryEvents):

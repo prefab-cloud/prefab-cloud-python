@@ -29,7 +29,8 @@ class Context:
                     )
                     self.contexts[""] = self.contexts.get("") or NamedContext("", {})
                     self.contexts[""].merge({name: values})
-
+        elif context is None:
+            pass #empty context
         else:
             raise InvalidContextFormatException(context)
 

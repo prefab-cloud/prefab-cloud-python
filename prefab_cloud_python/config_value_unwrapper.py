@@ -114,15 +114,15 @@ class ConfigValueUnwrapper:
             raise UnknownConfigValueTypeException(type)
 
         if self.value.decrypt_with != "":
-            decryption_key = self.resolver.get(self.value.decrypt_with)
-            if decryption_key is None:
+            decryption_key_evaluation = self.resolver.get(self.value.decrypt_with)
+            if decryption_key_evaluation is None or decryption_key_evaluation.raw_config_value is None:
                 self.resolver.base_client.logger.log_internal(
                     "warn",
                     f"No value for decryption key {self.value.decrypt_with} found.",
                 )
                 return ""
             else:
-                return Encryption(decryption_key).decrypt(raw)
+                return Encryption(decryption_key_evaluation.unwrapped_value()).decrypt(raw)
         else:
             return raw
 

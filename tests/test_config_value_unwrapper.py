@@ -1,4 +1,5 @@
 from prefab_cloud_python import Options, Client
+from prefab_cloud_python.config_resolver import Evaluation
 from prefab_cloud_python.config_value_unwrapper import (
     ConfigValueUnwrapper,
     EnvVarParseException,
@@ -24,7 +25,7 @@ class MockResolver:
 
     def get(self, key):
         if key == DECRYPTION_KEY_NAME:
-            return DECRYPTION_KEY_VALUE
+            return Evaluation(config=Prefab.Config(key=DECRYPTION_KEY_NAME), value=Prefab.ConfigValue(string=DECRYPTION_KEY_VALUE), context=EMPTY_CONTEXT, value_index=0, config_row_index=0, resolver=self)
         else:
             raise Exception("unexpected key")
 

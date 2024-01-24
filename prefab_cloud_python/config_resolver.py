@@ -23,8 +23,17 @@ class ConfigResolver:
         self.lock.release_read()
 
         if raw_config is None:
-            return None
-        return self.evaluate(raw_config, context=context)
+            merged_context = self.evaluation_context(context)
+            return Evaluation(
+                config=None,
+                value=None,
+                config_row_index=0,
+                value_index=0,
+                context=merged_context,
+                resolver=self,
+            )
+        else:
+            return self.evaluate(raw_config, context=context)
 
     def raw(self, key) -> Prefab.ConfigValue | None:
         via_key = self.local_store.get(key)
@@ -184,8 +193,8 @@ class CriteriaEvaluator:
 class Evaluation:
     def __init__(
         self,
-        config: Prefab.Config,
-        value: Prefab.ConfigValue,
+        config: Prefab.Config | None,
+        value: Prefab.ConfigValue | None,
         value_index: int,
         config_row_index: int,
         context: Context,

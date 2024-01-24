@@ -18,6 +18,8 @@ from . import Context, Options
 from .config_resolver import Evaluation
 from collections import defaultdict
 
+from .context_shape_aggregator import ContextShapeAggregator
+
 
 def current_time_millis() -> int:
     return int(time.time() * 1000)
@@ -59,6 +61,9 @@ class TelemetryManager(object):
         self.collect_example_contexts = (
             options.context_upload_mode == Options.ContextUploadMode.PERIODIC_EXAMPLE
         )
+        self.collect_context_shapes = (
+            options.context_upload_mode != Options.ContextUploadMode.NONE
+        )
         self.sync_started = False
         self.event_processor = TelemetryEventProcessor(
             evaluation_event_handler=self._handle_evaluation,
@@ -68,6 +73,9 @@ class TelemetryManager(object):
         self.timer = None
         self.evaluation_rollup = EvaluationRollup()
         self.example_contexts = ContextExampleAccumulator()
+        self.context_shape_aggregator = ContextShapeAggregator(
+            max_shapes=options.collect_max_shapes
+        )
 
     def start_periodic_sync(self) -> None:
         if self.report_interval:
@@ -102,6 +110,12 @@ class TelemetryManager(object):
             self.evaluation_rollup.record_evaluation(evaluationEvent.evaluation)
         if self.collect_example_contexts:
             self.example_contexts.add(evaluationEvent.evaluation.context)
+        if self.collect_context_shapes:
+            context = evaluationEvent.evaluation.context
+            if isinstance(context, Context):
+                self.context_shape_aggregator.push(context)
+            elif not isinstance(context, str):
+                self.context_shape_aggregator.push(Context(context))
 
     def _handle_flush(self, flush_event: FlushTelemetryEvent) -> None:
         try:
@@ -123,6 +137,11 @@ class TelemetryManager(object):
                             )
                         )
                     )
+            if self.collect_context_shapes:
+                shapes = self.context_shape_aggregator.flush()
+                if len(shapes.shapes) > 0:
+                    telemetry_events.append(TelemetryEvent(context_shapes=shapes))
+
             if telemetry_events:
                 # TODO retry/log
                 self.client.post(
@@ -185,19 +204,20 @@ class EvaluationRollup(object):
         self.recorded_since = current_time_millis()
 
     def record_evaluation(self, evaluation: Evaluation) -> None:
-        self.counts[
-            (
-                evaluation.config.key,
-                evaluation.config.config_type,
-                evaluation.config.id,
-                evaluation.config_row_index,
-                evaluation.value_index,
-                evaluation.deepest_value().weighted_value_index,
-                HashableProtobufWrapper(
-                    evaluation.deepest_value().reportable_wrapped_value().value
-                ),
-            )
-        ] += 1
+        if evaluation.config:
+            self.counts[
+                (
+                    evaluation.config.key,
+                    evaluation.config.config_type,
+                    evaluation.config.id,
+                    evaluation.config_row_index,
+                    evaluation.value_index,
+                    evaluation.deepest_value().weighted_value_index,
+                    HashableProtobufWrapper(
+                        evaluation.deepest_value().reportable_wrapped_value().value
+                    ),
+                )
+            ] += 1
 
     def build_telemetry(self):
         all_summaries = []

@@ -12,7 +12,6 @@ class FeatureFlagClient:
         variant = self.base_client.config_client().get(
             feature_name, False, context=context
         )
-
         return self.is_on(variant)
 
     def get(self, feature_name, default=False, context=Context.get_current()):

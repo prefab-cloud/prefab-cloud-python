@@ -67,6 +67,10 @@ def sort_proto_context_sets(
     )
 
 
+def sort_proto_context_shape(context_shapes: [prefab_pb2.ContextShape]):
+    return sorted(context_shapes, key=lambda obj: obj.name)
+
+
 class MockClientForPosts:
     def __init__(self):
         self.posts = []

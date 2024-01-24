@@ -82,13 +82,14 @@ def test_telemetry(options: Options, telemetry_manager: TelemetryManager):
 
     post_url, uploaded_telemetry_proto = mock_client.posts[0]
 
-    assert len(uploaded_telemetry_proto.events) == 2
+    assert len(uploaded_telemetry_proto.events) == 3
 
     telemetry_events_by_type = get_telemetry_events_by_type(uploaded_telemetry_proto)
 
     assert {key: len(value) for key, value in telemetry_events_by_type.items()} == {
         "summaries": 1,
         "example_contexts": 1,
+        "context_shapes": 1,
     }
 
     config_evaluation_summary = telemetry_events_by_type["summaries"][0]
@@ -146,6 +147,14 @@ def test_telemetry(options: Options, telemetry_manager: TelemetryManager):
         sort_proto_context_sets([item.contextSet for item in example_contexts.examples])
         == expected
     )
+
+    context_shapes_event = telemetry_events_by_type["context_shapes"][0]
+    context_shapes = context_shapes_event.shapes
+    assert len(context_shapes) == 2
+    assert context_shapes == [
+        Prefab.ContextShape(name="one", field_types={"key": 2}),
+        Prefab.ContextShape(name="", field_types={"b": 2}),
+    ]
 
 
 def get_telemetry_events_by_type(telemetry_event: Prefab.TelemetryEvents):

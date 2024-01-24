@@ -5,6 +5,7 @@ import prefab_pb2
 from prefab_cloud_python import Context
 from prefab_cloud_python.client import PostBodyType
 from prefab_cloud_python.config_resolver import CriteriaEvaluator
+from prefab_cloud_python.logger_client import LoggerClient
 
 
 class MockResolver:
@@ -74,6 +75,7 @@ def sort_proto_context_shape(context_shapes: [prefab_pb2.ContextShape]):
 class MockClientForPosts:
     def __init__(self):
         self.posts = []
+        self.logger = LoggerClient()
 
     def reset(self):
         self.posts.clear()

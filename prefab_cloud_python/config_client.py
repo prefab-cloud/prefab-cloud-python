@@ -260,3 +260,6 @@ class ConfigClient:
     def grpc_channel(self):
         creds = grpc.ssl_channel_credentials()
         return grpc.secure_channel(self.options.prefab_grpc_url, creds)
+
+    def record_log(self, path, severity):
+        self.base_client.record_log(path, severity)

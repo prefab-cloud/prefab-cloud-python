@@ -30,15 +30,13 @@ class LoggerFilter:
     def __init__(self, config_client, log_boundary=None, prefix=None):
         self.config_client = config_client
         self.log_boundary = log_boundary or os.environ.get("HOME")
-        self.log_path_aggregator = config_client.base_client.log_path_aggregator
         self.prefix = prefix
 
     def filter(self, record):
         path = self.get_path(os.path.abspath(record.pathname), record.funcName)
         record.msg = "{path}: {msg}".format(path=path, msg=record.getMessage())
         called_method_level = python_to_prefab_log_levels[record.levelname.lower()]
-        self.log_path_aggregator.push(path, Prefab.LogLevel.Name(called_method_level))
-
+        self.config_client.record_log(path, Prefab.LogLevel.Name(called_method_level))
         return self.should_log_message(record, path)
 
     def get_path(self, path, func_name):

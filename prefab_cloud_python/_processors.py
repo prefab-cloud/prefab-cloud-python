@@ -33,7 +33,6 @@ def clean_event_dict(_, __, event_dict):
     event_dict.pop("config_client")
     event_dict.pop("log_prefix")
     event_dict.pop("log_boundary")
-    event_dict.pop("log_path_aggregator")
     if "skip_aggregator" in event_dict:
         event_dict.pop("skip_aggregator")
     if "internal_path" in event_dict:
@@ -65,8 +64,8 @@ def log_or_drop(_, method, event_dict):
     closest_log_level = get_severity(location, config_client)
     called_method_level = python_to_prefab_log_levels[method]
 
-    if event_dict["log_path_aggregator"] and not event_dict["skip_aggregator"]:
-        event_dict["log_path_aggregator"].push(
+    if config_client and not event_dict["skip_aggregator"]:
+        config_client.record_log(
             event_dict["location"], Prefab.LogLevel.Name(called_method_level)
         )
 

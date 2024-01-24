@@ -2,7 +2,6 @@ import structlog
 import os
 from ._processors import clean_event_dict, set_location, log_or_drop
 
-
 structlog.configure(
     processors=[
         structlog.contextvars.merge_contextvars,
@@ -32,13 +31,15 @@ class BootstrappingConfigClient:
             return bootstrap_log_level.upper()
         return default
 
+    def record_log(self, path, level):
+        pass
+
 
 class LoggerClient:
-    def __init__(self, log_prefix=None, log_boundary=None, log_path_aggregator=None):
+    def __init__(self, log_prefix=None, log_boundary=None):
         self.log_prefix = log_prefix
         self.log_boundary = log_boundary
         self.config_client = BootstrappingConfigClient()
-        self.log_path_aggregator = log_path_aggregator
 
     def debug(self, msg):
         self.configured_logger().debug(msg)
@@ -73,6 +74,5 @@ class LoggerClient:
             config_client=self.config_client,
             log_prefix=self.log_prefix,
             log_boundary=self.log_boundary,
-            log_path_aggregator=self.log_path_aggregator,
             skip_aggregator=False,
         )

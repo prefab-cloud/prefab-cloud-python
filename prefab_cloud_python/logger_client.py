@@ -1,28 +1,5 @@
 import structlog
 import os
-from ._processors import clean_event_dict, set_location, log_or_drop
-
-
-structlog.configure(
-    processors=[
-        structlog.contextvars.merge_contextvars,
-        structlog.processors.add_log_level,
-        structlog.processors.StackInfoRenderer(),
-        structlog.dev.set_exc_info,
-        structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S", utc=False),
-        structlog.processors.CallsiteParameterAdder(
-            [
-                structlog.processors.CallsiteParameter.PATHNAME,
-                structlog.processors.CallsiteParameter.FUNC_NAME,
-            ],
-            additional_ignores=["prefab_cloud_python.logger_client"],
-        ),
-        set_location,
-        log_or_drop,
-        clean_event_dict,
-        structlog.dev.ConsoleRenderer(),
-    ]
-)
 
 
 class BootstrappingConfigClient:

@@ -103,9 +103,7 @@ def run_test(
         context = "NO_CONTEXT_PROVIDED"
     if function == "get":
         if expected.get("status") == "raise":
-            with pytest.raises(
-                CustomExceptions.get(expected["error"] or Exception)
-            ):
+            with pytest.raises(CustomExceptions.get(expected["error"] or Exception)):
                 client.get(key, context=context)
         else:
             assert client.get(

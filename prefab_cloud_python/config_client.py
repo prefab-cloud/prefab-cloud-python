@@ -39,6 +39,8 @@ If you'd prefer returning `None` rather than raising when this occurs, modify th
 
 class ConfigClient:
     def __init__(self, base_client, timeout):
+        self.checkpointing_thread = None
+        self.streaming_thread = None
         base_client.logger.log_internal("info", "Initializing ConfigClient")
         self.base_client = base_client
         self.options = base_client.options
@@ -67,7 +69,7 @@ class ConfigClient:
         elif self.options.has_datafile():
             self.load_json_file(self.options.datafile)
         else:
-            self.load_checkpoint()
+            #don't load checkpoint here, that'll block the caller. let the thread do it
             self.start_checkpointing_thread()
             self.start_streaming()
 
@@ -82,20 +84,17 @@ class ConfigClient:
     def __get(
         self, key, lookup_key, properties, context=Context.get_current()
     ) -> None | Evaluation:
-        try:
-            self.init_lock.acquire_read(self.options.connection_timeout_seconds)
-        except Exception:
-            if self.options.on_connection_failure == "RAISE":
-                raise InitializationTimeoutException(
-                    self.options.connection_timeout_seconds, key
+        with self.init_lock.read_locked_timeout(self.options.connection_timeout_seconds) as locked:
+            if not locked:
+                if self.options.on_connection_failure == "RAISE":
+                    raise InitializationTimeoutException(
+                        self.options.connection_timeout_seconds, key
+                    )
+                self.base_client.logger.log_internal(
+                    "warn",
+                    f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have.",
                 )
-            self.base_client.logger.log_internal(
-                "warn",
-                f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have.",
-            )
-            self.init_lock.release_write()
-        finally:
-            return self.config_resolver.get(key, context=context)
+        return self.config_resolver.get(key, context=context)
 
     def handle_default(self, key, default):
         if default != "NO_DEFAULT_PROVIDED":

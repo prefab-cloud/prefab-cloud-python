@@ -230,6 +230,13 @@ class EvaluationRollup(object):
 
     def record_evaluation(self, evaluation: Evaluation) -> None:
         if evaluation.config:
+            reportable_value = None
+            try:
+                reportable_value = HashableProtobufWrapper(
+                            evaluation.deepest_value().reportable_wrapped_value().value
+                        ),
+            except:
+                pass
             self.counts[
                 (
                     evaluation.config.key,
@@ -238,9 +245,7 @@ class EvaluationRollup(object):
                     evaluation.config_row_index,
                     evaluation.value_index,
                     evaluation.deepest_value().weighted_value_index,
-                    HashableProtobufWrapper(
-                        evaluation.deepest_value().reportable_wrapped_value().value
-                    ),
+                    reportable_value,
                 )
             ] += 1
 

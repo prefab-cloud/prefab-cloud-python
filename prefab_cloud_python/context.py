@@ -1,5 +1,6 @@
 from threading import current_thread
 
+import prefab_cloud_python
 from prefab_cloud_python.config_value_wrapper import ConfigValueWrapper
 from prefab_pb2 import Context as ProtoContext, ContextSet as ProtoContextSet
 
@@ -76,12 +77,16 @@ class Context:
         return d
 
     def scope(context):
-        if not isinstance(context, Context):
+        if not isinstance(context, prefab_cloud_python.context.Context):
             context = Context(context)
         return ScopedContext(context)
 
+    @staticmethod
     def set_current(context):
-        current_thread().prefab_context = context
+        if isinstance(context, prefab_cloud_python.context.Context):
+            current_thread().prefab_context = context
+        else:
+            current_thread().prefab_context = Context(context)
 
     @staticmethod
     def get_current():

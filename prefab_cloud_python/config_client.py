@@ -69,7 +69,7 @@ class ConfigClient:
         elif self.options.has_datafile():
             self.load_json_file(self.options.datafile)
         else:
-            #don't load checkpoint here, that'll block the caller. let the thread do it
+            # don't load checkpoint here, that'll block the caller. let the thread do it
             self.start_checkpointing_thread()
             self.start_streaming()
 
@@ -84,7 +84,9 @@ class ConfigClient:
     def __get(
         self, key, lookup_key, properties, context=Context.get_current()
     ) -> None | Evaluation:
-        with self.init_lock.read_locked_timeout(self.options.connection_timeout_seconds) as locked:
+        with self.init_lock.read_locked_timeout(
+            self.options.connection_timeout_seconds
+        ) as locked:
             if not locked:
                 if self.options.on_connection_failure == "RAISE":
                     raise InitializationTimeoutException(

@@ -25,7 +25,14 @@ class MockResolver:
 
     def get(self, key):
         if key == DECRYPTION_KEY_NAME:
-            return Evaluation(config=Prefab.Config(key=DECRYPTION_KEY_NAME), value=Prefab.ConfigValue(string=DECRYPTION_KEY_VALUE), context=EMPTY_CONTEXT, value_index=0, config_row_index=0, resolver=self)
+            return Evaluation(
+                config=Prefab.Config(key=DECRYPTION_KEY_NAME),
+                value=Prefab.ConfigValue(string=DECRYPTION_KEY_VALUE),
+                context=EMPTY_CONTEXT,
+                value_index=0,
+                config_row_index=0,
+                resolver=self,
+            )
         else:
             raise Exception("unexpected key")
 

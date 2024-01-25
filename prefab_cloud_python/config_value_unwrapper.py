@@ -21,14 +21,16 @@ class EnvVarParseException(Exception):
             % (config.key, env_var_name, env_var, VTN(config.value_type))
         )
 
+
 class MissingEnvVarException(Exception):
     "Raised when an environment variable specified in a `provided` config value does not exist"
 
     def __init__(self, config, env_var_name):
         super().__init__(
             "Environment variable %s referenced in config %s does not exist"
-            % (config.key, env_var_name )
+            % (config.key, env_var_name)
         )
+
 
 class UnknownConfigValueTypeException(Exception):
     "Raised when a config value of an unknown type is passed to the unwrapper"
@@ -124,7 +126,10 @@ class ConfigValueUnwrapper:
 
         if self.value.decrypt_with != "":
             decryption_key_evaluation = self.resolver.get(self.value.decrypt_with)
-            if decryption_key_evaluation is None or decryption_key_evaluation.raw_config_value is None:
+            if (
+                decryption_key_evaluation is None
+                or decryption_key_evaluation.raw_config_value is None
+            ):
                 self.resolver.base_client.logger.log_internal(
                     "warn",
                     f"No value for decryption key {self.value.decrypt_with} found.",
@@ -132,9 +137,11 @@ class ConfigValueUnwrapper:
                 return ""
             else:
                 try:
-                    return Encryption(decryption_key_evaluation.unwrapped_value()).decrypt(raw)
-                except Exception as e:
-                    raise DecryptionException(f"unable to decrypt value")
+                    return Encryption(
+                        decryption_key_evaluation.unwrapped_value()
+                    ).decrypt(raw)
+                except Exception:
+                    raise DecryptionException("unable to decrypt value")
         else:
             return raw
 

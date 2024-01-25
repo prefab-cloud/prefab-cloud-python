@@ -54,14 +54,14 @@ class ReadWriteLock:
     @contextmanager
     def read_locked_timeout(self, timeout=1):
         """This method is designed to be used via the `with` statement.
-            check return value: returns True only if lock is acquired
+        check return value: returns True only if lock is acquired
         """
         result = self.try_acquire_read(timeout=timeout)
         try:
             if result:
                 yield result
             else:
-                #return the result even if false rather than throw an exception, caller needs to check the result
+                # return the result even if false rather than throw an exception, caller needs to check the result
                 yield result
 
         finally:
@@ -89,4 +89,3 @@ class ReadWriteLock:
         """Release a write lock."""
         self._read_ready.release()
         self._write_locked = False
-

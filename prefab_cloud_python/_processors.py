@@ -66,7 +66,7 @@ def log_or_drop(_, method, event_dict):
 
     if config_client and not event_dict["skip_aggregator"]:
         config_client.record_log(
-            event_dict["location"], Prefab.LogLevel.Name(called_method_level)
+            event_dict["location"], called_method_level
         )
 
     if closest_log_level > called_method_level:

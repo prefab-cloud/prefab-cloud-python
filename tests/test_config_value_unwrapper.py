@@ -2,7 +2,7 @@ from prefab_cloud_python import Options, Client
 from prefab_cloud_python.config_resolver import Evaluation
 from prefab_cloud_python.config_value_unwrapper import (
     ConfigValueUnwrapper,
-    EnvVarParseException,
+    EnvVarParseException, MissingEnvVarException,
 )
 from prefab_cloud_python.encryption import Encryption
 import prefab_pb2 as Prefab
@@ -261,9 +261,9 @@ class TestConfigValueUnwrapper:
     def test_unwrapping_provided_values_with_missing_env_var(self):
         value = Prefab.Provided(source="ENV_VAR", lookup="NON_EXISTENT_ENV_VAR_NAME")
         config_value = Prefab.ConfigValue(provided=value)
-        assert (
-            TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT) == ""
-        )
+        with pytest.raises(MissingEnvVarException):
+            TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT)
+
 
     def test_unwrapping_encrypted_values_decrypts(self):
         clear_text = "very secret stuff"

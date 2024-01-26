@@ -4,7 +4,6 @@ from prefab_cloud_python._telemetry import TelemetryManager
 from prefab_cloud_python.config_resolver import Evaluation
 from prefab_cloud_python.context import Context
 import pytest
-from collections import defaultdict
 
 from tests.helpers import (
     EmptyResolver,
@@ -12,6 +11,7 @@ from tests.helpers import (
     MockClientForPosts,
     sort_proto_context_sets,
     sort_proto_context_shape,
+    get_telemetry_events_by_type,
 )
 
 TIMEVAL = 1234567890.0
@@ -81,8 +81,8 @@ def test_telemetry(options: Options, telemetry_manager: TelemetryManager):
             context=EXAMPLE_CONTEXT2,
         )
     )
-    telemetry_manager.record_log("some/path", "INFO")
-    telemetry_manager.record_log("another/path", "WARN")
+    telemetry_manager.record_log("some/path", Prefab.LogLevel.INFO)
+    telemetry_manager.record_log("another/path", Prefab.LogLevel.WARN)
 
     telemetry_manager.flush_and_block()
     assert len(mock_client.posts) == 1
@@ -166,10 +166,3 @@ def test_telemetry(options: Options, telemetry_manager: TelemetryManager):
         ]
     )
 
-
-def get_telemetry_events_by_type(telemetry_event: Prefab.TelemetryEvents):
-    values = defaultdict(list)
-    for event in telemetry_event.events:
-        payload_type = event.WhichOneof("payload")
-        values[payload_type].append(getattr(event, payload_type))
-    return values

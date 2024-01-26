@@ -3,6 +3,8 @@ from queue import Queue, Full
 import time
 from enum import Enum
 from abc import ABC
+from typing import List
+
 from cachetools import TTLCache
 
 from prefab_pb2 import (
@@ -68,10 +70,10 @@ class TelemetryManager(object):
         self.report_interval = options.collect_sync_interval
         self.report_summaries = options.collect_evaluation_summaries
         self.collect_example_contexts = (
-            options.context_upload_mode == Options.ContextUploadMode.PERIODIC_EXAMPLE
+                options.context_upload_mode == Options.ContextUploadMode.PERIODIC_EXAMPLE
         )
         self.collect_context_shapes = (
-            options.context_upload_mode != Options.ContextUploadMode.NONE
+                options.context_upload_mode != Options.ContextUploadMode.NONE
         )
         self.collect_logs = options.collect_logs
         self.sync_started = False
@@ -90,6 +92,7 @@ class TelemetryManager(object):
         self.log_path_aggregator = LogPathAggregator(
             client.logger, options.collect_max_paths
         )
+        self.listeners = []
 
     def start_periodic_sync(self) -> None:
         if self.report_interval:
@@ -111,9 +114,9 @@ class TelemetryManager(object):
     def record_evaluation(self, evaluation: Evaluation) -> None:
         self.event_processor.enqueue(EvaluationTelemetryEvent(evaluation))
 
-    def record_log(self, level, path: str) -> None:
+    def record_log(self, path: str, severity) -> None:
         if self.collect_logs:
-            self.event_processor.enqueue(LogEvent(level, path))
+            self.event_processor.enqueue(LogEvent(path, level=severity))
 
     def flush(self) -> FlushTelemetryEvent:
         flush_event = FlushTelemetryEvent()
@@ -142,7 +145,8 @@ class TelemetryManager(object):
                 current_eval_rollup = self.evaluation_rollup
                 eval_summaries = current_eval_rollup.build_telemetry()
                 self.evaluation_rollup = EvaluationRollup()
-                telemetry_events.append(TelemetryEvent(summaries=eval_summaries))
+                if len(eval_summaries.summaries) > 0:
+                    telemetry_events.append(TelemetryEvent(summaries=eval_summaries))
             if self.collect_example_contexts:
                 current_example_contexts = (
                     self.example_contexts.get_and_reset_contexts()
@@ -157,7 +161,7 @@ class TelemetryManager(object):
                     )
             if self.collect_context_shapes:
                 shapes = self.context_shape_aggregator.flush()
-                if len(shapes.shapes) > 0:
+                if shapes and len(shapes.shapes) > 0:
                     telemetry_events.append(TelemetryEvent(context_shapes=shapes))
 
             if self.collect_logs:
@@ -283,10 +287,10 @@ class EvaluationRollup(object):
 
 class TelemetryEventProcessor(object):
     def __init__(
-        self,
-        evaluation_event_handler=None,
-        flush_event_handler=None,
-        log_event_handler=None,
+            self,
+            evaluation_event_handler=None,
+            flush_event_handler=None,
+            log_event_handler=None,
     ) -> None:
         self.thread = None
         self.queue = Queue(10000)
@@ -309,18 +313,18 @@ class TelemetryEventProcessor(object):
             event = self.queue.get()
             try:
                 if (
-                    event.event_type == BaseTelemetryEvent.Type.EVAL
-                    and self.evaluation_event_handler
+                        event.event_type == BaseTelemetryEvent.Type.EVAL
+                        and self.evaluation_event_handler
                 ):
                     self.evaluation_event_handler(event)
                 elif (
-                    event.event_type == BaseTelemetryEvent.Type.FLUSH
-                    and self.flush_event_handler
+                        event.event_type == BaseTelemetryEvent.Type.FLUSH
+                        and self.flush_event_handler
                 ):
                     self.flush_event_handler(event)
                 elif (
-                    event.event_type == BaseTelemetryEvent.Type.LOG
-                    and self.log_event_handler
+                        event.event_type == BaseTelemetryEvent.Type.LOG
+                        and self.log_event_handler
                 ):
                     self.log_event_handler(event)
                 else:

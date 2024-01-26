@@ -1,5 +1,4 @@
 import os
-from typing import List
 from unittest.mock import patch
 
 import pytest
@@ -7,7 +6,10 @@ import yaml
 
 from prefab_cloud_python import Options, Client, Context
 import prefab_pb2 as Prefab
-from prefab_cloud_python.config_client import InitializationTimeoutException, MissingDefaultException
+from prefab_cloud_python.config_client import (
+    InitializationTimeoutException,
+    MissingDefaultException,
+)
 from prefab_cloud_python.config_value_unwrapper import (
     EnvVarParseException,
     MissingEnvVarException,
@@ -30,14 +32,16 @@ LogLevels = {
     "debugs": Prefab.LogLevel.DEBUG,
     "infos": Prefab.LogLevel.INFO,
     "warns": Prefab.LogLevel.WARN,
-    "errors": Prefab.LogLevel.ERROR
+    "errors": Prefab.LogLevel.ERROR,
 }
 
 OnConnectionFailure = {":raise": "RAISE", ":return": "RETURN"}
 
-ContextUploadMode = {":none": Options.ContextUploadMode.NONE,
-                     ":shape_only": Options.ContextUploadMode.SHAPE_ONLY,
-                     ":periodic_example": Options.ContextUploadMode.PERIODIC_EXAMPLE}
+ContextUploadMode = {
+    ":none": Options.ContextUploadMode.NONE,
+    ":shape_only": Options.ContextUploadMode.SHAPE_ONLY,
+    ":periodic_example": Options.ContextUploadMode.PERIODIC_EXAMPLE,
+}
 
 
 def build_options_with_overrides(options, overrides):
@@ -57,8 +61,10 @@ def build_options_with_overrides(options, overrides):
     options.connection_timeout_seconds = overrides.get(
         "initialization_timeout_sec", options.connection_timeout_seconds
     )
-    if overrides.get('context_upload_mode'):
-        options.context_upload_mode = ContextUploadMode[overrides["context_upload_mode"]]
+    if overrides.get("context_upload_mode"):
+        options.context_upload_mode = ContextUploadMode[
+            overrides["context_upload_mode"]
+        ]
     return options
 
 
@@ -98,12 +104,12 @@ def make_id_from_test_case(test_case_dict):
 
 
 def run_test(
-        test,
-        options,
-        input_key="key",
-        function="get",
-        global_context=None,
-        expected_modifier=(lambda x: x),
+    test,
+    options,
+    input_key="key",
+    function="get",
+    global_context=None,
+    expected_modifier=(lambda x: x),
 ):
     case = test["case"]
     input = case["input"]
@@ -141,65 +147,77 @@ def run_telemetry_test(test, options, global_context=None):
         Context.set_current(Context(global_context))
     client = Client(options)
     with patch.object(client, "post", wraps=client.post) as spy_method:
-        if case['aggregator'] == 'log_path':
+        if case["aggregator"] == "log_path":
             run_logging_telemetry_test(test, case, client, spy_method)
-        elif case['aggregator'] == 'context_shape':
+        elif case["aggregator"] == "context_shape":
             run_context_shape_telemetry_test(test, case, client, spy_method)
-        elif case['aggregator'] == 'example_contexts':
+        elif case["aggregator"] == "example_contexts":
             run_context_instances_telemetry_test(test, case, client, spy_method)
-        elif case['aggregator'] == 'evaluation_summary':
+        elif case["aggregator"] == "evaluation_summary":
             run_evaluation_summary_telemetry_test(test, case, client, spy_method)
         else:
             pytest.fail(f"aggregator {case['aggregator']} not implemented")
 
 
 def run_logging_telemetry_test(test, case, client, spy_post_method):
-    for logger_data in case['data']:
-        for level, count in logger_data['counts'].items():
+    for logger_data in case["data"]:
+        for level, count in logger_data["counts"].items():
             for _ in range(count):
-                client.record_log(logger_data['logger_name'], LogLevels[level])
+                client.record_log(logger_data["logger_name"], LogLevels[level])
     client.telemetry_manager.flush_and_block()
     url, telemetry_events = spy_post_method.call_args.args
     assert url == "/api/v1/telemetry/"
     telemetry_events_by_type = get_telemetry_events_by_type(telemetry_events)
-    log_events = telemetry_events_by_type['loggers']
+    log_events = telemetry_events_by_type["loggers"]
     assert len(log_events) == 1
-    expected_protos = sort_proto_loggers(build_loggers_expected_data(case['expected_data']))
+    expected_protos = sort_proto_loggers(
+        build_loggers_expected_data(case["expected_data"])
+    )
     assert sort_proto_loggers(log_events[0].loggers) == expected_protos
 
 
 def run_context_shape_telemetry_test(test, case, client, spy_post_method):
-    context = Context(case['data'])
+    context = Context(case["data"])
     client.config_client().get("some-key", default=10, context=context)
     client.telemetry_manager.flush_and_block()
     url, telemetry_events = spy_post_method.call_args.args
-    expected_shapes = [Prefab.ContextShape(name=item['name'], field_types=item['field_types']) for item in case['expected_data']]
+    expected_shapes = [
+        Prefab.ContextShape(name=item["name"], field_types=item["field_types"])
+        for item in case["expected_data"]
+    ]
     assert url == "/api/v1/telemetry/"
-    actual_shapes = get_telemetry_events_by_type(telemetry_events)['context_shapes']
+    actual_shapes = get_telemetry_events_by_type(telemetry_events)["context_shapes"]
     for expected_shape in expected_shapes:
         assert expected_shape in actual_shapes[0].shapes
 
 
 def run_context_instances_telemetry_test(test, case, client, spy_post_method):
-    context = Context(case['data'])
-    expected_context_proto = Context(case['expected_data']).to_proto()
+    context = Context(case["data"])
+    expected_context_proto = Context(case["expected_data"]).to_proto()
     client.config_client().get("some-key", default=10, context=context)
     client.telemetry_manager.flush_and_block()
     url, telemetry_events = spy_post_method.call_args.args
     assert url == "/api/v1/telemetry/"
-    actual_context = get_telemetry_events_by_type(telemetry_events)['example_contexts']
+    actual_context = get_telemetry_events_by_type(telemetry_events)["example_contexts"]
     for expected_context in expected_context_proto.contexts:
         assert expected_context in actual_context[0].examples[0].contextSet.contexts
 
+
 def run_evaluation_summary_telemetry_test(test, case, client, spy_post_method):
-    for key in case['data']:
+    for key in case["data"]:
         client.config_client().get(key)
     client.telemetry_manager.flush_and_block()
     url, telemetry_events = spy_post_method.call_args.args
     assert url == "/api/v1/telemetry/"
-    actual_summary_protos = get_telemetry_events_by_type(telemetry_events)['summaries'][0].summaries
-    expected_summary_protos = build_evaluation_summary_expected_data(case['expected_data'])
-    assert clear_config_ids(actual_summary_protos) == clear_config_ids(expected_summary_protos)
+    actual_summary_protos = get_telemetry_events_by_type(telemetry_events)["summaries"][
+        0
+    ].summaries
+    expected_summary_protos = build_evaluation_summary_expected_data(
+        case["expected_data"]
+    )
+    assert clear_config_ids(actual_summary_protos) == clear_config_ids(
+        expected_summary_protos
+    )
 
 
 def clear_config_ids(summary_list):
@@ -211,8 +229,8 @@ def clear_config_ids(summary_list):
 def build_loggers_expected_data(expected_data):
     loggers_expected_data = []
     for logger_data in expected_data:
-        current_logger = Prefab.Logger(logger_name=logger_data['logger_name'])
-        for level, count in logger_data['counts'].items():
+        current_logger = Prefab.Logger(logger_name=logger_data["logger_name"])
+        for level, count in logger_data["counts"].items():
             setattr(current_logger, level, count)
         loggers_expected_data.append(current_logger)
     return loggers_expected_data
@@ -221,15 +239,23 @@ def build_loggers_expected_data(expected_data):
 def build_evaluation_summary_expected_data(expected_data):
     summaries = []
     for expected_datum in expected_data:
-        counts = [Prefab.ConfigEvaluationCounter(count=expected_datum['count'],
-                                                 config_row_index=expected_datum['summary']['config_row_index'],
-                                                 conditional_value_index=expected_datum['summary']['conditional_value_index'],
-                                                 weighted_value_index=expected_datum.get('weighted_value_index'),
-                                                 selected_value=ConfigValueWrapper.wrap(expected_datum['value']))]
-        summaries.append(Prefab.ConfigEvaluationSummary(key=expected_datum['key'], type=expected_datum['type'], counters=counts))
+        counts = [
+            Prefab.ConfigEvaluationCounter(
+                count=expected_datum["count"],
+                config_row_index=expected_datum["summary"]["config_row_index"],
+                conditional_value_index=expected_datum["summary"][
+                    "conditional_value_index"
+                ],
+                weighted_value_index=expected_datum.get("weighted_value_index"),
+                selected_value=ConfigValueWrapper.wrap(expected_datum["value"]),
+            )
+        ]
+        summaries.append(
+            Prefab.ConfigEvaluationSummary(
+                key=expected_datum["key"], type=expected_datum["type"], counters=counts
+            )
+        )
     return summaries
-
-
 
 
 class TestIntegration:

@@ -65,9 +65,7 @@ def log_or_drop(_, method, event_dict):
     called_method_level = python_to_prefab_log_levels[method]
 
     if config_client and not event_dict["skip_aggregator"]:
-        config_client.record_log(
-            event_dict["location"], called_method_level
-        )
+        config_client.record_log(event_dict["location"], called_method_level)
 
     if closest_log_level > called_method_level:
         raise DropEvent

@@ -36,7 +36,7 @@ class LoggerFilter:
         path = self.get_path(os.path.abspath(record.pathname), record.funcName)
         record.msg = "{path}: {msg}".format(path=path, msg=record.getMessage())
         called_method_level = python_to_prefab_log_levels[record.levelname.lower()]
-        self.config_client.record_log(path, Prefab.LogLevel.Name(called_method_level))
+        self.config_client.record_log(path, called_method_level)
         return self.should_log_message(record, path)
 
     def get_path(self, path, func_name):

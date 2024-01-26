@@ -28,18 +28,17 @@ class LogPathAggregator:
         aggregate = defaultdict(lambda: Prefab.Logger())
 
         for (path, severity), count in to_ship.items():
-            if severity == "DEBUG":
+            if severity == Prefab.LogLevel.DEBUG or severity == "DEBUG":
                 aggregate[path].debugs = count
-            elif severity == "INFO":
+            elif severity == Prefab.LogLevel.INFO or severity == "INFO":
                 aggregate[path].infos = count
-            elif severity == "WARN":
+            elif severity == Prefab.LogLevel.WARN or severity == "WARN":
                 aggregate[path].warns = count
-            elif severity == "ERROR":
+            elif severity == Prefab.LogLevel.ERROR or severity == "ERROR":
                 aggregate[path].errors = count
-            elif severity == "FATAL":
+            elif severity == Prefab.LogLevel.FATAL or severity == "FATAL":
                 aggregate[path].fatals = count
             aggregate[path].logger_name = path
-
         loggers = Prefab.LoggersTelemetryEvent(
             loggers=aggregate.values(),
             start_at=round(start_at_was * 1000),

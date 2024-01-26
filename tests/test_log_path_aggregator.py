@@ -13,9 +13,9 @@ class TestLogPathAggregator:
             logger_path_aggregator = LogPathAggregator(LoggerClient(), 120)
 
             for _ in range(2):
-                logger_path_aggregator.push("path1", "INFO")
+                logger_path_aggregator.push("path1", Prefab.LogLevel.INFO)
             for _ in range(3):
-                logger_path_aggregator.push("path1", "ERROR")
+                logger_path_aggregator.push("path1", Prefab.LogLevel.ERROR)
 
             loggers = logger_path_aggregator.flush()
             assert loggers == Prefab.LoggersTelemetryEvent(

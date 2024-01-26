@@ -2,7 +2,8 @@ from prefab_cloud_python import Options, Client
 from prefab_cloud_python.config_resolver import Evaluation
 from prefab_cloud_python.config_value_unwrapper import (
     ConfigValueUnwrapper,
-    EnvVarParseException, MissingEnvVarException,
+    EnvVarParseException,
+    MissingEnvVarException,
 )
 from prefab_cloud_python.encryption import Encryption
 import prefab_pb2 as Prefab
@@ -263,7 +264,6 @@ class TestConfigValueUnwrapper:
         config_value = Prefab.ConfigValue(provided=value)
         with pytest.raises(MissingEnvVarException):
             TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT)
-
 
     def test_unwrapping_encrypted_values_decrypts(self):
         clear_text = "very secret stuff"

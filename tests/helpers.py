@@ -62,7 +62,7 @@ def proto_context_set_fingerprint(context_set: Prefab.ContextSet) -> str:
 
 
 def sort_proto_context_sets(
-        context_sets: [Prefab.ContextSet],
+    context_sets: [Prefab.ContextSet],
 ) -> [Prefab.ContextSet]:
     return sorted(
         context_sets,

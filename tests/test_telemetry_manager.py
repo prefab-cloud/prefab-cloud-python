@@ -165,4 +165,3 @@ def test_telemetry(options: Options, telemetry_manager: TelemetryManager):
             Prefab.ContextShape(name="", field_types={"b": 2}),
         ]
     )
-

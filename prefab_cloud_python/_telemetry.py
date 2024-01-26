@@ -232,12 +232,8 @@ class EvaluationRollup(object):
         if evaluation.config:
             reportable_value = None
             try:
-                reportable_value = (
-                    HashableProtobufWrapper(
-                        evaluation.deepest_value().reportable_wrapped_value().value
-                    ),
-                )
-            except:
+                reportable_value = HashableProtobufWrapper(evaluation.deepest_value().reportable_wrapped_value().value)
+            except Exception:
                 pass
             self.counts[
                 (

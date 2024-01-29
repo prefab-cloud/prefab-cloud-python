@@ -259,6 +259,9 @@ class EvaluationRollup(object):
         for key_and_type, all_keys in key_groups.items():
             current_counters = []
             for current_key_tuple in all_keys:
+                selected_value = None
+                if current_key_tuple[6]:
+                    selected_value = current_key_tuple[6].msg
                 current_counters.append(
                     ConfigEvaluationCounter(
                         count=self.counts[current_key_tuple],
@@ -266,7 +269,7 @@ class EvaluationRollup(object):
                         config_row_index=current_key_tuple[3],
                         conditional_value_index=current_key_tuple[4],
                         weighted_value_index=current_key_tuple[5],
-                        selected_value=current_key_tuple[6].msg,
+                        selected_value=selected_value,
                     )
                 )
             all_summaries.append(

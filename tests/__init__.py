@@ -1,0 +1,3 @@
+from prefab_cloud_python import default_structlog_setup
+
+default_structlog_setup()

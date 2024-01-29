@@ -1,4 +1,4 @@
-from prefab_cloud_python._processors import get_path, get_severity
+from prefab_cloud_python._structlog_processors import get_path, get_severity
 from prefab_cloud_python import Options, Client
 import prefab_pb2 as Prefab
 import pytest

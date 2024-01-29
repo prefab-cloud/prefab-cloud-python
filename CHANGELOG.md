@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Remove automatic `structlog` configuration. Adds helper methods to use Prefab in customer-configured structlog [#40]
+- Filter extracted for standard `logging` usage [#32]
+- Added types on client [#28]
+
 ## [0.9.0] - 2024-01-13
 
 - Add support for reading config from a local JSON datafile [#42]

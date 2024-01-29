@@ -7,3 +7,7 @@ ignore = [
 known-first-party = ["prefab_cloud_python", "prefab_pb2", "prefab_pb2_grpc", "tests"]
 force-single-line = true
 required-imports = ["from __future__ import annotations"]
+
+
+[per-file-ignores]
+"__init__.py" = ["F401"]

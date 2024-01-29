@@ -1,6 +1,9 @@
 from __future__ import annotations
 import functools
 
+from requests.adapters import HTTPAdapter
+from urllib3 import Retry
+
 from ._telemetry import TelemetryManager
 from .context import Context, ScopedContext
 from .config_client import ConfigClient
@@ -8,6 +11,7 @@ from .feature_flag_client import FeatureFlagClient
 from .logger_client import LoggerClient
 from .logger_filter import LoggerFilter
 from .options import Options
+from ._requests import TimeoutHTTPAdapter
 from typing import Optional, Union
 import prefab_pb2 as Prefab
 import uuid
@@ -37,7 +41,16 @@ class Client:
         self.namespace = options.namespace
         self.api_url = options.prefab_api_url
         self.grpc_url = options.prefab_grpc_url
+        # Define the retry strategy
+        retry_strategy = Retry(
+            total=2,  # Maximum number of retries
+            status_forcelist=[429, 500, 502, 503, 504],  # HTTP status codes to retry on
+            allowed_methods=["POST"]
+        )
+        # Create an TimeoutHTTPAdapter adapter with the retry strategy and a standard timeout and mount it to session
+        adapter = TimeoutHTTPAdapter(max_retries=retry_strategy, timeout=5)
         self.session = requests.Session()
+        self.session.mount("https://", adapter)
         self.session.headers.update({VersionHeader: f"prefab-cloud-python-{Version}"})
         if options.is_local_only():
             self.logger.log_internal(
@@ -58,10 +71,10 @@ class Client:
         self.config_client()
 
     def get(
-        self,
-        key: str,
-        default: ConfigValueType = "NO_DEFAULT_PROVIDED",
-        context: str | Context = "NO_CONTEXT_PROVIDED",
+            self,
+            key: str,
+            default: ConfigValueType = "NO_DEFAULT_PROVIDED",
+            context: str | Context = "NO_CONTEXT_PROVIDED",
     ) -> ConfigValueType:
         if self.is_ff(key):
             if default == "NO_DEFAULT_PROVIDED":
@@ -75,7 +88,7 @@ class Client:
             )
 
     def enabled(
-        self, feature_name: str, context: str | Context = "NO_CONTEXT_PROVIDED"
+            self, feature_name: str, context: str | Context = "NO_CONTEXT_PROVIDED"
     ) -> bool:
         return self.feature_flag_client().feature_is_on_for(
             feature_name, context=self.resolve_context_argument(context)
@@ -84,7 +97,7 @@ class Client:
     def is_ff(self, key: str) -> bool:
         raw = self.config_client().config_resolver.raw(key)
         if raw is not None and raw.config_type == Prefab.ConfigType.Value(
-            "FEATURE_FLAG"
+                "FEATURE_FLAG"
         ):
             return True
         return False

@@ -40,7 +40,6 @@ class Client:
 
         self.namespace = options.namespace
         self.api_url = options.prefab_api_url
-        self.grpc_url = options.prefab_grpc_url
         # Define the retry strategy
         retry_strategy = Retry(
             total=2,  # Maximum number of retries
@@ -59,10 +58,9 @@ class Client:
         else:
             self.logger.log_internal(
                 "info",
-                f"Prefab {Version} connecting to %s and %s, secure %s"
+                f"Prefab {Version} connecting to %s, secure %s"
                 % (
                     options.prefab_api_url,
-                    options.prefab_grpc_url,
                     options.http_secure,
                 ),
             )

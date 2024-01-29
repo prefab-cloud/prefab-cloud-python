@@ -8,7 +8,6 @@ from .context import Context
 from .config_resolver import Evaluation
 from google.protobuf.json_format import MessageToJson, Parse
 
-import grpc
 import threading
 import time
 import sseclient
@@ -255,11 +254,6 @@ class ConfigClient:
     @cache_path.setter
     def cache_path(self, path):
         self._cache_path = path
-
-    @functools.cache
-    def grpc_channel(self):
-        creds = grpc.ssl_channel_credentials()
-        return grpc.secure_channel(self.options.prefab_grpc_url, creds)
 
     def record_log(self, path, severity):
         self.base_client.record_log(path, severity)

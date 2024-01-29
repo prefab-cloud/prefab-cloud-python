@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Adds full telemetry support - will (configurably) send data back to Prefab about evaluations, logging counts, and context usage
+- Reliability changes, increased test coverage
 - Remove automatic `structlog` configuration. Adds helper methods to use Prefab in customer-configured structlog [#40]
 - Filter extracted for standard `logging` usage [#32]
 - Added types on client [#28]

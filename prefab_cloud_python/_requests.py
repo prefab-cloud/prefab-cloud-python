@@ -6,7 +6,7 @@ DEFAULT_TIMEOUT = 5  # seconds
 # from https://findwork.dev/blog/advanced-usage-python-requests-timeouts-retries-hooks/
 class TimeoutHTTPAdapter(HTTPAdapter):
     def __init__(self, *args, **kwargs):
-        self.timeout = kwargs.pop('timeout', DEFAULT_TIMEOUT)
+        self.timeout = kwargs.pop("timeout", DEFAULT_TIMEOUT)
         super().__init__(*args, **kwargs)
 
     def send(self, request, **kwargs):

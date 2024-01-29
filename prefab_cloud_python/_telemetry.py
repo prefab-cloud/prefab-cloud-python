@@ -290,7 +290,7 @@ class EvaluationRollup(object):
 class TelemetryEventProcessor(object):
     class TelemetryThread(threading.Thread):
         def __init__(self, *args, **kwargs):
-            self.base_client = kwargs.pop('base_client', None)
+            self.base_client = kwargs.pop("base_client", None)
             super().__init__(*args, **kwargs)
 
         def run(self):
@@ -299,13 +299,15 @@ class TelemetryEventProcessor(object):
             except Exception as e:
                 # Handle the exception here
                 if self.base_client:
-                    self.base_client.logger.log_internal("warn", f"Exception in thread {self.name}: {e}")
+                    self.base_client.logger.log_internal(
+                        "warn", f"Exception in thread {self.name}: {e}"
+                    )
                 else:
                     print(f"Exception in thread {self.name}: {e}")
 
     def __init__(
         self,
-        base_client= None,
+        base_client=None,
         evaluation_event_handler=None,
         flush_event_handler=None,
         log_event_handler=None,
@@ -318,7 +320,12 @@ class TelemetryEventProcessor(object):
         self.log_event_handler = log_event_handler
 
     def start(self) -> None:
-        self.thread = TelemetryEventProcessor.TelemetryThread(target=self.process_queue, daemon=True, name="TelemetryEventProcessor", base_client=self.base_client)
+        self.thread = TelemetryEventProcessor.TelemetryThread(
+            target=self.process_queue,
+            daemon=True,
+            name="TelemetryEventProcessor",
+            base_client=self.base_client,
+        )
         self.thread.start()
 
     def enqueue(self, event: BaseTelemetryEvent):

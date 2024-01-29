@@ -11,7 +11,6 @@ class TimeoutHTTPAdapter(HTTPAdapter):
         super().__init__(*args, **kwargs)
 
     def send(self, request, **kwargs) -> Response:
-        timeout = kwargs.get("timeout", None)
-        if timeout is None:
+        if "timeout" not in kwargs:
             kwargs["timeout"] = self.timeout
         return super().send(request, **kwargs)

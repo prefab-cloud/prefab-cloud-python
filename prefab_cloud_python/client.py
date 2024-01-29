@@ -115,7 +115,7 @@ class Client:
 
     @functools.cache
     def config_client(self) -> ConfigClient:
-        client = ConfigClient(self, timeout=5.0)
+        client = ConfigClient(self)
         return client
 
     @functools.cache

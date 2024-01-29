@@ -36,14 +36,14 @@ python_to_prefab_log_levels = {
 
 
 def clean_event_dict(_, __, event_dict):
-    event_dict.pop(CallsiteParameter.PATHNAME.value)
-    event_dict.pop(CallsiteParameter.FUNC_NAME.value)
-    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_PREFAB_CONFIG_CLIENT)
-    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_LOG_PREFIX)
-    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_LOG_BOUNDARY)
-    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR)
-    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR)
-    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH)
+    event_dict.pop(CallsiteParameter.PATHNAME.value, None)
+    event_dict.pop(CallsiteParameter.FUNC_NAME.value, None)
+    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_PREFAB_CONFIG_CLIENT, None)
+    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_LOG_PREFIX, None)
+    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_LOG_BOUNDARY, None)
+    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR, None)
+    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR, None)
+    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH, None)
     return event_dict
 
 

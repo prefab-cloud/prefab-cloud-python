@@ -3,7 +3,6 @@ import os
 from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_PREFAB_CONFIG_CLIENT
 from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_LOG_PREFIX
 from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_LOG_BOUNDARY
-from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR
 from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR
 from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH
 
@@ -63,4 +62,3 @@ class LoggerClient:
             STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR: False,
         }
         return structlog.get_logger().bind(**logger_binding)
-

@@ -38,13 +38,12 @@ If you'd prefer returning `None` rather than raising when this occurs, modify th
 
 
 class ConfigClient:
-    def __init__(self, base_client, timeout):
+    def __init__(self, base_client):
         self.checkpointing_thread = None
         self.streaming_thread = None
         base_client.logger.log_internal("info", "Initializing ConfigClient")
         self.base_client = base_client
         self.options = base_client.options
-        self.timeout = timeout
 
         self.stream_lock = ReadWriteLock()
         self.init_lock = ReadWriteLock()

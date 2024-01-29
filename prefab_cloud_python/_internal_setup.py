@@ -21,7 +21,7 @@ def default_structlog_setup(colors=True):
                     structlog.processors.CallsiteParameter.PATHNAME,
                     structlog.processors.CallsiteParameter.FUNC_NAME,
                 ],
-                additional_ignores=list(STRUCTLOG_CALLSITE_IGNORES),
+                additional_ignores=[STRUCTLOG_CALLSITE_IGNORES],
             ),
             create_prefab_structlog_processor(),
             structlog.dev.ConsoleRenderer(colors=colors),

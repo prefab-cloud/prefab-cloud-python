@@ -42,14 +42,14 @@ def clean_event_dict(_, __, event_dict):
     event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_LOG_PREFIX)
     event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_LOG_BOUNDARY)
     event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR)
-    if STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR in event_dict:
-        event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR)
-    if STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH in event_dict:
-        event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH)
+    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR)
+    event_dict.pop(STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH)
     return event_dict
 
 
 def set_location(_, __, event_dict):
+    # STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH when logging is internal, internal logging, defaults to None
+    # presence check needed first to determine if logging is "internal" then check if not-None
     if STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH in event_dict:
         if event_dict[STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH]:
             event_dict[LOCATION_KEY] = (

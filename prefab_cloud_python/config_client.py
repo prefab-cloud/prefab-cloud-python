@@ -38,11 +38,12 @@ If you'd prefer returning `None` rather than raising when this occurs, modify th
 
 
 class ConfigClient:
-    def __init__(self, base_client, timeout):
+    def __init__(self, base_client):
+        self.checkpointing_thread = None
+        self.streaming_thread = None
         base_client.logger.log_internal("info", "Initializing ConfigClient")
         self.base_client = base_client
         self.options = base_client.options
-        self.timeout = timeout
 
         self.stream_lock = ReadWriteLock()
         self.init_lock = ReadWriteLock()
@@ -67,41 +68,34 @@ class ConfigClient:
         elif self.options.has_datafile():
             self.load_json_file(self.options.datafile)
         else:
-            self.load_checkpoint()
+            # don't load checkpoint here, that'll block the caller. let the thread do it
             self.start_checkpointing_thread()
             self.start_streaming()
 
     def get(self, key, default="NO_DEFAULT_PROVIDED", context=Context.get_current()):
         evaluation_result = self.__get(key, None, {}, context=context)
-
-        if isinstance(context, Context):
-            self.base_client.context_shape_aggregator.push(context)
-        elif not isinstance(context, str):
-            self.base_client.context_shape_aggregator.push(Context(context))
-
         if evaluation_result is not None:
             self.base_client.telemetry_manager.record_evaluation(evaluation_result)
-            return evaluation_result.unwrapped_value()
-        else:
-            return self.handle_default(key, default)
+            if evaluation_result.config:
+                return evaluation_result.unwrapped_value()
+        return self.handle_default(key, default)
 
     def __get(
         self, key, lookup_key, properties, context=Context.get_current()
     ) -> None | Evaluation:
-        try:
-            self.init_lock.acquire_read(self.options.connection_timeout_seconds)
-        except Exception:
-            if self.options.on_connection_failure == "RAISE":
-                raise InitializationTimeoutException(
-                    self.options.connection_timeout_seconds, key
+        with self.init_lock.read_locked_timeout(
+            self.options.connection_timeout_seconds
+        ) as locked:
+            if not locked:
+                if self.options.on_connection_failure == "RAISE":
+                    raise InitializationTimeoutException(
+                        self.options.connection_timeout_seconds, key
+                    )
+                self.base_client.logger.log_internal(
+                    "warn",
+                    f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have.",
                 )
-            self.base_client.logger.log_internal(
-                "warn",
-                f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have.",
-            )
-            self.init_lock.release_write()
-        finally:
-            return self.config_resolver.get(key, context=context)
+        return self.config_resolver.get(key, context=context)
 
     def handle_default(self, key, default):
         if default != "NO_DEFAULT_PROVIDED":
@@ -135,7 +129,11 @@ class ConfigClient:
             "x-prefab-start-at-id": f"{self.config_loader.highwater_mark}",
         }
         response = self.base_client.session.get(
-            url, headers=headers, stream=True, auth=("authuser", self.options.api_key)
+            url,
+            headers=headers,
+            stream=True,
+            auth=("authuser", self.options.api_key),
+            timeout=None,
         )
 
         client = sseclient.SSEClient(response)
@@ -266,3 +264,6 @@ class ConfigClient:
     def grpc_channel(self):
         creds = grpc.ssl_channel_credentials()
         return grpc.secure_channel(self.options.prefab_grpc_url, creds)
+
+    def record_log(self, path, severity):
+        self.base_client.record_log(path, severity)

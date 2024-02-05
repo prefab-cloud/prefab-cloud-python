@@ -5,7 +5,12 @@ from prefab_cloud_python.context import (
 )
 import pytest
 import re
-
+from prefab_pb2 import (
+    Context as ProtoContext,
+    ContextSet as ProtoContextSet,
+    ConfigValue,
+    StringList,
+)
 
 EXAMPLE_PROPERTIES = {
     "user": {"key": "some-user-key", "name": "Ted"},
@@ -13,7 +18,7 @@ EXAMPLE_PROPERTIES = {
 }
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def setup():
     Context.set_current(None)
     yield
@@ -131,3 +136,54 @@ class TestContext:
         context.clear()
 
         assert not context.to_dict()
+
+    def test_named_context_to_proto(self):
+        proto_context = NamedContext(
+            "the-name",
+            {"a": 10, "b": 1.1, "c": "hello world", "d": ["hello", "world"], "e": True},
+        ).to_proto()
+        expected_proto_context = ProtoContext(
+            type="the-name",
+            values={
+                "a": ConfigValue(int=10),
+                "b": ConfigValue(double=1.1),
+                "c": ConfigValue(string="hello world"),
+                "d": ConfigValue(string_list=StringList(values=["hello", "world"])),
+                "e": ConfigValue(bool=True),
+            },
+        )
+        assert proto_context == expected_proto_context
+
+    def test_context_to_proto(self):
+        proto_context_set = Context(
+            {
+                "the-name": {
+                    "a": 10,
+                    "b": 1.1,
+                    "c": "hello world",
+                    "d": ["hello", "world"],
+                    "e": True,
+                },
+                "another": {"foo": "bar"},
+            }
+        ).to_proto()
+
+        expected_proto_context_set = ProtoContextSet(
+            contexts=[
+                ProtoContext(
+                    type="the-name",
+                    values={
+                        "a": ConfigValue(int=10),
+                        "b": ConfigValue(double=1.1),
+                        "c": ConfigValue(string="hello world"),
+                        "d": ConfigValue(
+                            string_list=StringList(values=["hello", "world"])
+                        ),
+                        "e": ConfigValue(bool=True),
+                    },
+                ),
+                ProtoContext(type="another", values={"foo": ConfigValue(string="bar")}),
+            ]
+        )
+
+        assert proto_context_set == expected_proto_context_set

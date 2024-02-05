@@ -1,55 +1,31 @@
-from prefab_cloud_python import Options, Client
 import prefab_pb2 as Prefab
 
 import time
 import timecop
 
+from prefab_cloud_python.log_path_aggregator import LogPathAggregator
+from prefab_cloud_python.logger_client import LoggerClient
+
 
 class TestLogPathAggregator:
     def test_sync(self):
         with timecop.freeze(time.time()):
-            options = Options(
-                prefab_datasources="LOCAL_ONLY",
-                api_key="123-development-yourapikey-SDK",
-                collect_sync_interval=1000,
-                prefab_envs=["unit_tests"],
-                prefab_config_classpath_dir="tests",
-                namespace="this.is.a.namespace",
-                connection_timeout_seconds=0,
-                log_boundary="..",
-            )
-            options.collect_max_paths = 100  # override Options LOCAL_ONLY behavior
-            client = Client(options)
+            logger_path_aggregator = LogPathAggregator(LoggerClient(), 120)
 
             for _ in range(2):
-                client.logger.info("here is a message")
+                logger_path_aggregator.push("path1", Prefab.LogLevel.INFO)
             for _ in range(3):
-                client.logger.error("here is a message")
+                logger_path_aggregator.push("path1", Prefab.LogLevel.ERROR)
 
-            requests = []
-
-            def new_post(self, *params):
-                requests.extend(params)
-
-            funcType = type(client.post)
-
-            client.post = funcType(new_post, client)
-
-            client.log_path_aggregator.sync()
-
-            assert requests == [
-                "/api/v1/known-loggers",
-                Prefab.Loggers(
-                    loggers=[
-                        Prefab.Logger(
-                            logger_name="prefab_cloud_python.tests.test_log_path_aggregator.test_sync",
-                            infos=2,
-                            errors=3,
-                        )
-                    ],
-                    start_at=round(time.time() * 1000),
-                    end_at=round(time.time() * 1000),
-                    instance_hash=client.instance_hash,
-                    namespace="this.is.a.namespace",
-                ),
-            ]
+            loggers = logger_path_aggregator.flush()
+            assert loggers == Prefab.LoggersTelemetryEvent(
+                loggers=[
+                    Prefab.Logger(
+                        logger_name="path1",
+                        infos=2,
+                        errors=3,
+                    )
+                ],
+                start_at=round(time.time() * 1000),
+                end_at=round(time.time() * 1000),
+            )

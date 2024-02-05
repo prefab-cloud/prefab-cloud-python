@@ -207,3 +207,28 @@ def test_rollup_works_for_confidential():
             selected_value=Prefab.ConfigValue(string="*****e31d9"),
         )
     ]
+
+
+def test_rollup_handles_none_value(mock_time):
+    evaluation_rollup = EvaluationRollup()
+    evaluation_rollup.record_evaluation(
+        Evaluation(
+            config=CONFIG1,
+            value=None,
+            value_index=31,
+            config_row_index=0,
+            resolver=EMPTY_RESOLVER,
+            context=EMPTY_CONTEXT,
+        )
+    )
+    telemetry = evaluation_rollup.build_telemetry()
+    assert len(telemetry.summaries) == 1
+    assert telemetry.summaries[0].counters == [
+        Prefab.ConfigEvaluationCounter(
+            count=1,
+            config_id=CONFIG1.id,
+            config_row_index=0,
+            conditional_value_index=31,
+            selected_value=None,
+        )
+    ]

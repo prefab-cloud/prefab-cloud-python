@@ -1,4 +1,5 @@
 import os
+from enum import Enum
 from pathlib import Path
 from urllib.parse import urlparse
 from typing import Optional, Union
@@ -46,6 +47,11 @@ VALID_ON_CONNECTION_FAILURE = ("RETURN", "RAISE")
 
 
 class Options:
+    class ContextUploadMode(Enum):
+        NONE = 1
+        SHAPE_ONLY = 2
+        PERIODIC_EXAMPLE = 3
+
     def __init__(
         self,
         api_key: Optional[str] = None,
@@ -70,6 +76,7 @@ class Options:
         collect_max_shapes: int = 10_000,
         collect_sync_interval: Optional[int] = None,
         collect_evaluation_summaries: bool = True,
+        context_upload_mode: ContextUploadMode = ContextUploadMode.PERIODIC_EXAMPLE,
     ) -> None:
         self.prefab_datasources = Options.__validate_datasource(prefab_datasources)
         self.datafile = x_datafile
@@ -100,6 +107,7 @@ class Options:
         self.__set_log_collection(collect_logs, collect_max_paths, self.is_local_only())
         self.collect_sync_interval = collect_sync_interval
         self.collect_max_shapes = collect_max_shapes
+        self.context_upload_mode = context_upload_mode
         self.collect_evaluation_summaries = collect_evaluation_summaries
 
     def is_local_only(self) -> bool:

@@ -1,7 +1,7 @@
 from .weighted_value_resolver import WeightedValueResolver
 from .config_value_wrapper import ConfigValueWrapper
 from .context import Context
-from .encryption import Encryption
+from .encryption import Encryption, DecryptionException
 import prefab_pb2 as Prefab
 import yaml
 import os
@@ -19,6 +19,16 @@ class EnvVarParseException(Exception):
         super().__init__(
             "Evaluating %s couldn't coerce %s of %s to %s"
             % (config.key, env_var_name, env_var, VTN(config.value_type))
+        )
+
+
+class MissingEnvVarException(Exception):
+    "Raised when an environment variable specified in a `provided` config value does not exist"
+
+    def __init__(self, config, env_var_name):
+        super().__init__(
+            "Environment variable %s referenced in config %s does not exist"
+            % (config.key, env_var_name)
         )
 
 
@@ -82,11 +92,12 @@ class ConfigValueUnwrapper:
             if config_value.provided.source == Prefab.ProvidedSource.Value("ENV_VAR"):
                 raw = os.getenv(config_value.provided.lookup)
                 if raw is None:
-                    resolver.base_client.logger.log_internal(
-                        "warn",
-                        f"ENV Variable {config_value.provided.lookup} not found. Using empty string.",
-                    )
-                    return ConfigValueUnwrapper(ConfigValueWrapper.wrap(""), resolver)
+                    raise MissingEnvVarException(config, config_value.provided.lookup)
+                    # resolver.base_client.logger.log_internal(
+                    #     "warn",
+                    #     f"ENV Variable {config_value.provided.lookup} not found. Using empty string.",
+                    # )
+                    # return ConfigValueUnwrapper(ConfigValueWrapper.wrap(""), resolver)
                 else:
                     coerced = ConfigValueUnwrapper.coerce_into_type(
                         raw, config, config_value.provided.lookup
@@ -114,18 +125,27 @@ class ConfigValueUnwrapper:
             raise UnknownConfigValueTypeException(type)
 
         if self.value.decrypt_with != "":
-            decryption_key = self.resolver.get(self.value.decrypt_with)
-            if decryption_key is None:
+            decryption_key_evaluation = self.resolver.get(self.value.decrypt_with)
+            if (
+                decryption_key_evaluation is None
+                or decryption_key_evaluation.raw_config_value is None
+            ):
                 self.resolver.base_client.logger.log_internal(
                     "warn",
                     f"No value for decryption key {self.value.decrypt_with} found.",
                 )
                 return ""
             else:
-                return Encryption(decryption_key).decrypt(raw)
+                try:
+                    return Encryption(
+                        decryption_key_evaluation.unwrapped_value()
+                    ).decrypt(raw)
+                except Exception:
+                    raise DecryptionException("unable to decrypt value")
         else:
             return raw
 
+    @staticmethod
     def coerce_into_type(value_string, config, env_var_name):
         try:
             value_type = config.value_type

@@ -1,5 +1,13 @@
+from collections import defaultdict
+
+import requests
+import responses
+
+import prefab_pb2 as Prefab
 from prefab_cloud_python import Context
+from prefab_cloud_python.client import PostBodyType
 from prefab_cloud_python.config_resolver import CriteriaEvaluator
+from prefab_cloud_python.logger_client import LoggerClient
 
 
 class MockResolver:
@@ -42,3 +50,50 @@ def sort_proto_evaluation_counters(counters):
             obj.selected_value.SerializeToString(),
         ),
     )
+
+
+def proto_context_set_fingerprint(context_set: Prefab.ContextSet) -> str:
+    fingerprint_string = ""
+    for context in sorted(context_set.contexts, key=lambda obj: (obj.type)):
+        key = context.values.get("key")
+        if key:
+            fingerprint_string += f"{context.type}:{key}::"
+    return fingerprint_string
+
+
+def sort_proto_context_sets(
+    context_sets: [Prefab.ContextSet],
+) -> [Prefab.ContextSet]:
+    return sorted(
+        context_sets,
+        key=lambda obj: (proto_context_set_fingerprint(obj)),
+    )
+
+
+def sort_proto_context_shape(context_shapes: [Prefab.ContextShape]):
+    return sorted(context_shapes, key=lambda obj: obj.name)
+
+
+def sort_proto_loggers(loggers: [Prefab.Logger]):
+    return sorted(loggers, key=lambda obj: obj.logger_name)
+
+
+def get_telemetry_events_by_type(telemetry_event: Prefab.TelemetryEvents):
+    values = defaultdict(list)
+    for event in telemetry_event.events:
+        payload_type = event.WhichOneof("payload")
+        values[payload_type].append(getattr(event, payload_type))
+    return values
+
+
+class MockClientForPosts:
+    def __init__(self):
+        self.posts = []
+        self.logger = LoggerClient()
+
+    def reset(self):
+        self.posts.clear()
+
+    def post(self, path: str, body: PostBodyType) -> requests.models.Response:
+        self.posts.append((path, body))
+        return responses.Response(status=200, method="POST", headers=[], url="")

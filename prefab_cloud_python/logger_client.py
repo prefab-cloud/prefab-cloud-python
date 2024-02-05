@@ -3,7 +3,6 @@ import os
 from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_PREFAB_CONFIG_CLIENT
 from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_LOG_PREFIX
 from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_LOG_BOUNDARY
-from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR
 from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR
 from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH
 
@@ -15,13 +14,15 @@ class BootstrappingConfigClient:
             return bootstrap_log_level.upper()
         return default
 
+    def record_log(self, path, level):
+        pass
+
 
 class LoggerClient:
-    def __init__(self, log_prefix=None, log_boundary=None, log_path_aggregator=None):
+    def __init__(self, log_prefix=None, log_boundary=None):
         self.log_prefix = log_prefix
         self.log_boundary = log_boundary
         self.config_client = BootstrappingConfigClient()
-        self.log_path_aggregator = log_path_aggregator
 
     def debug(self, msg):
         self.configured_logger().debug(msg)
@@ -58,7 +59,6 @@ class LoggerClient:
             STRUCTLOG_EVENT_DICT_KEY_PREFAB_CONFIG_CLIENT: self.config_client,
             STRUCTLOG_EVENT_DICT_KEY_LOG_PREFIX: self.log_prefix,
             STRUCTLOG_EVENT_DICT_KEY_LOG_BOUNDARY: self.log_boundary,
-            STRUCTLOG_EVENT_DICT_KEY_PATH_AGGREGATOR: self.log_path_aggregator,
             STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR: False,
         }
         return structlog.get_logger().bind(**logger_binding)

@@ -74,7 +74,7 @@ class Options:
         collect_logs: bool = True,
         collect_max_paths: int = 1000,
         collect_max_shapes: int = 10_000,
-        collect_sync_interval: Optional[int] = None,
+        collect_sync_interval: Optional[int] = 30,
         collect_evaluation_summaries: bool = True,
         context_upload_mode: ContextUploadMode = ContextUploadMode.PERIODIC_EXAMPLE,
     ) -> None:

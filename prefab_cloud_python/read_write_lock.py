@@ -89,3 +89,12 @@ class ReadWriteLock:
         """Release a write lock."""
         self._read_ready.release()
         self._write_locked = False
+
+    @contextmanager
+    def write_locked(self):
+        """This method is designed to be used via the with statement"""
+        try:
+            self.acquire_write()
+            yield
+        finally:
+            self.release_write()

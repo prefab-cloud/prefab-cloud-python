@@ -79,6 +79,7 @@ class Context:
     def set_current(context):
         current_thread().prefab_context = context
 
+    @staticmethod
     def get_current():
         if (
             "prefab_context" not in dir(current_thread())
@@ -87,6 +88,7 @@ class Context:
             Context.set_current(Context())
         return current_thread().prefab_context
 
+    @staticmethod
     def merge_with_current(new_context_attributes):
         return Context(Context.get_current().to_dict() | new_context_attributes)
 

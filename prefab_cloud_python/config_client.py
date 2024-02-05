@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 from .config_loader import ConfigLoader
 from .config_resolver import ConfigResolver
 from .read_write_lock import ReadWriteLock
 from .config_value_unwrapper import ConfigValueUnwrapper
 from .context import Context
+from .config_resolver import Evaluation
 from google.protobuf.json_format import MessageToJson, Parse
 
 import grpc
@@ -69,22 +72,22 @@ class ConfigClient:
             self.start_streaming()
 
     def get(self, key, default="NO_DEFAULT_PROVIDED", context=Context.get_current()):
-        value = self.__get(key, None, {}, context=context)
+        evaluation_result = self.__get(key, None, {}, context=context)
 
         if isinstance(context, Context):
             self.base_client.context_shape_aggregator.push(context)
         elif not isinstance(context, str):
             self.base_client.context_shape_aggregator.push(Context(context))
 
-        if value is not None:
-            raw_config = self.config_resolver.raw(key)
-            return ConfigValueUnwrapper.deepest_value(
-                value, raw_config, self.config_resolver, context
-            ).unwrap()
+        if evaluation_result is not None:
+            self.base_client.telemetry_manager.record_evaluation(evaluation_result)
+            return evaluation_result.unwrapped_value()
         else:
             return self.handle_default(key, default)
 
-    def __get(self, key, lookup_key, properties, context=Context.get_current()):
+    def __get(
+        self, key, lookup_key, properties, context=Context.get_current()
+    ) -> None | Evaluation:
         try:
             self.init_lock.acquire_read(self.options.connection_timeout_seconds)
         except Exception:
@@ -115,13 +118,15 @@ class ConfigClient:
         self.base_client.logger.log_internal("warn", "No success loading checkpoints")
 
     def start_checkpointing_thread(self):
-        self.checkpointing_thread = threading.Thread(target=self.checkpointing_loop)
-        self.checkpointing_thread.daemon = True
+        self.checkpointing_thread = threading.Thread(
+            target=self.checkpointing_loop, daemon=True
+        )
         self.checkpointing_thread.start()
 
     def start_streaming(self):
-        self.streaming_thread = threading.Thread(target=self.streaming_loop)
-        self.streaming_thread.daemon = True
+        self.streaming_thread = threading.Thread(
+            target=self.streaming_loop, daemon=True
+        )
         self.streaming_thread.start()
 
     def streaming_loop(self):

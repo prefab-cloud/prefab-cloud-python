@@ -54,12 +54,26 @@ def extended_env(new_env_vars):
 class TestConfigValueUnwrapper:
     def test_unwrapping_int(self):
         config_value = Prefab.ConfigValue(int=123)
-        assert TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT), 123
+        assert (
+            TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT) == 123
+        )
+        assert (
+            TestConfigValueUnwrapper.reportable_value(
+                config_value, CONFIG, EMPTY_CONTEXT
+            )
+            == 123
+        )
 
     def test_unwrapping_string(self):
         config_value = Prefab.ConfigValue(string="abc")
         assert (
             TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT)
+            == "abc"
+        )
+        assert (
+            TestConfigValueUnwrapper.reportable_value(
+                config_value, CONFIG, EMPTY_CONTEXT
+            )
             == "abc"
         )
 
@@ -68,24 +82,31 @@ class TestConfigValueUnwrapper:
         assert (
             TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT) == 5.22
         )
+        assert (
+            TestConfigValueUnwrapper.reportable_value(
+                config_value, CONFIG, EMPTY_CONTEXT
+            )
+            == 5.22
+        )
 
     def test_unwrapping_bool(self):
         config_value = Prefab.ConfigValue(bool=True)
-        assert (
-            TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT) is True
+        assert TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT)
+        assert TestConfigValueUnwrapper.reportable_value(
+            config_value, CONFIG, EMPTY_CONTEXT
         )
 
         config_value = Prefab.ConfigValue(bool=False)
-        assert (
-            TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT)
-            is False
+        assert not TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT)
+        assert not TestConfigValueUnwrapper.reportable_value(
+            config_value, CONFIG, EMPTY_CONTEXT
         )
 
     def test_unwrapping_log_level(self):
         config_value = Prefab.ConfigValue(log_level="INFO")
         assert TestConfigValueUnwrapper.unwrap(
             config_value, CONFIG, EMPTY_CONTEXT
-        ) == Prefab.LogLevel.keys().index("INFO")
+        ), Prefab.LogLevel.keys().index("INFO")
 
     def test_unwrapping_string_list(self):
         string_list = ["a", "b", "c"]
@@ -96,12 +117,24 @@ class TestConfigValueUnwrapper:
             TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT)
             == string_list
         )
+        assert (
+            TestConfigValueUnwrapper.reportable_value(
+                config_value, CONFIG, EMPTY_CONTEXT
+            )
+            == string_list
+        )
 
     def test_unwrapping_weighted_values(self):
         weighted_values = self.build_weighted_values({"abc": 1})
         config_value = Prefab.ConfigValue(weighted_values=weighted_values)
         assert (
             TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT)
+            == "abc"
+        )
+        assert (
+            TestConfigValueUnwrapper.reportable_value(
+                config_value, CONFIG, EMPTY_CONTEXT
+            )
             == "abc"
         )
 
@@ -179,6 +212,12 @@ class TestConfigValueUnwrapper:
                 TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT)
                 == "unit test value"
             )
+            assert (
+                TestConfigValueUnwrapper.reportable_value(
+                    config_value, CONFIG, EMPTY_CONTEXT
+                )
+                == "unit test value"
+            )
 
     def test_unwrapping_provided_values_coerces_to_int(self):
         with extended_env({"ENV_VAR_NAME": "42"}):
@@ -227,6 +266,26 @@ class TestConfigValueUnwrapper:
         assert (
             TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT)
             == clear_text
+        )
+        assert (
+            TestConfigValueUnwrapper.reportable_value(
+                config_value, CONFIG, EMPTY_CONTEXT
+            )
+            == "*****27151"
+        )
+
+    def test_reportable_value_for_confidential(self):
+        clear_text = "kind of secret stuff"
+        config_value = Prefab.ConfigValue(string=clear_text, confidential=True)
+        assert (
+            TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT)
+            == clear_text
+        )
+        assert (
+            TestConfigValueUnwrapper.reportable_value(
+                config_value, CONFIG, EMPTY_CONTEXT
+            )
+            == "*****a0e4d"
         )
 
     def test_coerce(self):
@@ -298,6 +357,12 @@ class TestConfigValueUnwrapper:
         return ConfigValueUnwrapper.deepest_value(
             config_value, config, MockResolver(client()), context
         ).unwrap()
+
+    @staticmethod
+    def reportable_value(config_value, config, context):
+        return ConfigValueUnwrapper.deepest_value(
+            config_value, config, MockResolver(client()), context
+        ).reportable_value()
 
     @staticmethod
     def context_with_key(key):

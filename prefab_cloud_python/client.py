@@ -1,5 +1,7 @@
 from __future__ import annotations
 import functools
+
+from ._telemetry import TelemetryManager
 from .context import Context, ScopedContext
 from .config_client import ConfigClient
 from .feature_flag_client import FeatureFlagClient
@@ -13,9 +15,12 @@ import prefab_pb2 as Prefab
 import uuid
 import requests
 from urllib.parse import urljoin
+from importlib.metadata import version
 
 ConfigValueType = Optional[Union[int, float, bool, str, list[str]]]
-PostBodyType = Union[Prefab.Loggers, Prefab.ContextShapes]
+PostBodyType = Union[Prefab.Loggers, Prefab.ContextShapes, Prefab.TelemetryEvents]
+Version = version("prefab-cloud-python")
+VersionHeader = "X-PrefabCloud-Client-Version"
 
 
 class Client:
@@ -38,20 +43,26 @@ class Client:
             self, self.options.collect_max_shapes, self.options.collect_sync_interval
         )
 
+        self.telemetry_manager = TelemetryManager(self)
+
         if not options.is_local_only():
             self.log_path_aggregator.start_periodic_sync()
             self.context_shape_aggregator.start_periodic_sync()
+            self.telemetry_manager.start_periodic_sync()
 
         self.namespace = options.namespace
         self.api_url = options.prefab_api_url
         self.grpc_url = options.prefab_grpc_url
         self.session = requests.Session()
+        self.session.headers.update({VersionHeader: f"prefab-cloud-python-{Version}"})
         if options.is_local_only():
-            self.logger.log_internal("info", "Prefab running in local-only mode")
+            self.logger.log_internal(
+                "info", f"Prefab {Version} running in local-only mode"
+            )
         else:
             self.logger.log_internal(
                 "info",
-                "Prefab connecting to %s and %s, secure %s"
+                f"Prefab {Version} connecting to %s and %s, secure %s"
                 % (
                     options.prefab_api_url,
                     options.prefab_grpc_url,

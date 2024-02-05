@@ -129,7 +129,11 @@ class ConfigClient:
             "x-prefab-start-at-id": f"{self.config_loader.highwater_mark}",
         }
         response = self.base_client.session.get(
-            url, headers=headers, stream=True, auth=("authuser", self.options.api_key), timeout=None
+            url,
+            headers=headers,
+            stream=True,
+            auth=("authuser", self.options.api_key),
+            timeout=None,
         )
 
         client = sseclient.SSEClient(response)

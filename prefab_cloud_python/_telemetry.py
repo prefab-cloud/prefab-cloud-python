@@ -107,7 +107,7 @@ class TelemetryManager(object):
         try:
             self.flush()
         finally:
-            if self.sync_started:
+            if self.sync_started and not self.client.shutdown_flag.is_set():
                 self.timer = threading.Timer(self.report_interval, self.run_sync)
                 self.timer.start()
 
@@ -338,7 +338,7 @@ class TelemetryEventProcessor(object):
             pass
 
     def process_queue(self):
-        while True:
+        while not self.base_client.shutdown_flag.is_set():
             event = self.queue.get()
             try:
                 if (

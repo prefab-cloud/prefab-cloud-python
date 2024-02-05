@@ -1,3 +1,4 @@
+import threading
 from collections import defaultdict
 
 import requests
@@ -90,6 +91,7 @@ class MockClientForPosts:
     def __init__(self):
         self.posts = []
         self.logger = LoggerClient()
+        self.shutdown_flag = threading.Event()
 
     def reset(self):
         self.posts.clear()
@@ -97,3 +99,4 @@ class MockClientForPosts:
     def post(self, path: str, body: PostBodyType) -> requests.models.Response:
         self.posts.append((path, body))
         return responses.Response(status=200, method="POST", headers=[], url="")
+

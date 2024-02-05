@@ -99,4 +99,3 @@ class MockClientForPosts:
     def post(self, path: str, body: PostBodyType) -> requests.models.Response:
         self.posts.append((path, body))
         return responses.Response(status=200, method="POST", headers=[], url="")
-

@@ -147,7 +147,7 @@ class ConfigClient:
                 self.load_configs(configs, "sse_streaming")
 
     def checkpointing_loop(self):
-        while True:
+        while not self.base_client.shutdown_flag.is_set():
             try:
                 self.load_checkpoint()
                 time.sleep(self.checkpoint_freq_secs)
@@ -156,6 +156,7 @@ class ConfigClient:
 
     def load_checkpoint_from_api_cdn(self):
         url = "%s/api/v1/configs/0" % self.options.url_for_api_cdn
+        self.base_client.logger.log_internal("warn", f"Loading config from {url}")
         response = self.base_client.session.get(
             url, auth=("authuser", self.options.api_key)
         )

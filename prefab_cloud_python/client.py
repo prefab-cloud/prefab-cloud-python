@@ -1,5 +1,7 @@
 from __future__ import annotations
 import functools
+import threading
+import logging
 
 from urllib3 import Retry
 
@@ -30,6 +32,7 @@ class Client:
     no_default_provided = "NO_DEFAULT_PROVIDED"
 
     def __init__(self, options: Options) -> None:
+        self.shutdown_flag = threading.Event()
         self.options = options
         self.instance_hash = str(uuid.uuid4())
         self.logger = LoggerClient(self.options.log_prefix, self.options.log_boundary)
@@ -146,3 +149,10 @@ class Client:
             prefix=self.options.log_prefix,
             log_boundary=self.options.log_boundary,
         )
+
+    def close(self) -> None:
+        if not self.shutdown_flag.is_set():
+            logging.info("Shutting down prefab client instance")
+            self.shutdown_flag.set()
+        else:
+            logging.warning("Close already called")

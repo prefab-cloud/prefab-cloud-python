@@ -10,10 +10,9 @@ class ReadWriteLock:
     def __init__(self):
         self._read_ready = threading.Condition(threading.Lock())
         self._readers = 0
-        self._write_locked = False
 
     def try_acquire_read(self, timeout):
-        acquired = self._read_ready.acquire(blocking=True, timeout=timeout)
+        acquired = self._read_ready.acquire(timeout=timeout)
         if not acquired:
             print("not acquired, returning False")
             return False
@@ -23,8 +22,8 @@ class ReadWriteLock:
     def acquire_read(self):
         """Acquire a read lock. Blocks only if a thread has
         acquired the write lock."""
-        self._read_ready.acquire(blocking=True)
-        self._acquire_read_core()
+        if self._read_ready.acquire():
+            self._acquire_read_core()
 
     def _acquire_read_core(self):
         try:
@@ -34,7 +33,7 @@ class ReadWriteLock:
 
     def release_read(self):
         """Release a read lock."""
-        self._read_ready.acquire(blocking=True)
+        self._read_ready.acquire()
         try:
             self._readers -= 1
             if not self._readers:
@@ -68,27 +67,16 @@ class ReadWriteLock:
             if result:
                 self.release_read()
 
-    @contextmanager
-    def try_read_locked(self, timeout=10):
-        """This method is designed to be used via the `with` statement."""
-        try:
-            self.acquire_read()
-            yield
-        finally:
-            self.release_read()
-
     def acquire_write(self):
         """Acquire a write lock. Blocks until there are no
         acquired read or write locks."""
-        self._read_ready.acquire(blocking=True)
+        self._read_ready.acquire()
         while self._readers > 0:
             self._read_ready.wait()
-        self._write_locked = True
 
     def release_write(self):
         """Release a write lock."""
         self._read_ready.release()
-        self._write_locked = False
 
     @contextmanager
     def write_locked(self):

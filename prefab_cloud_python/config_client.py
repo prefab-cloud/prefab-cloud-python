@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from ._count_down_latch import CountDownLatch
 from .config_loader import ConfigLoader
 from .config_resolver import ConfigResolver
-from .read_write_lock import ReadWriteLock
 from .config_value_unwrapper import ConfigValueUnwrapper
 from .context import Context
 from .config_resolver import Evaluation
@@ -44,10 +44,7 @@ class ConfigClient:
         base_client.logger.log_internal("info", "Initializing ConfigClient")
         self.base_client = base_client
         self.options = base_client.options
-
-        self.stream_lock = ReadWriteLock()
-        self.init_lock = ReadWriteLock()
-
+        self.init_latch = CountDownLatch()
         self.checkpoint_freq_secs = 60
 
         self.config_loader = ConfigLoader(base_client)
@@ -56,7 +53,6 @@ class ConfigClient:
         self.base_client.logger.log_internal(
             "debug", "Initialize ConfigClient: acquire write lock"
         )
-        self.init_lock.acquire_write()
         self.base_client.logger.log_internal(
             "debug", "Initialize ConfigClient: acquired write lock"
         )
@@ -83,18 +79,18 @@ class ConfigClient:
     def __get(
         self, key, lookup_key, properties, context=Context.get_current()
     ) -> None | Evaluation:
-        with self.init_lock.read_locked_timeout(
-            self.options.connection_timeout_seconds
-        ) as locked:
-            if not locked:
-                if self.options.on_connection_failure == "RAISE":
-                    raise InitializationTimeoutException(
-                        self.options.connection_timeout_seconds, key
-                    )
-                self.base_client.logger.log_internal(
-                    "warn",
-                    f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have.",
+        ok_to_proceed = self.init_latch.wait(
+            timeout=self.options.connection_timeout_seconds
+        )
+        if not ok_to_proceed:
+            if self.options.on_connection_failure == "RAISE":
+                raise InitializationTimeoutException(
+                    self.options.connection_timeout_seconds, key
                 )
+            self.base_client.logger.log_internal(
+                "warn",
+                f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have.",
+            )
         return self.config_resolver.get(key, context=context)
 
     def handle_default(self, key, default):
@@ -239,10 +235,8 @@ class ConfigClient:
             self.load_configs(configs, "datafile")
 
     def finish_init(self, source):
-        if not self.init_lock._write_locked:
-            return
+        self.init_latch.count_down()
         self.base_client.logger.log_internal("info", f"Unlocked config via {source}")
-        self.init_lock.release_write()
         self.base_client.logger.set_config_client(self)
 
     def set_cache_path(self):

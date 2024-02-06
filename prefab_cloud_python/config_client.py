@@ -120,27 +120,35 @@ class ConfigClient:
         self.streaming_thread.start()
 
     def streaming_loop(self):
-        url = "%s/api/v1/sse/config" % self.options.prefab_api_url
-        headers = {
-            "x-prefab-start-at-id": f"{self.config_loader.highwater_mark}",
-        }
-        response = self.base_client.session.get(
-            url,
-            headers=headers,
-            stream=True,
-            auth=("authuser", self.options.api_key),
-            timeout=None,
-        )
-
-        client = sseclient.SSEClient(response)
-
-        for event in client.events():
-            if event.data:
-                self.base_client.logger.log_internal(
-                    "info", "Loading data from SSE stream"
+        while not self.base_client.shutdown_flag.is_set():
+            try:
+                url = "%s/api/v1/sse/config" % self.options.prefab_api_url
+                headers = {
+                    "x-prefab-start-at-id": f"{self.config_loader.highwater_mark}",
+                }
+                response = self.base_client.session.get(
+                    url,
+                    headers=headers,
+                    stream=True,
+                    auth=("authuser", self.options.api_key),
+                    timeout=None,
                 )
-                configs = Prefab.Configs.FromString(base64.b64decode(event.data))
-                self.load_configs(configs, "sse_streaming")
+
+                client = sseclient.SSEClient(response)
+
+                for event in client.events():
+                    if event.data:
+                        self.base_client.logger.log_internal(
+                            "info", "Loading data from SSE stream"
+                        )
+                        configs = Prefab.Configs.FromString(
+                            base64.b64decode(event.data)
+                        )
+                        self.load_configs(configs, "sse_streaming")
+            except Exception:
+                self.base_client.logger.log_internal(
+                    "info", "Issue with streaming connection, will restart"
+                )
 
     def checkpointing_loop(self):
         while not self.base_client.shutdown_flag.is_set():
@@ -148,7 +156,9 @@ class ConfigClient:
                 self.load_checkpoint()
                 time.sleep(self.checkpoint_freq_secs)
             except Exception:
-                self.base_client.logger.log_internal("info", "Issue Checkpointing")
+                self.base_client.logger.log_internal(
+                    "info", "Issue checkpointing, will restart"
+                )
 
     def load_checkpoint_from_api_cdn(self):
         url = "%s/api/v1/configs/0" % self.options.url_for_api_cdn

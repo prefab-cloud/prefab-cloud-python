@@ -10,6 +10,7 @@ import google
 
 class ConfigResolver:
     def __init__(self, base_client, config_loader):
+        self.local_store = None
         self.lock = ReadWriteLock()
         self.base_client = base_client
         self.config_loader = config_loader
@@ -18,9 +19,8 @@ class ConfigResolver:
         self.make_local()
 
     def get(self, key, context=Context.get_current()) -> "Evaluation | None":
-        self.lock.acquire_read()
-        raw_config = self.raw(key)
-        self.lock.release_read()
+        with self.lock.read_locked():
+            raw_config = self.raw(key)
 
         if raw_config is None:
             merged_context = self.evaluation_context(context)
@@ -58,9 +58,8 @@ class ConfigResolver:
         self.make_local()
 
     def make_local(self):
-        self.lock.acquire_write()
-        self.local_store = self.config_loader.calc_config()
-        self.lock.release_write()
+        with self.lock.write_locked():
+            self.local_store = self.config_loader.calc_config()
 
     @property
     def default_context(self):

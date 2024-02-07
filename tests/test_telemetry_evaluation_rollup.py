@@ -36,12 +36,13 @@ CONFIDENTIAL_VALUE = Prefab.ConfigValue(string="don't pass it on", confidential=
 def mock_time():
     with patch("time.time") as mock_time:
         # Set the mock to return a specific value
-        mock_time.side_effect = [TIMEVAL, TIMEVAL2]
+        mock_time.return_value = TIMEVAL
         yield mock_time
 
 
 def test_empty_rollup(mock_time):
     evaluation_rollup = EvaluationRollup()
+    mock_time.return_value = TIMEVAL2
     telemetry = evaluation_rollup.build_telemetry()
     assert len(telemetry.summaries) == 0
     assert telemetry.start == int(TIMEVAL * 1000)
@@ -101,7 +102,9 @@ def test_rollup_counts_properly(mock_time):
             context=EMPTY_CONTEXT,
         )
     )
+    mock_time.return_value = TIMEVAL2
     telemetry = evaluation_rollup.build_telemetry()
+
     sorted_summaries = sort_proto_evaluation_summaries(telemetry.summaries)
     assert len(telemetry.summaries) == 2
     assert telemetry.start == int(TIMEVAL * 1000)
@@ -157,7 +160,7 @@ def test_rollup_counts_properly(mock_time):
     )
 
 
-def test_rollup_works_for_weighted_value():
+def test_rollup_works_for_weighted_value(mock_time):
     evaluation_rollup = EvaluationRollup()
     EMPTY_CONTEXT.get("foo")
     evaluation_rollup.record_evaluation(
@@ -170,6 +173,7 @@ def test_rollup_works_for_weighted_value():
             context=EMPTY_CONTEXT,
         )
     )
+    mock_time.return_value = TIMEVAL2
     telemetry = evaluation_rollup.build_telemetry()
     assert len(telemetry.summaries) == 1
     assert telemetry.summaries[0].counters == [
@@ -184,7 +188,7 @@ def test_rollup_works_for_weighted_value():
     ]
 
 
-def test_rollup_works_for_confidential():
+def test_rollup_works_for_confidential(mock_time):
     evaluation_rollup = EvaluationRollup()
     evaluation_rollup.record_evaluation(
         Evaluation(
@@ -196,6 +200,7 @@ def test_rollup_works_for_confidential():
             context=EMPTY_CONTEXT,
         )
     )
+    mock_time.return_value = TIMEVAL2
     telemetry = evaluation_rollup.build_telemetry()
     assert len(telemetry.summaries) == 1
     assert telemetry.summaries[0].counters == [
@@ -221,6 +226,7 @@ def test_rollup_handles_none_value(mock_time):
             context=EMPTY_CONTEXT,
         )
     )
+    mock_time.return_value = TIMEVAL2
     telemetry = evaluation_rollup.build_telemetry()
     assert len(telemetry.summaries) == 1
     assert telemetry.summaries[0].counters == [

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from .options import Options as Options
 from .context import Context as Context
 from .client import Client as Client
@@ -10,23 +12,21 @@ from .read_write_lock import ReadWriteLock
 import logging
 
 
-__base_client = None
-__options = None
+__base_client: Optional[Client] = None
+__options: Optional[Options] = None
 __lock = ReadWriteLock()
 
 
 def set_options(options: Options) -> None:
-    global __base_client
+    """Configure the client. Client will be instantiated lazily with these options. Setting them again will have no effect unless reset_instance is called"""
     global __options
-    global __lock
     with __lock.write_locked():
         __options = options
 
 
-def get() -> Client:
+def get_client() -> Client:
+    """Returns the singleton instance of the client. Created if needed using the options set by set_options"""
     global __base_client
-    global __options
-    global __lock
     with __lock.read_locked():
         if __base_client:
             return __base_client
@@ -43,7 +43,7 @@ def get() -> Client:
 
 
 def reset_instance() -> None:
-    """clears the client instance so it will be recreated on the next get() call"""
+    """clears the singleton client instance so it will be recreated on the next get() call"""
     global __base_client
     with __lock.write_locked():
         old_client = __base_client

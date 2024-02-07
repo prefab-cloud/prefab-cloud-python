@@ -72,7 +72,6 @@ class Client:
         self.context().clear()
         self.config_client()
 
-
     def __enter__(self):
         return self
 

@@ -12,7 +12,7 @@ def client():
         prefab_config_classpath_dir="tests",
         prefab_envs=["unit_tests"],
         prefab_datasources="LOCAL_ONLY",
-        collect_sync_interval=None
+        collect_sync_interval=None,
     )
     return Client(options)
 

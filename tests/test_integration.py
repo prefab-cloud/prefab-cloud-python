@@ -76,7 +76,7 @@ def options():
     return Options(
         api_key=os.environ["PREFAB_INTEGRATION_TEST_API_KEY"],
         prefab_api_url="https://api.staging-prefab.cloud",
-        collect_sync_interval=None
+        collect_sync_interval=None,
     )
 
 
@@ -127,7 +127,9 @@ def run_test(
             context = "NO_CONTEXT_PROVIDED"
         if function == "get":
             if expected.get("status") == "raise":
-                with pytest.raises(CustomExceptions.get(expected["error"] or Exception)):
+                with pytest.raises(
+                    CustomExceptions.get(expected["error"] or Exception)
+                ):
                     client.get(key, context=context)
             else:
                 assert client.get(

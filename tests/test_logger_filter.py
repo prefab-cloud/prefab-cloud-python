@@ -32,6 +32,7 @@ def config_client():
         prefab_config_classpath_dir="tests",
         prefab_envs=["unit_tests"],
         prefab_datasources="LOCAL_ONLY",
+        collect_sync_interval=None
     )
     client = Client(options)
     return client.config_client()
@@ -134,6 +135,7 @@ class TestLoggerFilter:
             prefab_envs=["unit_tests"],
             prefab_datasources="LOCAL_ONLY",
             log_prefix="my.prefix",
+            collect_sync_interval=None
         )
         client = Client(options)
 
@@ -308,6 +310,7 @@ class TestLoggerFilter:
             prefab_envs=["unit_tests"],
             prefab_datasources="LOCAL_ONLY",
             log_prefix="my.own.prefix",
+            collect_sync_interval=None
         )
         client = Client(options)
 

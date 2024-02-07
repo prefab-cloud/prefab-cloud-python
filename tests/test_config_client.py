@@ -73,7 +73,7 @@ class TestConfigClient:
         assert config_client.get("test") == "test value"
 
     def test_cache_path(self):
-        options = Options(api_key="123-API-KEY-SDK", x_use_local_cache=True)
+        options = Options(api_key="123-API-KEY-SDK", x_use_local_cache=True, collect_sync_interval=None)
         client = Client(options)
         assert (
             client.config_client().cache_path
@@ -100,6 +100,7 @@ class TestConfigClient:
             prefab_datasources="LOCAL_ONLY",
             x_use_local_cache=True,
             on_no_default=on_no_default,
+            collect_sync_interval=None
         )
         client = Client(options)
         return client.config_client()

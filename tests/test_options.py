@@ -245,7 +245,7 @@ class TestOptionsLogCollection:
             options = Options()
             assert options.collect_logs is True
             assert options.collect_max_paths == 1000
-            assert options.collect_sync_interval is None
+            assert options.collect_sync_interval == 30
 
     def test_can_be_set(self):
         with extended_env({"PREFAB_API_KEY": "2-test-api-key"}):

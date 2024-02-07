@@ -9,8 +9,11 @@ def client():
         prefab_config_classpath_dir="tests",
         prefab_envs=["unit_tests"],
         prefab_datasources="LOCAL_ONLY",
+        collect_sync_interval=None,
     )
-    return Client(options)
+    client_instance = Client(options)
+    yield client_instance
+    client_instance.close()
 
 
 class TestClient:
@@ -38,7 +41,9 @@ class TestClient:
         assert client.get("missing_value") is None
 
     def test_loading_from_datafile(self):
-        options = Options(x_datafile="tests/prefab.datafile.json")
+        options = Options(
+            x_datafile="tests/prefab.datafile.json", collect_sync_interval=None
+        )
         client = Client(options)
         assert client.get("foo.str") == "hello!"
 

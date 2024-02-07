@@ -41,7 +41,9 @@ class TestConfigLoader:
 
     def test_calc_config_without_unit_tests(self):
         options = Options(
-            prefab_config_classpath_dir="tests", prefab_datasources="LOCAL_ONLY"
+            prefab_config_classpath_dir="tests",
+            prefab_datasources="LOCAL_ONLY",
+            collect_sync_interval=None,
         )
         client = Client(options)
         loader = client.config_client().config_loader
@@ -169,5 +171,6 @@ class TestConfigLoader:
             prefab_config_classpath_dir="tests",
             prefab_envs="unit_tests",
             prefab_datasources="LOCAL_ONLY",
+            collect_sync_interval=None,
         )
         return Client(options)

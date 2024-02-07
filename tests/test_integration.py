@@ -76,6 +76,7 @@ def options():
     return Options(
         api_key=os.environ["PREFAB_INTEGRATION_TEST_API_KEY"],
         prefab_api_url="https://api.staging-prefab.cloud",
+        collect_sync_interval=None,
     )
 
 
@@ -115,29 +116,31 @@ def run_test(
     input = case["input"]
     expected = case["expected"]
     options = build_options_with_overrides(options, case.get("client_overrides"))
-    client = Client(options)
-    if global_context:
-        Context.set_current(Context(global_context))
-    key = input[input_key]
-    default = input.get("default")
-    if input.get("context"):
-        context = Context(input["context"])
-    else:
-        context = "NO_CONTEXT_PROVIDED"
-    if function == "get":
-        if expected.get("status") == "raise":
-            with pytest.raises(CustomExceptions.get(expected["error"] or Exception)):
-                client.get(key, context=context)
+    with Client(options) as client:
+        if global_context:
+            Context.set_current(Context(global_context))
+        key = input[input_key]
+        default = input.get("default")
+        if input.get("context"):
+            context = Context(input["context"])
         else:
-            assert client.get(
-                key, default=default, context=context
-            ) == expected_modifier(expected["value"])
-    elif function == "enabled":
-        assert client.enabled(key, context=context) == expected_modifier(
-            expected["value"]
-        )
-    elif function == "post":
-        pytest.fail("post not implemented")
+            context = "NO_CONTEXT_PROVIDED"
+        if function == "get":
+            if expected.get("status") == "raise":
+                with pytest.raises(
+                    CustomExceptions.get(expected["error"] or Exception)
+                ):
+                    client.get(key, context=context)
+            else:
+                assert client.get(
+                    key, default=default, context=context
+                ) == expected_modifier(expected["value"])
+        elif function == "enabled":
+            assert client.enabled(key, context=context) == expected_modifier(
+                expected["value"]
+            )
+        elif function == "post":
+            pytest.fail("post not implemented")
 
 
 def run_telemetry_test(test, options, global_context=None):

@@ -1,11 +1,14 @@
 from __future__ import annotations
 import functools
+import logging
 
 from .read_write_lock import ReadWriteLock
 from .config_value_unwrapper import ConfigValueUnwrapper
 from .context import Context
 import prefab_pb2 as Prefab
 import google
+
+logger = logging.getLogger(__name__)
 
 
 class ConfigResolver:
@@ -148,9 +151,7 @@ class CriteriaEvaluator:
         if criterion.operator == OPS.ALWAYS_TRUE:
             return True
 
-        self.base_client.logger.log_internal(
-            "info", f"Unknown criterion operator {criterion.operator}"
-        )
+        logger.info(f"Unknown criterion operator {criterion.operator}")
         return False
 
     def matches(self, criterion, value, properties):

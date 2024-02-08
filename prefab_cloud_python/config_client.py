@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import logging
+
+import prefab_cloud_python
 from ._count_down_latch import CountDownLatch
 from .config_loader import ConfigLoader
 from .config_resolver import ConfigResolver
@@ -20,6 +23,8 @@ import os
 
 STALE_CACHE_WARN_HOURS = 5
 
+logger = logging.getLogger(__name__)
+
 
 class InitializationTimeoutException(Exception):
     def __init__(self, timeout_seconds, key):
@@ -39,24 +44,16 @@ If you'd prefer returning `None` rather than raising when this occurs, modify th
 
 class ConfigClient:
     def __init__(self, base_client):
+        self.is_initialized = threading.Event()
         self.checkpointing_thread = None
         self.streaming_thread = None
-        base_client.logger.log_internal("info", "Initializing ConfigClient")
+        logger.info("Initializing ConfigClient")
         self.base_client = base_client
         self.options = base_client.options
         self.init_latch = CountDownLatch()
         self.checkpoint_freq_secs = 60
-
         self.config_loader = ConfigLoader(base_client)
         self.config_resolver = ConfigResolver(base_client, self.config_loader)
-
-        self.base_client.logger.log_internal(
-            "debug", "Initialize ConfigClient: acquire write lock"
-        )
-        self.base_client.logger.log_internal(
-            "debug", "Initialize ConfigClient: acquired write lock"
-        )
-
         self.set_cache_path()
 
         if self.options.is_local_only():
@@ -87,8 +84,7 @@ class ConfigClient:
                 raise InitializationTimeoutException(
                     self.options.connection_timeout_seconds, key
                 )
-            self.base_client.logger.log_internal(
-                "warn",
+            logger.warning(
                 f"Couldn't initialize in {self.options.connection_timeout_seconds}. Key {key}. Returning what we have.",
             )
         return self.config_resolver.get(key, context=context)
@@ -105,7 +101,7 @@ class ConfigClient:
             return
         if self.load_cache():
             return
-        self.base_client.logger.log_internal("warn", "No success loading checkpoints")
+        logger.warning("No success loading checkpoints")
 
     def start_checkpointing_thread(self):
         self.checkpointing_thread = threading.Thread(
@@ -138,17 +134,13 @@ class ConfigClient:
 
                 for event in client.events():
                     if event.data:
-                        self.base_client.logger.log_internal(
-                            "info", "Loading data from SSE stream"
-                        )
+                        logger.info("Loading data from SSE stream")
                         configs = Prefab.Configs.FromString(
                             base64.b64decode(event.data)
                         )
                         self.load_configs(configs, "sse_streaming")
             except Exception:
-                self.base_client.logger.log_internal(
-                    "info", "Issue with streaming connection, will restart"
-                )
+                logger.info("Issue with streaming connection, will restart")
 
     def checkpointing_loop(self):
         while not self.base_client.shutdown_flag.is_set():
@@ -156,13 +148,11 @@ class ConfigClient:
                 self.load_checkpoint()
                 time.sleep(self.checkpoint_freq_secs)
             except Exception:
-                self.base_client.logger.log_internal(
-                    "info", "Issue checkpointing, will restart"
-                )
+                logger.info("Issue checkpointing, will restart")
 
     def load_checkpoint_from_api_cdn(self):
         url = "%s/api/v1/configs/0" % self.options.url_for_api_cdn
-        self.base_client.logger.log_internal("warn", f"Loading config from {url}")
+        logger.warning(f"Loading config from {url}")
         response = self.base_client.session.get(
             url, auth=("authuser", self.options.api_key)
         )
@@ -171,8 +161,7 @@ class ConfigClient:
             self.load_configs(configs, "remote_api_cdn")
             return True
         else:
-            self.base_client.logger.log_internal(
-                "info",
+            logger.info(
                 "Checkpoint remote_cdn_api failed to load",
             )
             return False
@@ -196,13 +185,11 @@ class ConfigClient:
         for config in configs.configs:
             self.config_loader.set(config, source)
         if self.config_loader.highwater_mark > starting_highwater_mark:
-            self.base_client.logger.log_internal(
-                "info",
+            logger.info(
                 f"Found new checkpoint with highwater id {self.config_loader.highwater_mark} from {source} in project {project_id} environment: {project_env_id} and namespace {self.base_client.options.namespace}",
             )
         else:
-            self.base_client.logger.log_internal(
-                "debug",
+            logger.debug(
                 f"Checkpoint with highwater id {self.config_loader.highwater_mark} from {source}. No changes.",
             )
         self.config_resolver.update()
@@ -213,9 +200,7 @@ class ConfigClient:
             return
         with open(self.cache_path, "w") as f:
             f.write(MessageToJson(configs))
-            self.base_client.logger.log_internal(
-                "debug", f"Cached configs to {self.cache_path}"
-            )
+            logger.debug(f"Cached configs to {self.cache_path}")
 
     def load_cache(self):
         if not self.options.use_local_cache:
@@ -231,12 +216,10 @@ class ConfigClient:
                     2,
                 )
                 if hours_old > STALE_CACHE_WARN_HOURS:
-                    self.base_client.logger.log_internal(
-                        "info", f"Stale Cache Load: {hours_old} hours old"
-                    )
+                    logger.info(f"Stale Cache Load: {hours_old} hours old")
                 return True
         except OSError as e:
-            self.base_client.logger.log_internal("info", e)
+            logger.info("error loading from cache", e)
             return False
 
     def load_json_file(self, datafile):
@@ -245,8 +228,9 @@ class ConfigClient:
             self.load_configs(configs, "datafile")
 
     def finish_init(self, source):
+        self.is_initialized.set()
         self.init_latch.count_down()
-        self.base_client.logger.log_internal("info", f"Unlocked config via {source}")
+        logger.info(f"Unlocked config via {source}")
         self.base_client.logger.set_config_client(self)
 
     def set_cache_path(self):
@@ -272,3 +256,6 @@ class ConfigClient:
 
     def record_log(self, path, severity):
         self.base_client.record_log(path, severity)
+
+    def is_ready(self) -> bool:
+        return self.is_initialized.is_set()

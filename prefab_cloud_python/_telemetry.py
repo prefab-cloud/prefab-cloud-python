@@ -1,4 +1,5 @@
 import threading
+import logging
 from queue import Queue, Full
 import time
 from enum import Enum
@@ -21,6 +22,8 @@ from collections import defaultdict
 
 from .context_shape_aggregator import ContextShapeAggregator
 from .log_path_aggregator import LogPathAggregator
+
+logger = logging.getLogger(__name__)
 
 
 def current_time_millis() -> int:
@@ -300,13 +303,8 @@ class TelemetryEventProcessor(object):
             try:
                 super().run()
             except Exception as e:
-                # Handle the exception here
-                if self.base_client:
-                    self.base_client.logger.log_internal(
-                        "warn", f"Exception in thread {self.name}: {e}"
-                    )
-                else:
-                    print(f"Exception in thread {self.name}: {e}")
+                # ignore exception so thread keeps running
+                logger.warning(f"Exception in thread {self.name}: {e}")
 
     def __init__(
         self,

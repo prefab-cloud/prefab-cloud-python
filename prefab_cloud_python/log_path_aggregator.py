@@ -1,6 +1,9 @@
 import time
+import logging
 from collections import defaultdict
 import prefab_pb2 as Prefab
+
+logger = logging.getLogger(__name__)
 
 
 class LogPathAggregator:
@@ -23,7 +26,7 @@ class LogPathAggregator:
         start_at_was = self.start_at
         self.start_at = time.time()
 
-        self.logger.log_internal("debug", "flushing stats for %s paths" % len(to_ship))
+        logger.debug("flushing stats for %s paths" % len(to_ship))
 
         aggregate = defaultdict(lambda: Prefab.Logger())
 

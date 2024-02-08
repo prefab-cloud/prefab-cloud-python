@@ -11,6 +11,8 @@ from importlib.metadata import version
 from .read_write_lock import ReadWriteLock
 import logging
 
+log = logging.getLogger(__name__)
+
 
 __base_client: Optional[Client] = None
 __options: Optional[Options] = None
@@ -35,7 +37,7 @@ def get_client() -> Client:
         if not __options:
             raise Exception("Options has not been set")
         if not __base_client:
-            logging.info(
+            log.info(
                 f"Initializing Prefab client version f{version('prefab-cloud-python')}"
             )
             __base_client = Client(__options)

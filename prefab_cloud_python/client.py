@@ -24,6 +24,7 @@ ConfigValueType = Optional[Union[int, float, bool, str, list[str]]]
 PostBodyType = Union[Prefab.Loggers, Prefab.ContextShapes, Prefab.TelemetryEvents]
 Version = version("prefab-cloud-python")
 VersionHeader = "X-PrefabCloud-Client-Version"
+logger = logging.getLogger(__name__)
 
 
 class Client:
@@ -55,12 +56,9 @@ class Client:
         self.session.mount("https://", adapter)
         self.session.headers.update({VersionHeader: f"prefab-cloud-python-{Version}"})
         if options.is_local_only():
-            self.logger.log_internal(
-                "info", f"Prefab {Version} running in local-only mode"
-            )
+            logger.info(f"Prefab {Version} running in local-only mode")
         else:
-            self.logger.log_internal(
-                "info",
+            logger.info(
                 f"Prefab {Version} connecting to %s and %s, secure %s"
                 % (
                     options.prefab_api_url,
@@ -156,6 +154,9 @@ class Client:
             prefix=self.options.log_prefix,
             log_boundary=self.options.log_boundary,
         )
+
+    def is_ready(self) -> bool:
+        return self.config_client().is_ready()
 
     def close(self) -> None:
         if not self.shutdown_flag.is_set():

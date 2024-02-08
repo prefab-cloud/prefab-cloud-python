@@ -6,10 +6,13 @@ import prefab_pb2 as Prefab
 import yaml
 import os
 import hashlib
+import logging
 
 VTV = Prefab.Config.ValueType.Value
 VTN = Prefab.Config.ValueType.Name
 CONFIDENTIAL_PREFIX = "*****"
+
+logger = logging.getLogger(__name__)
 
 
 class EnvVarParseException(Exception):
@@ -130,8 +133,7 @@ class ConfigValueUnwrapper:
                 decryption_key_evaluation is None
                 or decryption_key_evaluation.raw_config_value is None
             ):
-                self.resolver.base_client.logger.log_internal(
-                    "warn",
+                logger.warning(
                     f"No value for decryption key {self.value.decrypt_with} found.",
                 )
                 return ""

@@ -1,10 +1,16 @@
 import logging
+
+import prefab_cloud_python
 import prefab_pb2 as Prefab
 from .context import Context
 
+log = logging.getLogger(__name__)
+
+IGNORE_PREFIX = prefab_cloud_python.__name__
 LOG_LEVEL_BASE_KEY = "log-level"
 
 LLV = Prefab.LogLevel.Value
+
 
 prefab_to_python_log_levels = {
     LLV("NOT_SET_LOG_LEVEL"): LLV("DEBUG"),
@@ -40,16 +46,28 @@ def iterate_dotted_string(s: str):
 
 
 class LoggerFilter(logging.Filter):
-    def __init__(self, config_client):
+    def __init__(self, client=None):
         super().__init__()
-        self.config_client = config_client
+        self.client = client
+
+    def _get_client(self):
+        if self.client:
+            return self.client
+        return prefab_cloud_python.get_client()
 
     def filter(self, record):
+        # prevent recursion
+        if record.name and record.name.startswith(IGNORE_PREFIX):
+            print("returning from filter early")
+            return True
         called_method_level = python_to_prefab_log_levels.get(record.levelno)
         if not called_method_level:
             return True
-        self.config_client.record_log(record.name, called_method_level)
-        return self.should_log_message(record.name, called_method_level)
+        client = self._get_client()
+        if client and client.is_ready():
+            client.record_log(record.name, called_method_level)
+            return self.should_log_message(record.name, called_method_level)
+        return True
 
     def should_log_message(self, logger_name, called_method_level):
         closest_log_level = self.get_severity(logger_name)
@@ -64,7 +82,7 @@ class LoggerFilter(logging.Filter):
             full_lookup_key = LOG_LEVEL_BASE_KEY
 
         for lookup_key in iterate_dotted_string(full_lookup_key):
-            log_level = self.config_client.get(
+            log_level = self._get_client().get(
                 lookup_key, default=None, context=context
             )
             if log_level:

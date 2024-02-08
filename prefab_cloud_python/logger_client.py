@@ -4,7 +4,6 @@ from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_PREFAB_CONFIG_CLIENT
 from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_LOG_PREFIX
 from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_LOG_BOUNDARY
 from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR
-from ._internal_constants import STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH
 
 
 class BootstrappingConfigClient:
@@ -38,14 +37,6 @@ class LoggerClient:
 
     def critical(self, msg):
         self.configured_logger().critical(msg)
-
-    def log_internal(self, level, msg, path=None):
-        logger_binding = {
-            STRUCTLOG_EVENT_DICT_KEY_SKIP_AGGREGATOR: True,
-            STRUCTLOG_EVENT_DICT_KEY_INTERNAL_PATH: path,
-        }
-        internal_logger = self.configured_logger().bind(**logger_binding)
-        getattr(internal_logger, level)(msg)
 
     def set_config_client(self, config_client):
         self.config_client = config_client

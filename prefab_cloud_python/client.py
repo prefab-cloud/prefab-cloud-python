@@ -160,5 +160,6 @@ class Client:
         if not self.shutdown_flag.is_set():
             logging.info("Shutting down prefab client instance")
             self.shutdown_flag.set()
+            self.config_client().close()
         else:
             logging.warning("Close already called")

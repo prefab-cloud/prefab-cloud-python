@@ -46,6 +46,7 @@ class ConfigClient:
         self.is_initialized = threading.Event()
         self.checkpointing_thread = None
         self.streaming_thread = None
+        self.sse_client = None
         logger.info("Initializing ConfigClient")
         self.base_client = base_client
         self.options = base_client.options
@@ -129,9 +130,9 @@ class ConfigClient:
                     timeout=None,
                 )
 
-                client = sseclient.SSEClient(response)
+                self.sse_client = sseclient.SSEClient(response)
 
-                for event in client.events():
+                for event in self.sse_client.events():
                     if event.data:
                         logger.info("Loading data from SSE stream")
                         configs = Prefab.Configs.FromString(
@@ -258,3 +259,7 @@ class ConfigClient:
 
     def is_ready(self) -> bool:
         return self.is_initialized.is_set()
+
+    def close(self) -> None:
+        if self.sse_client:
+            self.sse_client.close()

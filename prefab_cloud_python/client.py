@@ -118,7 +118,8 @@ class Client:
     def context(self) -> Context:
         return Context.get_current()
 
-    def scoped_context(context: Context) -> ScopedContext:
+    @staticmethod
+    def scoped_context(context: dict | Context) -> ScopedContext:
         return Context.scope(context)
 
     @functools.cache

@@ -1,5 +1,4 @@
-import os
-import re
+import logging
 import prefab_pb2 as Prefab
 from .context import Context
 
@@ -16,7 +15,7 @@ prefab_to_python_log_levels = {
     LLV("ERROR"): LLV("ERROR"),
     LLV("FATAL"): LLV("FATAL"),
 }
-python_to_prefab_log_levels = {
+python_log_level_name_to_prefab_log_levels = {
     "debug": LLV("DEBUG"),
     "info": LLV("INFO"),
     "warn": LLV("WARN"),
@@ -25,55 +24,50 @@ python_to_prefab_log_levels = {
     "critical": LLV("FATAL"),
 }
 
+python_to_prefab_log_levels = {
+    logging.DEBUG: LLV("DEBUG"),
+    logging.INFO: LLV("INFO"),
+    logging.WARN: LLV("WARN"),
+    logging.ERROR: LLV("ERROR"),
+    logging.CRITICAL: LLV("FATAL"),
+}
 
-class LoggerFilter:
-    def __init__(self, config_client, log_boundary=None, prefix=None):
+
+def iterate_dotted_string(s: str):
+    parts = s.split(".")
+    for i in range(len(parts), 0, -1):
+        yield ".".join(parts[:i])
+
+
+class LoggerFilter(logging.Filter):
+    def __init__(self, config_client):
+        super().__init__()
         self.config_client = config_client
-        self.log_boundary = log_boundary or os.environ.get("HOME")
-        self.prefix = prefix
 
     def filter(self, record):
-        path = self.get_path(os.path.abspath(record.pathname), record.funcName)
-        record.msg = "{path}: {msg}".format(path=path, msg=record.getMessage())
-        called_method_level = python_to_prefab_log_levels[record.levelname.lower()]
-        self.config_client.record_log(path, called_method_level)
-        return self.should_log_message(record, path)
+        called_method_level = python_to_prefab_log_levels.get(record.levelno)
+        if not called_method_level:
+            return True
+        self.config_client.record_log(record.name, called_method_level)
+        return self.should_log_message(record.name, called_method_level)
 
-    def get_path(self, path, func_name):
-        if "site-packages" in path:
-            path = path.split("site-packages/")[-1]
-        else:
-            path = path.replace(self.log_boundary, "")
-            path = [segment for segment in path.split("/") if segment]
-            path = ".".join(path)
-
-        path = path.lower()
-        path = re.sub(".pyc?$", "", path)
-        path = re.sub("-", "_", path)
-
-        if isinstance(self.prefix, str):
-            return "%s.%s.%s" % (self.prefix, path, func_name)
-        else:
-            return "%s.%s" % (path, func_name)
-
-    def should_log_message(self, record, path):
-        called_method_level = python_to_prefab_log_levels[record.levelname.lower()]
-        closest_log_level = self.get_severity(path)
+    def should_log_message(self, logger_name, called_method_level):
+        closest_log_level = self.get_severity(logger_name)
         return called_method_level >= closest_log_level
 
-    def get_severity(self, location):
+    def get_severity(self, logger_name):
         context = Context.get_current() or {}
         default = LLV("WARN")
-        closest_log_level = self.config_client.get(
-            LOG_LEVEL_BASE_KEY, default=default, context=context
-        )
+        if logger_name:
+            full_lookup_key = ".".join([LOG_LEVEL_BASE_KEY, logger_name])
+        else:
+            full_lookup_key = LOG_LEVEL_BASE_KEY
 
-        path_segs = location.split(".")
-        for i, _ in enumerate(path_segs):
-            next_search_path = ".".join([LOG_LEVEL_BASE_KEY, *path_segs[: i + 1]])
-            next_level = self.config_client.get(
-                next_search_path, default=closest_log_level, context=context
+        for lookup_key in iterate_dotted_string(full_lookup_key):
+            log_level = self.config_client.get(
+                lookup_key, default=None, context=context
             )
-            if next_level is not None:
-                closest_log_level = next_level
-        return prefab_to_python_log_levels[closest_log_level]
+            if log_level:
+                return prefab_to_python_log_levels[log_level]
+
+        return default

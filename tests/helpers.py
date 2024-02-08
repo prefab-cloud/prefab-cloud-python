@@ -8,7 +8,6 @@ import prefab_pb2 as Prefab
 from prefab_cloud_python import Context
 from prefab_cloud_python.client import PostBodyType
 from prefab_cloud_python.config_resolver import CriteriaEvaluator
-from prefab_cloud_python.logger_client import LoggerClient
 
 
 class MockResolver:
@@ -90,7 +89,6 @@ def get_telemetry_events_by_type(telemetry_event: Prefab.TelemetryEvents):
 class MockClientForPosts:
     def __init__(self):
         self.posts = []
-        self.logger = LoggerClient()
         self.shutdown_flag = threading.Event()
 
     def reset(self):

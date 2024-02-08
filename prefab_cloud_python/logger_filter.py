@@ -1,11 +1,18 @@
-import os
-import re
+import logging
+from structlog import DropEvent
+
+
+import prefab_cloud_python
 import prefab_pb2 as Prefab
 from .context import Context
 
+log = logging.getLogger(__name__)
+
+IGNORE_PREFIX = prefab_cloud_python.__name__
 LOG_LEVEL_BASE_KEY = "log-level"
 
 LLV = Prefab.LogLevel.Value
+
 
 prefab_to_python_log_levels = {
     LLV("NOT_SET_LOG_LEVEL"): LLV("DEBUG"),
@@ -16,7 +23,7 @@ prefab_to_python_log_levels = {
     LLV("ERROR"): LLV("ERROR"),
     LLV("FATAL"): LLV("FATAL"),
 }
-python_to_prefab_log_levels = {
+python_log_level_name_to_prefab_log_levels = {
     "debug": LLV("DEBUG"),
     "info": LLV("INFO"),
     "warn": LLV("WARN"),
@@ -25,55 +32,85 @@ python_to_prefab_log_levels = {
     "critical": LLV("FATAL"),
 }
 
+python_to_prefab_log_levels = {
+    logging.DEBUG: LLV("DEBUG"),
+    logging.INFO: LLV("INFO"),
+    logging.WARN: LLV("WARN"),
+    logging.ERROR: LLV("ERROR"),
+    logging.CRITICAL: LLV("FATAL"),
+}
 
-class LoggerFilter:
-    def __init__(self, config_client, log_boundary=None, prefix=None):
-        self.config_client = config_client
-        self.log_boundary = log_boundary or os.environ.get("HOME")
-        self.prefix = prefix
 
-    def filter(self, record):
-        path = self.get_path(os.path.abspath(record.pathname), record.funcName)
-        record.msg = "{path}: {msg}".format(path=path, msg=record.getMessage())
-        called_method_level = python_to_prefab_log_levels[record.levelname.lower()]
-        self.config_client.record_log(path, called_method_level)
-        return self.should_log_message(record, path)
+def iterate_dotted_string(s: str):
+    parts = s.split(".")
+    for i in range(len(parts), 0, -1):
+        yield ".".join(parts[:i])
 
-    def get_path(self, path, func_name):
-        if "site-packages" in path:
-            path = path.split("site-packages/")[-1]
-        else:
-            path = path.replace(self.log_boundary, "")
-            path = [segment for segment in path.split("/") if segment]
-            path = ".".join(path)
 
-        path = path.lower()
-        path = re.sub(".pyc?$", "", path)
-        path = re.sub("-", "_", path)
+class LoggerFilter(logging.Filter):
+    def __init__(self, client=None) -> None:
+        """Filter for use with standard logging. Will get its client reference from prefab_python_client.get_client() unless overridden"""
+        super().__init__()
+        self.client = client
 
-        if isinstance(self.prefix, str):
-            return "%s.%s.%s" % (self.prefix, path, func_name)
-        else:
-            return "%s.%s" % (path, func_name)
+    def _get_client(self) -> "prefab_cloud_python.Client":
+        if self.client:
+            return self.client
+        return prefab_cloud_python.get_client()
 
-    def should_log_message(self, record, path):
-        called_method_level = python_to_prefab_log_levels[record.levelname.lower()]
-        closest_log_level = self.get_severity(path)
+    def filter(self, record: logging.LogRecord) -> bool:
+        """this method is used with the standard logger"""
+        # prevent recursion
+        if self._should_skip_processing(record.name):
+            return True
+        called_method_level = python_to_prefab_log_levels.get(record.levelno)
+        if not called_method_level:
+            return True
+        client = self._get_client()
+        if client and client.is_ready():
+            client.record_log(record.name, called_method_level)
+            return self._should_log_message(record.name, called_method_level)
+        return True
+
+    def processor(self, logger, method_name: str, event_dict):
+        """this method is used with structlogger.
+        It depends on structlog.stdlib.add_log_level being in the structlog pipeline first
+        """
+        logger_name = getattr(logger, "name", None) or event_dict.get("logger")
+        if self._should_skip_processing(logger_name):
+            return event_dict
+        called_method_level = python_log_level_name_to_prefab_log_levels.get(
+            event_dict.get("level")
+        )
+        if not called_method_level:
+            return event_dict
+        client = self._get_client()
+        if client and client.is_ready():
+            client.record_log(logger_name, called_method_level)
+            if not self._should_log_message(logger_name, called_method_level):
+                raise DropEvent
+        return event_dict
+
+    def _should_skip_processing(self, logger_name):
+        return logger_name and logger_name.startswith(IGNORE_PREFIX)
+
+    def _should_log_message(self, logger_name, called_method_level):
+        closest_log_level = self._get_severity(logger_name)
         return called_method_level >= closest_log_level
 
-    def get_severity(self, location):
+    def _get_severity(self, logger_name):
         context = Context.get_current() or {}
         default = LLV("WARN")
-        closest_log_level = self.config_client.get(
-            LOG_LEVEL_BASE_KEY, default=default, context=context
-        )
+        if logger_name:
+            full_lookup_key = ".".join([LOG_LEVEL_BASE_KEY, logger_name])
+        else:
+            full_lookup_key = LOG_LEVEL_BASE_KEY
 
-        path_segs = location.split(".")
-        for i, _ in enumerate(path_segs):
-            next_search_path = ".".join([LOG_LEVEL_BASE_KEY, *path_segs[: i + 1]])
-            next_level = self.config_client.get(
-                next_search_path, default=closest_log_level, context=context
+        for lookup_key in iterate_dotted_string(full_lookup_key):
+            log_level = self._get_client().get(
+                lookup_key, default=None, context=context
             )
-            if next_level is not None:
-                closest_log_level = next_level
-        return prefab_to_python_log_levels[closest_log_level]
+            if log_level:
+                return prefab_to_python_log_levels[log_level]
+
+        return default

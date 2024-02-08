@@ -9,7 +9,6 @@ from ._telemetry import TelemetryManager
 from .context import Context, ScopedContext
 from .config_client import ConfigClient
 from .feature_flag_client import FeatureFlagClient
-from .logger_client import LoggerClient
 from .logger_filter import LoggerFilter
 from .options import Options
 from ._requests import TimeoutHTTPAdapter
@@ -24,6 +23,7 @@ ConfigValueType = Optional[Union[int, float, bool, str, list[str]]]
 PostBodyType = Union[Prefab.Loggers, Prefab.ContextShapes, Prefab.TelemetryEvents]
 Version = version("prefab-cloud-python")
 VersionHeader = "X-PrefabCloud-Client-Version"
+logger = logging.getLogger(__name__)
 
 
 class Client:
@@ -35,7 +35,6 @@ class Client:
         self.shutdown_flag = threading.Event()
         self.options = options
         self.instance_hash = str(uuid.uuid4())
-        self.logger = LoggerClient(self.options.log_prefix, self.options.log_boundary)
         self.telemetry_manager = TelemetryManager(self, options)
         if not options.is_local_only():
             self.telemetry_manager.start_periodic_sync()
@@ -55,12 +54,9 @@ class Client:
         self.session.mount("https://", adapter)
         self.session.headers.update({VersionHeader: f"prefab-cloud-python-{Version}"})
         if options.is_local_only():
-            self.logger.log_internal(
-                "info", f"Prefab {Version} running in local-only mode"
-            )
+            logger.info(f"Prefab {Version} running in local-only mode")
         else:
-            self.logger.log_internal(
-                "info",
+            logger.info(
                 f"Prefab {Version} connecting to %s and %s, secure %s"
                 % (
                     options.prefab_api_url,
@@ -118,7 +114,8 @@ class Client:
     def context(self) -> Context:
         return Context.get_current()
 
-    def scoped_context(context: Context) -> ScopedContext:
+    @staticmethod
+    def scoped_context(context: dict | Context) -> ScopedContext:
         return Context.scope(context)
 
     @functools.cache
@@ -156,9 +153,13 @@ class Client:
             log_boundary=self.options.log_boundary,
         )
 
+    def is_ready(self) -> bool:
+        return self.config_client().is_ready()
+
     def close(self) -> None:
         if not self.shutdown_flag.is_set():
             logging.info("Shutting down prefab client instance")
             self.shutdown_flag.set()
+            self.config_client().close()
         else:
             logging.warning("Close already called")

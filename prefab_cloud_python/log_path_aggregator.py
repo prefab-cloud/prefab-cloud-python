@@ -1,14 +1,16 @@
 import time
+import logging
 from collections import defaultdict
 import prefab_pb2 as Prefab
 
+logger = logging.getLogger(__name__)
+
 
 class LogPathAggregator:
-    def __init__(self, logger, max_paths):
+    def __init__(self, max_paths):
         self.max_paths = max_paths
         self.start_at = time.time()
         self.paths = defaultdict(int)
-        self.logger = logger
 
     def push(self, path, severity):
         if len(self.paths) >= self.max_paths:
@@ -23,7 +25,7 @@ class LogPathAggregator:
         start_at_was = self.start_at
         self.start_at = time.time()
 
-        self.logger.log_internal("debug", "flushing stats for %s paths" % len(to_ship))
+        logger.debug("flushing stats for %s paths" % len(to_ship))
 
         aggregate = defaultdict(lambda: Prefab.Logger())
 

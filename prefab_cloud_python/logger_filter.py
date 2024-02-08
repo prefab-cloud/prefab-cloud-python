@@ -1,4 +1,6 @@
 import logging
+from structlog import DropEvent
+
 
 import prefab_cloud_python
 import prefab_pb2 as Prefab
@@ -46,19 +48,20 @@ def iterate_dotted_string(s: str):
 
 
 class LoggerFilter(logging.Filter):
-    def __init__(self, client=None):
+    def __init__(self, client=None) -> None:
+        """Filter for use with standard logging. Will get its client reference from prefab_python_client.get_client() unless overridden"""
         super().__init__()
         self.client = client
 
-    def _get_client(self):
+    def _get_client(self) -> "prefab_cloud_python.Client":
         if self.client:
             return self.client
         return prefab_cloud_python.get_client()
 
-    def filter(self, record):
+    def filter(self, record: logging.LogRecord) -> bool:
+        """this method is used with the standard logger"""
         # prevent recursion
-        if record.name and record.name.startswith(IGNORE_PREFIX):
-            print("returning from filter early")
+        if self._should_skip_processing(record.name):
             return True
         called_method_level = python_to_prefab_log_levels.get(record.levelno)
         if not called_method_level:
@@ -66,14 +69,36 @@ class LoggerFilter(logging.Filter):
         client = self._get_client()
         if client and client.is_ready():
             client.record_log(record.name, called_method_level)
-            return self.should_log_message(record.name, called_method_level)
+            return self._should_log_message(record.name, called_method_level)
         return True
 
-    def should_log_message(self, logger_name, called_method_level):
-        closest_log_level = self.get_severity(logger_name)
+    def processor(self, logger, method_name: str, event_dict):
+        """this method is used with structlogger.
+        It depends on structlog.stdlib.add_log_level being in the structlog pipeline first
+        """
+        logger_name = getattr(logger, "name", None) or event_dict.get("logger")
+        if self._should_skip_processing(logger_name):
+            return event_dict
+        called_method_level = python_log_level_name_to_prefab_log_levels.get(
+            event_dict.get("level")
+        )
+        if not called_method_level:
+            return event_dict
+        client = self._get_client()
+        if client and client.is_ready():
+            client.record_log(logger_name, called_method_level)
+            if not self._should_log_message(logger_name, called_method_level):
+                raise DropEvent
+        return event_dict
+
+    def _should_skip_processing(self, logger_name):
+        return logger_name and logger_name.startswith(IGNORE_PREFIX)
+
+    def _should_log_message(self, logger_name, called_method_level):
+        closest_log_level = self._get_severity(logger_name)
         return called_method_level >= closest_log_level
 
-    def get_severity(self, logger_name):
+    def _get_severity(self, logger_name):
         context = Context.get_current() or {}
         default = LLV("WARN")
         if logger_name:

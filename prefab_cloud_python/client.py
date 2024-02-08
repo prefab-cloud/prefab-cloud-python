@@ -9,7 +9,6 @@ from ._telemetry import TelemetryManager
 from .context import Context, ScopedContext
 from .config_client import ConfigClient
 from .feature_flag_client import FeatureFlagClient
-from .logger_client import LoggerClient
 from .logger_filter import LoggerFilter
 from .options import Options
 from ._requests import TimeoutHTTPAdapter
@@ -36,7 +35,6 @@ class Client:
         self.shutdown_flag = threading.Event()
         self.options = options
         self.instance_hash = str(uuid.uuid4())
-        self.logger = LoggerClient(self.options.log_prefix, self.options.log_boundary)
         self.telemetry_manager = TelemetryManager(self, options)
         if not options.is_local_only():
             self.telemetry_manager.start_periodic_sync()

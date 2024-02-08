@@ -7,11 +7,10 @@ logger = logging.getLogger(__name__)
 
 
 class LogPathAggregator:
-    def __init__(self, logger, max_paths):
+    def __init__(self, max_paths):
         self.max_paths = max_paths
         self.start_at = time.time()
         self.paths = defaultdict(int)
-        self.logger = logger
 
     def push(self, path, severity):
         if len(self.paths) >= self.max_paths:

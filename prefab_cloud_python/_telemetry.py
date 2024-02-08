@@ -92,9 +92,7 @@ class TelemetryManager(object):
         self.context_shape_aggregator = ContextShapeAggregator(
             max_shapes=options.collect_max_shapes
         )
-        self.log_path_aggregator = LogPathAggregator(
-            client.logger, options.collect_max_paths
-        )
+        self.log_path_aggregator = LogPathAggregator(options.collect_max_paths)
         self.listeners = []
 
     def start_periodic_sync(self) -> None:

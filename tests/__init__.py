@@ -1,3 +1,9 @@
-from prefab_cloud_python import default_structlog_setup
+import logging
+import sys
 
-default_structlog_setup()
+root_logger = logging.getLogger()
+ch = logging.StreamHandler(sys.stdout)
+ch.setFormatter(
+    logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+)
+root_logger.addHandler(ch)

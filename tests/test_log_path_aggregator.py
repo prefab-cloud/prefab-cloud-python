@@ -4,13 +4,12 @@ import time
 import timecop
 
 from prefab_cloud_python.log_path_aggregator import LogPathAggregator
-from prefab_cloud_python.logger_client import LoggerClient
 
 
 class TestLogPathAggregator:
     def test_sync(self):
         with timecop.freeze(time.time()):
-            logger_path_aggregator = LogPathAggregator(LoggerClient(), 120)
+            logger_path_aggregator = LogPathAggregator(120)
 
             for _ in range(2):
                 logger_path_aggregator.push("path1", Prefab.LogLevel.INFO)

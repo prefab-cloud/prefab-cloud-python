@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 
-import prefab_cloud_python
 from ._count_down_latch import CountDownLatch
 from .config_loader import ConfigLoader
 from .config_resolver import ConfigResolver
@@ -139,16 +138,17 @@ class ConfigClient:
                             base64.b64decode(event.data)
                         )
                         self.load_configs(configs, "sse_streaming")
-            except Exception:
-                logger.info("Issue with streaming connection, will restart")
+            except Exception as e:
+                if not self.base_client.shutdown_flag.is_set:
+                    logger.info(f"Issue with streaming connection, will restart {e}")
 
     def checkpointing_loop(self):
         while not self.base_client.shutdown_flag.is_set():
             try:
                 self.load_checkpoint()
                 time.sleep(self.checkpoint_freq_secs)
-            except Exception:
-                logger.info("Issue checkpointing, will restart")
+            except Exception as e:
+                logger.warn(f"Issue checkpointing, will restart {e}")
 
     def load_checkpoint_from_api_cdn(self):
         url = "%s/api/v1/configs/0" % self.options.url_for_api_cdn
@@ -231,7 +231,6 @@ class ConfigClient:
         self.is_initialized.set()
         self.init_latch.count_down()
         logger.info(f"Unlocked config via {source}")
-        self.base_client.logger.set_config_client(self)
 
     def set_cache_path(self):
         dir = os.environ.get(

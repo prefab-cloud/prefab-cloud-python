@@ -1,29 +1,19 @@
-from .structlog_multi_processor import StructlogMultiProcessor
-from ._structlog_processors import clean_event_dict, set_location, log_or_drop
 import structlog
-from .constants import STRUCTLOG_CALLSITE_IGNORES
 
-
-def create_prefab_structlog_processor():
-    return StructlogMultiProcessor([set_location, log_or_drop, clean_event_dict])
+from prefab_cloud_python import LoggerFilter
 
 
 def default_structlog_setup(colors=True):
+    logger_filter = LoggerFilter()
     structlog.configure(
         processors=[
-            structlog.contextvars.merge_contextvars,
+            structlog.stdlib.add_logger_name,
             structlog.processors.add_log_level,
+            logger_filter.processor,
             structlog.processors.StackInfoRenderer(),
-            structlog.dev.set_exc_info,
             structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S", utc=False),
-            structlog.processors.CallsiteParameterAdder(
-                [
-                    structlog.processors.CallsiteParameter.PATHNAME,
-                    structlog.processors.CallsiteParameter.FUNC_NAME,
-                ],
-                additional_ignores=[STRUCTLOG_CALLSITE_IGNORES],
-            ),
-            create_prefab_structlog_processor(),
             structlog.dev.ConsoleRenderer(colors=colors),
-        ]
+        ],
+        logger_factory=structlog.stdlib.LoggerFactory(),  # Use Python's logging factory
+        wrapper_class=structlog.stdlib.BoundLogger,
     )

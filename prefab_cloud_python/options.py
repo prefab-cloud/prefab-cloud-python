@@ -1,8 +1,11 @@
+import logging
 import os
 from enum import Enum
 from pathlib import Path
 from urllib.parse import urlparse
 from typing import Optional, Union
+
+import prefab_cloud_python
 
 
 class MissingApiKeyException(Exception):
@@ -77,6 +80,7 @@ class Options:
         collect_sync_interval: Optional[int] = 30,
         collect_evaluation_summaries: bool = True,
         context_upload_mode: ContextUploadMode = ContextUploadMode.PERIODIC_EXAMPLE,
+        prefab_client_log_level: Optional[int] = logging.WARNING,
     ) -> None:
         self.prefab_datasources = Options.__validate_datasource(prefab_datasources)
         self.datafile = x_datafile
@@ -109,6 +113,10 @@ class Options:
         self.collect_max_shapes = collect_max_shapes
         self.context_upload_mode = context_upload_mode
         self.collect_evaluation_summaries = collect_evaluation_summaries
+        if prefab_client_log_level:
+            logging.getLogger(prefab_cloud_python.__name__).setLevel(
+                prefab_client_log_level
+            )
 
     def is_local_only(self) -> bool:
         return self.prefab_datasources == "LOCAL_ONLY"

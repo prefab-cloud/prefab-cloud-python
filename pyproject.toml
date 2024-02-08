@@ -20,6 +20,7 @@ requests = "^2.30.0"
 structlog = "^22.3"
 sseclient-py = "^1.7.2"
 cachetools = "^5.3.0"
+protobuf = "^4.25.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.1"

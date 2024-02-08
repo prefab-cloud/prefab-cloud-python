@@ -3,7 +3,6 @@ from prefab_cloud_python.options import (
     MissingApiKeyException,
     InvalidApiKeyException,
     InvalidApiUrlException,
-    InvalidGrpcUrlException,
 )
 
 import os
@@ -101,43 +100,6 @@ class TestOptionsApiUrl:
             prefab_api_url="http://api.prefab.cloud", prefab_datasources="LOCAL_ONLY"
         )
         assert options.prefab_api_url is None
-
-
-class TestOptionsGrpcUrl:
-    def test_prefab_grpc_url_from_env(self):
-        with extended_env(
-            {"PREFAB_API_KEY": "1-api", "PREFAB_GRPC_URL": "grpc.dev-prefab.cloud"}
-        ):
-            options = Options()
-            assert options.prefab_grpc_url == "grpc.dev-prefab.cloud"
-
-    def test_grpc_url_from_input(self):
-        with extended_env({"PREFAB_API_KEY": "1-api"}):
-            options = Options(prefab_grpc_url="grpc.test-prefab.cloud")
-            assert options.prefab_grpc_url == "grpc.test-prefab.cloud"
-
-    def test_prefab_grpc_url_default_fallback(self):
-        with extended_env({"PREFAB_API_KEY": "1-api"}):
-            options = Options()
-            assert options.prefab_grpc_url == "grpc.prefab.cloud:443"
-
-    def test_prefab_grpc_url_errors_on_invalid_format(self):
-        with extended_env({"PREFAB_API_KEY": "1-api"}):
-            with pytest.raises(InvalidGrpcUrlException) as context:
-                Options(prefab_grpc_url="gprc.prefab.cloud")
-
-        assert "Invalid gRPC URL found: gprc.prefab.cloud" in str(context)
-
-    def test_prefab_grpc_url_doesnt_matter_local_only_set_in_env(self):
-        with extended_env({"PREFAB_DATASOURCES": "LOCAL_ONLY"}):
-            options = Options(prefab_grpc_url="gprc.prefab.cloud")
-            assert options.prefab_grpc_url is None
-
-    def test_prefab_grpc_url_doesnt_matter_local_only(self):
-        options = Options(
-            prefab_grpc_url="gprc.prefab.cloud", prefab_datasources="LOCAL_ONLY"
-        )
-        assert options.prefab_grpc_url is None
 
 
 class TestOptionsPrefabEnvs:

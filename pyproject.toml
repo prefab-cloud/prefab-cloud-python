@@ -12,7 +12,7 @@ documentation = "https://docs.prefab.cloud/docs/python-sdk/python"
 packages = [{include = "prefab_cloud_python"}, {include = "prefab_pb2.py"}]
 
 [tool.poetry.dependencies]
-cryptography = ">= 41.0.7"
+cryptography = ">= 42.0.0"
 python = ">= 3.9, < 4"
 pyyaml = "^6.0.0"
 mmh3 = "^3.0.0"
@@ -21,6 +21,7 @@ structlog = "^22.3"
 sseclient-py = "^1.7.2"
 cachetools = "^5.3.0"
 protobuf = "^4.25.2"
+urllib3 = ">= 2.0.6"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.1"

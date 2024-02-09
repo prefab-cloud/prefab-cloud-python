@@ -18,8 +18,8 @@ import uuid
 import requests
 from urllib.parse import urljoin
 from importlib.metadata import version
+from .constants import NoDefaultProvided, ConfigValueType
 
-ConfigValueType = Optional[Union[int, float, bool, str, list[str]]]
 PostBodyType = Union[Prefab.Loggers, Prefab.ContextShapes, Prefab.TelemetryEvents]
 Version = version("prefab-cloud-python")
 VersionHeader = "X-PrefabCloud-Client-Version"
@@ -29,7 +29,6 @@ logger = logging.getLogger(__name__)
 class Client:
     max_sleep_sec = 10
     base_sleep_sec = 0.5
-    no_default_provided = "NO_DEFAULT_PROVIDED"
 
     def __init__(self, options: Options) -> None:
         self.shutdown_flag = threading.Event()
@@ -75,12 +74,10 @@ class Client:
     def get(
         self,
         key: str,
-        default: ConfigValueType = "NO_DEFAULT_PROVIDED",
-        context: str | Context = "NO_CONTEXT_PROVIDED",
+        default: ConfigValueType = NoDefaultProvided,
+        context: Optional[dict | Context] = None,
     ) -> ConfigValueType:
         if self.is_ff(key):
-            if default == "NO_DEFAULT_PROVIDED":
-                default = None
             return self.feature_flag_client().get(
                 key, default=default, context=self.resolve_context_argument(context)
             )
@@ -90,7 +87,7 @@ class Client:
             )
 
     def enabled(
-        self, feature_name: str, context: str | Context = "NO_CONTEXT_PROVIDED"
+        self, feature_name: str, context: Optional[dict | Context] = None
     ) -> bool:
         return self.feature_flag_client().feature_is_on_for(
             feature_name, context=self.resolve_context_argument(context)
@@ -104,9 +101,13 @@ class Client:
             return True
         return False
 
-    def resolve_context_argument(self, context: str | Context) -> Context:
-        if context != "NO_CONTEXT_PROVIDED":
+    def resolve_context_argument(
+        self, context: Optional[dict | Context] = None
+    ) -> Context:
+        if isinstance(context, Context):
             return context
+        if isinstance(context, dict):
+            return Context(context=context)
         return Context.get_current()
 
     def context(self) -> Context:

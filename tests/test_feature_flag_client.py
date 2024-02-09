@@ -31,7 +31,7 @@ class TestFeatureFlagClient:
     def test_get(self):
         ff_client = self.build_client()
 
-        assert not ff_client.get("something-that-doesnt-exist")
+        assert ff_client.get("something-that-doesnt-exist", default=None) is None
         assert not ff_client.get("disabled_flag")
         assert ff_client.get("enabled_flag")
         assert ff_client.get("flag_with_a_value") == "all-features"

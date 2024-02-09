@@ -1,1 +1,4 @@
-STRUCTLOG_CALLSITE_IGNORES = "prefab_cloud_python.logger_client"
+from typing import Optional, Union
+
+NoDefaultProvided = object()
+ConfigValueType = Optional[Union[int, float, bool, str, list[str]]]

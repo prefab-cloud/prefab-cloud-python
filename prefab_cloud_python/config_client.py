@@ -1,6 +1,14 @@
 from __future__ import annotations
 
 import logging
+import threading
+import time
+from typing import Optional
+
+import sseclient
+import base64
+import prefab_pb2 as Prefab
+import os
 
 from ._count_down_latch import CountDownLatch
 from .config_loader import ConfigLoader
@@ -8,14 +16,9 @@ from .config_resolver import ConfigResolver
 from .config_value_unwrapper import ConfigValueUnwrapper
 from .context import Context
 from .config_resolver import Evaluation
-from google.protobuf.json_format import MessageToJson, Parse
+from .constants import NoDefaultProvided
 
-import threading
-import time
-import sseclient
-import base64
-import prefab_pb2 as Prefab
-import os
+from google.protobuf.json_format import MessageToJson, Parse
 
 
 STALE_CACHE_WARN_HOURS = 5
@@ -63,7 +66,12 @@ class ConfigClient:
             self.start_checkpointing_thread()
             self.start_streaming()
 
-    def get(self, key, default="NO_DEFAULT_PROVIDED", context=Context.get_current()):
+    def get(
+        self,
+        key,
+        default=NoDefaultProvided,
+        context: Optional[dict | Context] = Context.get_current(),
+    ):
         evaluation_result = self.__get(key, None, {}, context=context)
         if evaluation_result is not None:
             self.base_client.telemetry_manager.record_evaluation(evaluation_result)
@@ -72,7 +80,11 @@ class ConfigClient:
         return self.handle_default(key, default)
 
     def __get(
-        self, key, lookup_key, properties, context=Context.get_current()
+        self,
+        key,
+        lookup_key,
+        properties,
+        context: Optional[dict | Context] = Context.get_current(),
     ) -> None | Evaluation:
         ok_to_proceed = self.init_latch.wait(
             timeout=self.options.connection_timeout_seconds
@@ -88,7 +100,7 @@ class ConfigClient:
         return self.config_resolver.get(key, context=context)
 
     def handle_default(self, key, default):
-        if default != "NO_DEFAULT_PROVIDED":
+        if default != NoDefaultProvided:
             return default
         if self.options.on_no_default == "RAISE":
             raise MissingDefaultException(key)

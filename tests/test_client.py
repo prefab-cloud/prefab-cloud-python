@@ -81,7 +81,11 @@ class TestClient:
 
     def test_ff_get_with_attributes(self, client):
         assert (
-            client.get("just_my_domain", context={"user": {"domain": "gmail.com"}})
+            client.get(
+                "just_my_domain",
+                default=None,
+                context={"user": {"domain": "gmail.com"}},
+            )
             is None
         )
         assert (
@@ -106,7 +110,7 @@ class TestClient:
 
     def test_ff_get_with_scoped_context(self, client):
         with Client.scoped_context({"user": {"domain": "gmail.com"}}):
-            assert client.get("just_my_domain") is None
+            assert client.get("just_my_domain", default=None) is None
 
         with Client.scoped_context({"user": {"domain": "gmail.com"}}):
             assert client.get("just_my_domain", default="DEFAULT") == "DEFAULT"

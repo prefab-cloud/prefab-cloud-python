@@ -124,7 +124,7 @@ def run_test(
         if input.get("context"):
             context = Context(input["context"])
         else:
-            context = "NO_CONTEXT_PROVIDED"
+            context = None
         if function == "get":
             if expected.get("status") == "raise":
                 with pytest.raises(

@@ -1,5 +1,10 @@
+from __future__ import annotations
+
 import logging
+from typing import Optional
+
 from .context import Context
+from .constants import NoDefaultProvided, ConfigValueType
 
 logger = logging.getLogger(__name__)
 
@@ -8,25 +13,38 @@ class FeatureFlagClient:
     def __init__(self, base_client):
         self.base_client = base_client
 
-    def feature_is_on(self, feature_name, context=Context.get_current()):
+    def feature_is_on(
+        self, feature_name, context: Optional[dict | Context] = Context.get_current()
+    ) -> bool:
         return self.feature_is_on_for(feature_name, context)
 
-    def feature_is_on_for(self, feature_name, context=Context.get_current()):
+    def feature_is_on_for(
+        self, feature_name, context: Optional[dict | Context] = Context.get_current()
+    ) -> bool:
         variant = self.base_client.config_client().get(
             feature_name, False, context=context
         )
-        return self.is_on(variant)
+        return self._is_on(variant)
 
-    def get(self, feature_name, default=False, context=Context.get_current()):
-        value = self._get(feature_name, context)
-        if value is None:
-            return default
-        return value
+    def get(
+        self,
+        feature_name,
+        default=NoDefaultProvided,
+        context: Optional[dict | Context] = Context.get_current(),
+    ) -> ConfigValueType:
+        return self._get(feature_name, default=default, context=context)
 
-    def _get(self, feature_name, context=Context.get_current()):
-        return self.base_client.config_client().get(feature_name, None, context=context)
+    def _get(
+        self,
+        feature_name,
+        default=NoDefaultProvided,
+        context: Optional[dict | Context] = Context.get_current(),
+    ) -> ConfigValueType:
+        return self.base_client.config_client().get(
+            feature_name, default=default, context=context
+        )
 
-    def is_on(self, variant):
+    def _is_on(self, variant) -> bool:
         try:
             if variant is None:
                 return False

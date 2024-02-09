@@ -47,4 +47,5 @@ def reset_instance() -> None:
     with __lock.write_locked():
         old_client = __base_client
         __base_client = None
-        old_client.close()
+        if old_client:
+            old_client.close()

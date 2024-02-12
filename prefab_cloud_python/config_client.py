@@ -58,6 +58,7 @@ class ConfigClient:
             "debug", "Initialize ConfigClient: acquired write lock"
         )
 
+        self._cache_path = None
         self.set_cache_path()
 
         if self.options.is_local_only():
@@ -212,6 +213,8 @@ class ConfigClient:
     def cache_configs(self, configs):
         if not self.options.use_local_cache:
             return
+        if not self.cache_path:
+            return
         with open(self.cache_path, "w") as f:
             f.write(MessageToJson(configs))
             self.base_client.logger.log_internal(
@@ -220,6 +223,8 @@ class ConfigClient:
 
     def load_cache(self):
         if not self.options.use_local_cache:
+            return False
+        if not self.cache_path:
             return False
         try:
             with open(self.cache_path, "r") as f:
@@ -253,15 +258,19 @@ class ConfigClient:
         self.base_client.logger.set_config_client(self)
 
     def set_cache_path(self):
-        dir = os.environ.get(
-            "XDG_CACHE_HOME", os.path.join(os.environ["HOME"], ".cache")
-        )
-        file_name = f"prefab.cache.{self.base_client.options.api_key_id}.json"
-        self.cache_path = os.path.join(dir, file_name)
+        home_dir_cache_path = None
+        home_dir = os.environ.get("HOME")
+        if home_dir:
+            home_dir_cache_path = os.path.join(home_dir, ".cache")
+        cache_path = os.environ.get("XDG_CACHE_HOME", home_dir_cache_path)
+        if cache_path:
+            file_name = f"prefab.cache.{self.base_client.options.api_key_id}.json"
+            self.cache_path = os.path.join(cache_path, file_name)
 
     @property
     def cache_path(self):
-        os.makedirs(os.path.dirname(self._cache_path), exist_ok=True)
+        if self._cache_path:
+            os.makedirs(os.path.dirname(self._cache_path), exist_ok=True)
         return self._cache_path
 
     @cache_path.setter

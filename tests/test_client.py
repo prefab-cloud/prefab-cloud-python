@@ -1,3 +1,5 @@
+import logging
+
 from prefab_cloud_python import Options, Client
 from prefab_cloud_python.config_client import MissingDefaultException
 import pytest
@@ -121,3 +123,12 @@ class TestClient:
     def test_getting_feature_flag_value(self, client):
         assert not client.enabled("flag_with_a_value")
         assert client.get("flag_with_a_value") == "all-features"
+
+    def test_loglevel(self, client):
+        assert client.get_loglevel("") == logging.WARNING
+        assert client.get_loglevel("app") == logging.ERROR
+        assert client.get_loglevel("app.controller") == logging.ERROR
+        assert client.get_loglevel("app.controller.hello") == logging.WARNING
+        assert client.get_loglevel("app.controller.hello.index") == logging.INFO
+        assert client.get_loglevel("app.controller.hello.index.store") == logging.INFO
+        assert client.get_loglevel("app.controller.hello.edit") == logging.WARN

@@ -1,12 +1,11 @@
 from __future__ import annotations
-
-import logging
 from typing import Optional
 
 from .context import Context
 from .constants import NoDefaultProvided, ConfigValueType
+from ._internal_logging import InternalLogger
 
-logger = logging.getLogger(__name__)
+logger = InternalLogger(__name__)
 
 
 class FeatureFlagClient:

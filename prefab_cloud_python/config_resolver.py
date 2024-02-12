@@ -1,14 +1,14 @@
 from __future__ import annotations
 import functools
-import logging
 
 from .read_write_lock import ReadWriteLock
 from .config_value_unwrapper import ConfigValueUnwrapper
 from .context import Context
+from ._internal_logging import InternalLogger
 import prefab_pb2 as Prefab
 import google
 
-logger = logging.getLogger(__name__)
+logger = InternalLogger(__name__)
 
 
 class ConfigResolver:
@@ -53,6 +53,7 @@ class ConfigResolver:
         ).evaluate(self.evaluation_context(context))
 
     def evaluation_context(self, context):
+        # TODO handle dict
         if not isinstance(context, Context):
             context = Context.merge_with_current(context)
         return context.merge_default(self.default_context)

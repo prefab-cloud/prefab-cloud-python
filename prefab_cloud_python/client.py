@@ -2,14 +2,19 @@ from __future__ import annotations
 import functools
 import threading
 import logging
-
 from urllib3 import Retry
 
+
 from ._telemetry import TelemetryManager
+from ._internal_logging import (
+    InternalLogger,
+    iterate_dotted_string,
+    prefab_to_python_log_levels,
+    ReentrancyCheck,
+)
 from .context import Context, ScopedContext
 from .config_client import ConfigClient
 from .feature_flag_client import FeatureFlagClient
-from .logger_filter import LoggerFilter
 from .options import Options
 from ._requests import TimeoutHTTPAdapter
 from typing import Optional, Union
@@ -19,11 +24,13 @@ import requests
 from urllib.parse import urljoin
 from importlib.metadata import version
 from .constants import NoDefaultProvided, ConfigValueType
+from ._internal_constants import LOG_LEVEL_BASE_KEY
 
 PostBodyType = Union[Prefab.Loggers, Prefab.ContextShapes, Prefab.TelemetryEvents]
 Version = version("prefab-cloud-python")
 VersionHeader = "X-PrefabCloud-Client-Version"
-logger = logging.getLogger(__name__)
+logger = InternalLogger(__name__)
+LLV = Prefab.LogLevel.Value
 
 
 class Client:
@@ -101,6 +108,29 @@ class Client:
             return True
         return False
 
+    def get_loglevel(self, logger_name: str) -> Optional[int]:
+        """determine the loglevel for the given logger_name. The return value is one of the logging.WARNING, logging.INFO numeric constants"""
+        try:
+            ReentrancyCheck.set()  # set thread local so any internal-to-client-logging doesn't cause lockup
+            if not self.config_client().is_ready():
+                return self.options.bootstrap_loglevel
+            default = logging.WARNING
+            if logger_name:
+                full_lookup_key = ".".join([LOG_LEVEL_BASE_KEY, logger_name])
+            else:
+                full_lookup_key = LOG_LEVEL_BASE_KEY
+
+            for lookup_key in iterate_dotted_string(full_lookup_key):
+                log_level = self.get(lookup_key, default=None)
+                if (
+                    log_level is not None
+                    and prefab_to_python_log_levels.get(log_level) is not None
+                ):
+                    return prefab_to_python_log_levels.get(log_level)
+            return default
+        finally:
+            ReentrancyCheck.clear()
+
     def resolve_context_argument(
         self, context: Optional[dict | Context] = None
     ) -> Context:
@@ -141,24 +171,18 @@ class Client:
             auth=("authuser", self.options.api_key or ""),
         )
 
-    def record_log(self, path, severity):
+    def record_log(self, logger_name, severity):
+        """severity is the python numeric loglevel, eg logging.WARNING"""
         if self.telemetry_manager:
-            self.telemetry_manager.record_log(path, severity)
-
-    def logging_filter(self):
-        return LoggerFilter(
-            self.config_client(),
-            prefix=self.options.log_prefix,
-            log_boundary=self.options.log_boundary,
-        )
+            self.telemetry_manager.record_log(logger_name, severity)
 
     def is_ready(self) -> bool:
         return self.config_client().is_ready()
 
     def close(self) -> None:
         if not self.shutdown_flag.is_set():
-            logging.info("Shutting down prefab client instance")
+            logger.info("Shutting down prefab client instance")
             self.shutdown_flag.set()
             self.config_client().close()
         else:
-            logging.warning("Close already called")
+            logger.warning("Close already called")

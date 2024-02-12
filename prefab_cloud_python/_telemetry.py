@@ -1,5 +1,4 @@
 import threading
-import logging
 from queue import Queue, Full
 import time
 from enum import Enum
@@ -22,8 +21,9 @@ from collections import defaultdict
 
 from .context_shape_aggregator import ContextShapeAggregator
 from .log_path_aggregator import LogPathAggregator
+from ._internal_logging import InternalLogger
 
-logger = logging.getLogger(__name__)
+logger = InternalLogger(__name__)
 
 
 def current_time_millis() -> int:
@@ -115,9 +115,9 @@ class TelemetryManager(object):
     def record_evaluation(self, evaluation: Evaluation) -> None:
         self.event_processor.enqueue(EvaluationTelemetryEvent(evaluation))
 
-    def record_log(self, path: str, severity) -> None:
+    def record_log(self, logger_name: str, severity) -> None:
         if self.collect_logs:
-            self.event_processor.enqueue(LogEvent(path, level=severity))
+            self.event_processor.enqueue(LogEvent(logger_name, level=severity))
 
     def flush(self) -> FlushTelemetryEvent:
         flush_event = FlushTelemetryEvent()

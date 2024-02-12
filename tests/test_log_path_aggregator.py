@@ -1,3 +1,5 @@
+import logging
+
 import prefab_pb2 as Prefab
 
 import time
@@ -12,9 +14,9 @@ class TestLogPathAggregator:
             logger_path_aggregator = LogPathAggregator(120)
 
             for _ in range(2):
-                logger_path_aggregator.push("path1", Prefab.LogLevel.INFO)
+                logger_path_aggregator.push("path1", logging.INFO)
             for _ in range(3):
-                logger_path_aggregator.push("path1", Prefab.LogLevel.ERROR)
+                logger_path_aggregator.push("path1", logging.ERROR)
 
             loggers = logger_path_aggregator.flush()
             assert loggers == Prefab.LoggersTelemetryEvent(

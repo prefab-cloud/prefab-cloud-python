@@ -27,7 +27,7 @@ def assert_logged(cap, level, msg, logger_name, should_log=True):
 
 
 @pytest.fixture
-def config_client():
+def client():
     options = Options(
         prefab_config_classpath_dir="tests",
         prefab_envs=["unit_tests"],
@@ -35,7 +35,8 @@ def config_client():
         collect_sync_interval=None,
     )
     client = Client(options)
-    return client.config_client()
+    yield client
+    client.close()
 
 
 def configure_logger(logger_name=None):
@@ -52,28 +53,9 @@ def configure_logger(logger_name=None):
 
 
 class TestLoggerFilter:
-    def test_get_severity(self, config_client):
-        filter = LoggerFilter(config_client)
-
-        assert filter._get_severity("") == Prefab.LogLevel.Value("WARN")
-        assert filter._get_severity("app") == Prefab.LogLevel.Value("ERROR")
-        assert filter._get_severity("app.controller") == Prefab.LogLevel.Value("ERROR")
-        assert filter._get_severity("app.controller.hello") == Prefab.LogLevel.Value(
-            "WARN"
-        )
-        assert filter._get_severity(
-            "app.controller.hello.index"
-        ) == Prefab.LogLevel.Value("INFO")
-        assert filter._get_severity(
-            "app.controller.hello.index.store"
-        ) == Prefab.LogLevel.Value("INFO")
-        assert filter._get_severity(
-            "app.controller.hello.edit"
-        ) == Prefab.LogLevel.Value("WARN")
-
-    def test_capture_output(self, config_client, capsys):
+    def test_capture_output(self, client, capsys):
         (logger, ch) = configure_logger()
-        filter = LoggerFilter(client=config_client)
+        filter = LoggerFilter(client=client)
         ch.addFilter(filter)
 
         log_message = "capture this message"
@@ -82,9 +64,9 @@ class TestLoggerFilter:
         captured = capsys.readouterr()
         assert log_message in captured.out
 
-    def test_no_output_for_lower_log_level(self, config_client, capsys):
+    def test_no_output_for_lower_log_level(self, client, capsys):
         (logger, ch) = configure_logger()
-        filter = LoggerFilter(client=config_client)
+        filter = LoggerFilter(client=client)
         ch.addFilter(filter)
 
         logger.debug("ok")
@@ -92,7 +74,7 @@ class TestLoggerFilter:
         captured = capsys.readouterr()
         assert captured.out == ""
 
-    def test_log_eval_rules_on_top_level_key(self, config_client, capsys):
+    def test_log_eval_rules_on_top_level_key(self, client, capsys):
         config = Prefab.Config(
             key="log-level",
             rows=[
@@ -141,11 +123,13 @@ class TestLoggerFilter:
             ],
         )
 
-        config_client.config_resolver.local_store[config.key] = {"config": config}
-        config_client.config_resolver.project_env_id = project_env_id
+        client.config_client().config_resolver.local_store[config.key] = {
+            "config": config
+        }
+        client.config_client().config_resolver.project_env_id = project_env_id
 
         (logger, ch) = configure_logger(logger_name="tests.test_logger")
-        filter = LoggerFilter(client=config_client)
+        filter = LoggerFilter(client=client)
         ch.addFilter(filter)
 
         with Client.scoped_context({}):
@@ -182,17 +166,7 @@ class TestLoggerFilter:
             logger.error("Test error")
             assert_logged(capsys, "ERROR", "Test error", "tests.test_logger")
 
-    def test_log_eval_rules_on_key_path_for_standard_logger(
-        self, config_client, capsys
-    ):
-        options = Options(
-            prefab_config_classpath_dir="tests",
-            prefab_envs=["unit_tests"],
-            prefab_datasources="LOCAL_ONLY",
-            collect_sync_interval=None,
-        )
-        client = Client(options)
-
+    def test_log_eval_rules_on_key_path_for_standard_logger(self, client, capsys):
         client.config_client().config_resolver.local_store[LoggingConfig.key] = {
             "config": LoggingConfig
         }
@@ -201,7 +175,7 @@ class TestLoggerFilter:
         logger_name = "my.module.name"
 
         (logger, ch) = configure_logger(logger_name=logger_name)
-        filter = LoggerFilter(client=client.config_client())
+        filter = LoggerFilter(client=client)
         ch.addFilter(filter)
 
         with Client.scoped_context({}):

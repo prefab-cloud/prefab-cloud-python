@@ -6,13 +6,13 @@ import prefab_pb2 as Prefab
 import yaml
 import os
 import hashlib
-import logging
+from ._internal_logging import InternalLogger
 
 VTV = Prefab.Config.ValueType.Value
 VTN = Prefab.Config.ValueType.Name
 CONFIDENTIAL_PREFIX = "*****"
 
-logger = logging.getLogger(__name__)
+logger = InternalLogger(__name__)
 
 
 class EnvVarParseException(Exception):

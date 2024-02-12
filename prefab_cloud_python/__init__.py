@@ -6,9 +6,9 @@ from .client import Client as Client
 from .logger_filter import LoggerFilter as LoggerFilter
 from importlib.metadata import version
 from .read_write_lock import ReadWriteLock
-import logging
+from ._internal_logging import InternalLogger
 
-log = logging.getLogger(__name__)
+log = InternalLogger(__name__)
 
 
 __base_client: Optional[Client] = None

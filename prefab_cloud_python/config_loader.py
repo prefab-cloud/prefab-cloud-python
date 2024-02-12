@@ -2,9 +2,9 @@ import glob
 import os
 from .yaml_parser import YamlParser
 import prefab_pb2 as Prefab
-import logging
+from ._internal_logging import InternalLogger
 
-logger = logging.getLogger(__name__)
+logger = InternalLogger(__name__)
 
 
 class ConfigLoader:

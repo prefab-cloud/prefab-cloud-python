@@ -1,3 +1,4 @@
+import logging
 import os
 from unittest.mock import patch
 
@@ -29,10 +30,10 @@ CustomExceptions = {
 }
 
 LogLevels = {
-    "debugs": Prefab.LogLevel.DEBUG,
-    "infos": Prefab.LogLevel.INFO,
-    "warns": Prefab.LogLevel.WARN,
-    "errors": Prefab.LogLevel.ERROR,
+    "debugs": logging.DEBUG,
+    "infos": logging.INFO,
+    "warns": logging.WARNING,
+    "errors": logging.ERROR,
 }
 
 OnConnectionFailure = {":raise": "RAISE", ":return": "RETURN"}

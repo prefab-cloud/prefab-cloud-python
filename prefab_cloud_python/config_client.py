@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import logging
+from ._internal_logging import InternalLogger
 import threading
 import time
 from typing import Optional
@@ -23,7 +23,7 @@ from google.protobuf.json_format import MessageToJson, Parse
 
 STALE_CACHE_WARN_HOURS = 5
 
-logger = logging.getLogger(__name__)
+logger = InternalLogger(__name__)
 
 
 class InitializationTimeoutException(Exception):

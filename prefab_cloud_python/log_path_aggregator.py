@@ -1,9 +1,10 @@
-import time
 import logging
+import time
+from ._internal_logging import InternalLogger
 from collections import defaultdict
 import prefab_pb2 as Prefab
 
-logger = logging.getLogger(__name__)
+logger = InternalLogger(__name__)
 
 
 class LogPathAggregator:
@@ -30,15 +31,35 @@ class LogPathAggregator:
         aggregate = defaultdict(lambda: Prefab.Logger())
 
         for (path, severity), count in to_ship.items():
-            if severity == Prefab.LogLevel.DEBUG or severity == "DEBUG":
+            if (
+                severity == logging.DEBUG
+                or severity == Prefab.LogLevel.DEBUG
+                or severity == "DEBUG"
+            ):
                 aggregate[path].debugs = count
-            elif severity == Prefab.LogLevel.INFO or severity == "INFO":
+            elif (
+                severity == logging.INFO
+                or severity == Prefab.LogLevel.INFO
+                or severity == "INFO"
+            ):
                 aggregate[path].infos = count
-            elif severity == Prefab.LogLevel.WARN or severity == "WARN":
+            elif (
+                severity == logging.WARNING
+                or severity == Prefab.LogLevel.WARN
+                or severity == "WARN"
+            ):
                 aggregate[path].warns = count
-            elif severity == Prefab.LogLevel.ERROR or severity == "ERROR":
+            elif (
+                severity == logging.ERROR
+                or severity == Prefab.LogLevel.ERROR
+                or severity == "ERROR"
+            ):
                 aggregate[path].errors = count
-            elif severity == Prefab.LogLevel.FATAL or severity == "FATAL":
+            elif (
+                severity == logging.CRITICAL
+                or severity == Prefab.LogLevel.FATAL
+                or severity == "FATAL"
+            ):
                 aggregate[path].fatals = count
             aggregate[path].logger_name = path
         loggers = Prefab.LoggersTelemetryEvent(

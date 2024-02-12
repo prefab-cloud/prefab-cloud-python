@@ -1,8 +1,8 @@
 from .config_parser import ConfigParser
 import yaml
-import logging
+from ._internal_logging import InternalLogger
 
-logger = logging.getLogger(__name__)
+logger = InternalLogger(__name__)
 
 
 class YamlParser:

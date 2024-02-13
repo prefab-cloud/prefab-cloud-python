@@ -1,3 +1,5 @@
+import threading
+
 from prefab_cloud_python import Options, Client
 from prefab_cloud_python.config_client import MissingDefaultException, ConfigClient
 import prefab_pb2 as Prefab
@@ -46,6 +48,7 @@ def options():
         prefab_envs=["unit_tests"],
         api_key=None,
         prefab_datasources="LOCAL_ONLY",
+        on_ready_callback=None,
     ):
         return Options(
             api_key=api_key,
@@ -55,6 +58,7 @@ def options():
             x_use_local_cache=x_use_local_cache,
             on_no_default=on_no_default,
             collect_sync_interval=None,
+            on_ready_callback=on_ready_callback,
         )
 
     return options
@@ -149,3 +153,15 @@ class TestConfigClient:
         with extended_env({"XDG_CACHE_HOME": "/tmp"}):
             config_client = config_client_factory.create_config_client(options())
             assert config_client.cache_path == "/tmp/prefab.cache.local.json"
+
+    def test_on_ready_callback(self, config_client_factory, options):
+        on_ready_called = threading.Event()
+
+        def my_on_ready_callback():
+            on_ready_called.set()
+
+        config_client_factory.create_config_client(
+            options(on_ready_callback=my_on_ready_callback)
+        )
+        on_ready_called.wait(timeout=2)
+        assert on_ready_called.is_set()

@@ -52,6 +52,7 @@ class ConfigClient:
         self.base_client = base_client
         self.options = base_client.options
         self.init_latch = CountDownLatch()
+        self.finish_init_mutex = threading.Lock()
         self.checkpoint_freq_secs = 60
         self.config_loader = ConfigLoader(base_client)
         self.config_resolver = ConfigResolver(base_client, self.config_loader)
@@ -244,9 +245,16 @@ class ConfigClient:
             self.load_configs(configs, "datafile")
 
     def finish_init(self, source):
-        self.is_initialized.set()
-        self.init_latch.count_down()
-        logger.info(f"Unlocked config via {source}")
+        with self.finish_init_mutex:
+            was_initialized = self.is_initialized.is_set()
+            self.is_initialized.set()
+            self.init_latch.count_down()
+            if not was_initialized:
+                logger.warning(f"Unlocked config via {source}")
+                if self.options.on_ready_callback:
+                    threading.Thread(
+                        target=self.options.on_ready_callback, daemon=True
+                    ).start()
 
     def set_cache_path(self):
         home_dir_cache_path = None

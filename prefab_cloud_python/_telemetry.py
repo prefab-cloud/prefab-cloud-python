@@ -15,7 +15,8 @@ from prefab_pb2 import (
     ExampleContext as ProtoExampleContext,
     ExampleContexts,
 )
-from . import Context, Options
+from .context import Context
+from .options import Options
 from .config_resolver import Evaluation
 from collections import defaultdict
 

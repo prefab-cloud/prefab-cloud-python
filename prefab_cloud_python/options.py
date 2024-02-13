@@ -1,9 +1,14 @@
+from __future__ import annotations
+
 import logging
 import os
 from enum import Enum
 from pathlib import Path
 from urllib.parse import urlparse
 from typing import Optional, Union
+
+from .context import Context
+from .constants import ContextDictType
 
 
 class MissingApiKeyException(Exception):
@@ -69,6 +74,7 @@ class Options:
         collect_evaluation_summaries: bool = True,
         context_upload_mode: ContextUploadMode = ContextUploadMode.PERIODIC_EXAMPLE,
         bootstrap_loglevel: Optional[int] = None,
+        global_context: Optional[ContextDictType | Context] = None,
     ) -> None:
         self.prefab_datasources = Options.__validate_datasource(prefab_datasources)
         self.datafile = x_datafile
@@ -103,6 +109,7 @@ class Options:
             or bootstrap_loglevel
             or logging.WARNING
         )
+        self.global_context = Context.normalize_context_arg(global_context)
 
     def is_local_only(self) -> bool:
         return self.prefab_datasources == "LOCAL_ONLY"

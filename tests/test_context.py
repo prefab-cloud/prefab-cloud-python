@@ -94,6 +94,21 @@ class TestContext:
             "name": "Ted",
         }
 
+    def test_merge_dicts(self, setup):
+        context = Context(EXAMPLE_PROPERTIES)
+        assert context.to_dict() == EXAMPLE_PROPERTIES
+        context.merge_context_dict(
+            {
+                "user": {"key": "brand-new", "other": "different"},
+                "address": {"city": "New York"},
+            }
+        )
+        assert context.to_dict() == {
+            "user": {"key": "brand-new", "other": "different"},
+            "team": {"key": "abc", "plan": "pro"},
+            "address": {"city": "New York"},
+        }
+
     def test_with_context(self, setup):
         assert not Context.get_current().contexts
         context = Context(EXAMPLE_PROPERTIES)

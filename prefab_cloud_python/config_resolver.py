@@ -123,10 +123,7 @@ class CriteriaEvaluator:
         return True
 
     def evaluate_criterion(self, criterion, properties):
-        if criterion.property_name == "NAMESPACE":
-            value_from_properties = self.base_client.options.namespace
-        else:
-            value_from_properties = properties.get(criterion.property_name)
+        value_from_properties = properties.get(criterion.property_name)
 
         if criterion.operator in [OPS.LOOKUP_KEY_IN, OPS.PROP_IS_ONE_OF]:
             return self.matches(criterion, value_from_properties, properties)

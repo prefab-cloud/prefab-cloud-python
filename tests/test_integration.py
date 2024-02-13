@@ -79,6 +79,7 @@ def options():
         api_key=os.environ["PREFAB_INTEGRATION_TEST_API_KEY"],
         prefab_api_url="https://api.staging-prefab.cloud",
         collect_sync_interval=None,
+        bootstrap_loglevel=logging.INFO,
     )
 
 

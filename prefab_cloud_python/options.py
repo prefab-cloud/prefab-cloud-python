@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import os
 from enum import Enum
-from pathlib import Path
 from urllib.parse import urlparse
 from typing import Optional, Union
 
@@ -54,10 +53,6 @@ class Options:
         api_key: Optional[str] = None,
         prefab_api_url: Optional[str] = None,
         prefab_datasources: Optional[str] = None,
-        logdev: str = "STDIO",
-        log_prefix: Optional[str] = None,
-        log_boundary: Optional[str] = None,
-        namespace: str = "",
         connection_timeout_seconds: int = 10,
         prefab_config_override_dir: Optional[str] = os.environ.get("HOME"),
         prefab_config_classpath_dir: str = ".",
@@ -84,10 +79,6 @@ class Options:
             or os.environ.get("PREFAB_API_URL")
             or "https://api.prefab.cloud"
         )
-        self.logdev = logdev
-        self.log_prefix = log_prefix
-        self.log_boundary = str(Path(log_boundary).resolve()) if log_boundary else None
-        self.namespace = namespace
         self.connection_timeout_seconds = connection_timeout_seconds
         self.prefab_config_override_dir = prefab_config_override_dir
         self.prefab_config_classpath_dir = prefab_config_classpath_dir

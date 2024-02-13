@@ -44,8 +44,6 @@ class Client:
         self.telemetry_manager = TelemetryManager(self, options)
         if not options.is_local_only():
             self.telemetry_manager.start_periodic_sync()
-
-        self.namespace = options.namespace
         self.api_url = options.prefab_api_url
         # Define the retry strategy
         retry_strategy = Retry(

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [0.10.0] - 2024-02-13
 
 - Adds full telemetry support - will (configurably) send data back to Prefab about evaluations, logging counts, and context usage
 - Reliability changes, increased test coverage
@@ -9,7 +9,12 @@
 - Added types on client [#28]
 - Changed default collect_sync_interval from None to 30 seconds [#54]
 - Added package methods to configure, manage and reset a singleton instance of the client [#53]
+- logging overhaul - remove logging via client in favor of a logging filter [#55], [#60]
 - Removed GRPC [#56]
+- Fix issue where client crashed in absence of HOME env var [#61]
+- Added global_context option [#63]
+- Removed namespace, other disused options [#64]
+- added on_ready_callback [#65]
 
 ## [0.9.0] - 2024-01-13
 

@@ -198,7 +198,7 @@ class ConfigClient:
             self.config_loader.set(config, source)
         if self.config_loader.highwater_mark > starting_highwater_mark:
             logger.info(
-                f"Found new checkpoint with highwater id {self.config_loader.highwater_mark} from {source} in project {project_id} environment: {project_env_id} and namespace {self.base_client.options.namespace}",
+                f"Found new checkpoint with highwater id {self.config_loader.highwater_mark} from {source} in project {project_id} environment: {project_env_id}",
             )
         else:
             logger.debug(

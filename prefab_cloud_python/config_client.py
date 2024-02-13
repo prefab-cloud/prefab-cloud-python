@@ -249,11 +249,12 @@ class ConfigClient:
             was_initialized = self.is_initialized.is_set()
             self.is_initialized.set()
             self.init_latch.count_down()
-            logger.warning(f"Unlocked config via {source}")
-            if not was_initialized and self.options.on_ready_callback:
-                threading.Thread(
-                    target=self.options.on_ready_callback, daemon=True
-                ).start()
+            if not was_initialized:
+                logger.warning(f"Unlocked config via {source}")
+                if self.options.on_ready_callback:
+                    threading.Thread(
+                        target=self.options.on_ready_callback, daemon=True
+                    ).start()
 
     def set_cache_path(self):
         home_dir_cache_path = None

@@ -4,7 +4,7 @@ import logging
 import os
 from enum import Enum
 from urllib.parse import urlparse
-from typing import Optional, Union
+from typing import Optional, Union, Callable
 
 from .context import Context
 from .constants import ContextDictType
@@ -70,6 +70,7 @@ class Options:
         context_upload_mode: ContextUploadMode = ContextUploadMode.PERIODIC_EXAMPLE,
         bootstrap_loglevel: Optional[int] = None,
         global_context: Optional[ContextDictType | Context] = None,
+        on_ready_callback: Optional[Callable[[], None]] = None,
     ) -> None:
         self.prefab_datasources = Options.__validate_datasource(prefab_datasources)
         self.datafile = x_datafile
@@ -101,6 +102,8 @@ class Options:
             or logging.WARNING
         )
         self.global_context = Context.normalize_context_arg(global_context)
+        self.foobar = "james"
+        self.on_ready_callback = on_ready_callback
 
     def is_local_only(self) -> bool:
         return self.prefab_datasources == "LOCAL_ONLY"

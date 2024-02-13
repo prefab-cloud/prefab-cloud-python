@@ -10,6 +10,7 @@ Python client for prefab.cloud, providing Config, FeatureFlags as a Service
 
 ```python
 from prefab_cloud_python import Client, Options
+import prefab_cloud_python
 
 options = Options(
     prefab_api_key="your-prefab-api-key"
@@ -24,9 +25,10 @@ context = {
   }
 }
 
-client = Client(options)
 
-result = client.enabled("my-first-feature-flag", context=context)
+prefab_cloud_python.set_options(options)
+
+result = prefab_cloud_python.get_client().enabled("my-first-feature-flag", context=context)
 
 print("my-first-feature-flag is:", result)
 ```

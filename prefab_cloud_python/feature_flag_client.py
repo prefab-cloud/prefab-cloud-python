@@ -13,12 +13,12 @@ class FeatureFlagClient:
         self.base_client = base_client
 
     def feature_is_on(
-        self, feature_name, context: Optional[dict | Context] = Context.get_current()
+        self, feature_name, context: Optional[dict | Context] = None
     ) -> bool:
         return self.feature_is_on_for(feature_name, context)
 
     def feature_is_on_for(
-        self, feature_name, context: Optional[dict | Context] = Context.get_current()
+        self, feature_name, context: Optional[dict | Context] = None
     ) -> bool:
         variant = self.base_client.config_client().get(
             feature_name, False, context=context
@@ -29,7 +29,7 @@ class FeatureFlagClient:
         self,
         feature_name,
         default=NoDefaultProvided,
-        context: Optional[dict | Context] = Context.get_current(),
+        context: Optional[dict | Context] = None,
     ) -> ConfigValueType:
         return self._get(feature_name, default=default, context=context)
 
@@ -37,7 +37,7 @@ class FeatureFlagClient:
         self,
         feature_name,
         default=NoDefaultProvided,
-        context: Optional[dict | Context] = Context.get_current(),
+        context: Optional[dict | Context] = None,
     ) -> ConfigValueType:
         return self.base_client.config_client().get(
             feature_name, default=default, context=context

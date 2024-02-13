@@ -23,7 +23,7 @@ import uuid
 import requests
 from urllib.parse import urljoin
 from importlib.metadata import version
-from .constants import NoDefaultProvided, ConfigValueType
+from .constants import NoDefaultProvided, ConfigValueType, ContextDictType
 from ._internal_constants import LOG_LEVEL_BASE_KEY
 
 PostBodyType = Union[Prefab.Loggers, Prefab.ContextShapes, Prefab.TelemetryEvents]
@@ -82,22 +82,18 @@ class Client:
         self,
         key: str,
         default: ConfigValueType = NoDefaultProvided,
-        context: Optional[dict | Context] = None,
+        context: Optional[ContextDictType | Context] = None,
     ) -> ConfigValueType:
         if self.is_ff(key):
-            return self.feature_flag_client().get(
-                key, default=default, context=self.resolve_context_argument(context)
-            )
+            return self.feature_flag_client().get(key, default=default, context=context)
         else:
-            return self.config_client().get(
-                key, default=default, context=self.resolve_context_argument(context)
-            )
+            return self.config_client().get(key, default=default, context=context)
 
     def enabled(
-        self, feature_name: str, context: Optional[dict | Context] = None
+        self, feature_name: str, context: Optional[ContextDictType | Context] = None
     ) -> bool:
         return self.feature_flag_client().feature_is_on_for(
-            feature_name, context=self.resolve_context_argument(context)
+            feature_name, context=context
         )
 
     def is_ff(self, key: str) -> bool:
@@ -130,15 +126,6 @@ class Client:
             return default
         finally:
             ReentrancyCheck.clear()
-
-    def resolve_context_argument(
-        self, context: Optional[dict | Context] = None
-    ) -> Context:
-        if isinstance(context, Context):
-            return context
-        if isinstance(context, dict):
-            return Context(context=context)
-        return Context.get_current()
 
     def context(self) -> Context:
         return Context.get_current()

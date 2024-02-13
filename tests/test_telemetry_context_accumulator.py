@@ -1,6 +1,6 @@
 import prefab_pb2 as Prefab
 
-from prefab_cloud_python import Context
+from prefab_cloud_python.context import Context
 from prefab_cloud_python._telemetry import ContextExampleAccumulator
 
 

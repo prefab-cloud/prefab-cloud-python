@@ -19,9 +19,10 @@ class ConfigResolver:
         self.config_loader = config_loader
         self.project_env_id = 0
         self.default_context = {}
+        self.base_context = base_client.options.global_context.to_dict()
         self.make_local()
 
-    def get(self, key, context=Context.get_current()) -> "Evaluation | None":
+    def get(self, key, context=None) -> "Evaluation | None":
         with self.lock.read_locked():
             raw_config = self.raw(key)
 
@@ -44,7 +45,7 @@ class ConfigResolver:
             return via_key["config"]
         return None
 
-    def evaluate(self, config, context=Context.get_current()) -> "Evaluation | None":
+    def evaluate(self, config, context=None) -> "Evaluation | None":
         return CriteriaEvaluator(
             config,
             project_env_id=self.project_env_id,
@@ -53,10 +54,16 @@ class ConfigResolver:
         ).evaluate(self.evaluation_context(context))
 
     def evaluation_context(self, context):
-        # TODO handle dict
-        if not isinstance(context, Context):
-            context = Context.merge_with_current(context)
-        return context.merge_default(self.default_context)
+        merged_context = Context()
+        merged_context.merge_context_dict(self.base_context)
+        merged_context.merge_context_dict(self.default_context)
+        if Context.get_current():
+            merged_context.merge_context_dict(Context.get_current().to_dict())
+        if context:
+            merged_context.merge_context_dict(
+                Context.normalize_context_arg(context).to_dict()
+            )
+        return merged_context
 
     def update(self):
         self.make_local()
@@ -71,7 +78,7 @@ class ConfigResolver:
 
     @default_context.setter
     def default_context(self, value):
-        self._default_context = value
+        self._default_context = Context.normalize_context_arg(value).to_dict()
 
 
 OPS = Prefab.Criterion.CriterionOperator

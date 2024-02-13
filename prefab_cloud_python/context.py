@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from threading import current_thread
 
 import prefab_cloud_python
@@ -15,7 +17,7 @@ class InvalidContextFormatException(Exception):
 
 
 class Context:
-    def __init__(self, context={}):
+    def __init__(self, context={}) -> None:
         self.contexts = {}
 
         if isinstance(context, NamedContext):
@@ -57,13 +59,11 @@ class Context:
             return self.contexts[name].get(key)
 
     def merge(self, key, value):
-        original = self.contexts.get(key) or NamedContext(key, data={})
-        original.merge(value)
-        self.contexts[str(key)] = original
+        self.contexts[str(key)] = NamedContext(key, data=value)
 
-    def merge_default(self, defaults):
-        for name in defaults.keys():
-            self.merge(name, defaults[name])
+    def merge_context_dict(self, context):
+        for name, nested_context in context.items():
+            self.merge(name, nested_context)
 
         return self
 
@@ -100,6 +100,16 @@ class Context:
     @staticmethod
     def merge_with_current(new_context_attributes):
         return Context(Context.get_current().to_dict() | new_context_attributes)
+
+    @staticmethod
+    def normalize_context_arg(context):
+        if context is None:
+            return Context()
+        if isinstance(context, dict):
+            return Context(context)
+        if isinstance(context, Context):
+            return context
+        raise ValueError(f"unexpected context type - {str(type(context))}")
 
     def to_proto(self) -> ProtoContextSet:
         return ProtoContextSet(

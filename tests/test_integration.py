@@ -5,7 +5,8 @@ from unittest.mock import patch
 import pytest
 import yaml
 
-from prefab_cloud_python import Options, Client, Context
+from prefab_cloud_python import Options, Client
+from prefab_cloud_python.context import Context
 import prefab_pb2 as Prefab
 from prefab_cloud_python.config_client import (
     InitializationTimeoutException,

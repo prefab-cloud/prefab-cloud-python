@@ -71,7 +71,7 @@ class ConfigClient:
         self,
         key,
         default=NoDefaultProvided,
-        context: Optional[dict | Context] = Context.get_current(),
+        context: Optional[dict | Context] = None,
     ):
         evaluation_result = self.__get(key, None, {}, context=context)
         if evaluation_result is not None:
@@ -85,7 +85,7 @@ class ConfigClient:
         key,
         lookup_key,
         properties,
-        context: Optional[dict | Context] = Context.get_current(),
+        context: Optional[dict | Context] = None,
     ) -> None | Evaluation:
         ok_to_proceed = self.init_latch.wait(
             timeout=self.options.connection_timeout_seconds
@@ -164,7 +164,7 @@ class ConfigClient:
 
     def load_checkpoint_from_api_cdn(self):
         url = "%s/api/v1/configs/0" % self.options.url_for_api_cdn
-        logger.warning(f"Loading config from {url}")
+        logger.info(f"Loading config from {url}")
         response = self.base_client.session.get(
             url, auth=("authuser", self.options.api_key)
         )

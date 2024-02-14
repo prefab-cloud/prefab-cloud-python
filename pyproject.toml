@@ -8,7 +8,7 @@ maintainers = ["Michael Berkowitz <michael.berkowitz@gmail.com>", "James Kebinge
 readme = "README.md"
 homepage = "https://www.prefab.cloud"
 repository = "https://github.com/prefab-cloud/prefab-cloud-python"
-documentation = "https://docs.prefab.cloud/docs/python-sdk/python"
+documentation = "https://docs.prefab.cloud/docs/sdks/python"
 packages = [{include = "prefab_cloud_python"}, {include = "prefab_pb2.py"}]
 
 [tool.poetry.dependencies]

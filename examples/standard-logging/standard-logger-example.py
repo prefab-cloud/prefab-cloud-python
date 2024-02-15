@@ -4,6 +4,7 @@ import time
 import prefab_cloud_python
 from prefab_cloud_python import Options, LoggerFilter
 
+
 ###
 # This example shows logger configuration and printing a config value in a loop
 # to run set PREFAB_API_KEY
@@ -23,12 +24,15 @@ def main():
         logging.warning("Logger configured")
 
     logger = logging.getLogger("prefab.python.test.logger")
-    options = Options(bootstrap_loglevel=logging.DEBUG, on_ready_callback=configure_logger)
+    options = Options(
+        bootstrap_loglevel=logging.DEBUG, on_ready_callback=configure_logger
+    )
     prefab_cloud_python.set_options(options)
     while True:
         time.sleep(1)
         logger.warning(
-            f"value of `example-config` is {prefab_cloud_python.get_client().get('example-config', default='default value')}")
+            f"value of `example-config` is {prefab_cloud_python.get_client().get('example-config', default='default value')}"
+        )
         logger.error("ERROR message")
         logger.warning("WARN message")
         logger.info("INFO message")

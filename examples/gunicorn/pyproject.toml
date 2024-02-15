@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "gunicorntest"
+version = "0.1.0"
+description = ""
+authors = ["James Kebinger <james.kebinger@prefab.cloud>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+gunicorn = "^21.2.0"
+prefab-cloud-python = {path = "../..", develop = true}
+cachetools = "5.3.2"
+protobuf = "^4.25.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

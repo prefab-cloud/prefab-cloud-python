@@ -61,6 +61,10 @@ To run only one specific test file
 poetry run pytest tests/name_of_test_file.py
 ```
 
+### Examples
+
+There are examples in [examples](examples/)
+
 ### Releasing
 
 1. Run pre-commit hooks to check and fix formatting, other rule enforcement.

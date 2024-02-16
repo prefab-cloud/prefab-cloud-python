@@ -74,6 +74,18 @@ class TestLoggerFilter:
         captured = capsys.readouterr()
         assert captured.out == ""
 
+    def test_structlog_level_lookup(self, client):
+        filter = LoggerFilter(client=client)
+        assert (
+            filter._derive_structlog_numeric_level("warn", {"level_number": 30}) == 30
+        )
+        assert (
+            filter._derive_structlog_numeric_level("warn", {"level": "warning"}) == 30
+        )
+        assert filter._derive_structlog_numeric_level("warning", {}) == 30
+        assert filter._derive_structlog_numeric_level("warn", {}) == 30
+        assert filter._derive_structlog_numeric_level("debug", {}) == 10
+
     def test_log_eval_rules_on_top_level_key(self, client, capsys):
         config = Prefab.Config(
             key="log-level",

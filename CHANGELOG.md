@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.10.1] - 2024-02-16
+
+- Adds log level name to number conversion for structlog [#69]
+
 ## [0.10.0] - 2024-02-13
 
 - Adds full telemetry support - will (configurably) send data back to Prefab about evaluations, logging counts, and context usage

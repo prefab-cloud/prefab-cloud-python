@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Iterator
 
 from structlog import DropEvent
 
@@ -7,7 +7,7 @@ import prefab_cloud_python
 from prefab_cloud_python import Client
 
 
-def iterate_dotted_string(s: str):
+def iterate_dotted_string(s: str) -> Iterator[str]:
     parts = s.split(".")
     for i in range(len(parts), 0, -1):
         yield ".".join(parts[:i])
@@ -17,14 +17,14 @@ class BaseLoggerFilterProcessor:
     def __init__(self, client: Client = None) -> None:
         self.client = client
 
-    def _get_client(self) -> "prefab_cloud_python.Client":
+    def _get_client(self) -> Client:
         if self.client:
             return self.client
         return prefab_cloud_python.get_client()
 
     def _should_log_message(
         self, client: Client, logger_name: str, called_method_level: int
-    ):
+    ) -> bool:
         closest_log_level = client.get_loglevel(logger_name)
         return called_method_level >= closest_log_level
 
@@ -60,7 +60,7 @@ class LoggerProcessor(BaseLoggerFilterProcessor):
         """Override this as needed to derive a different logger name"""
         return getattr(logger, "name", None) or event_dict.get("logger")
 
-    def processor(self, logger, method_name: str, event_dict):
+    def processor(self, logger, method_name: str, event_dict: dict) -> dict:
         """this method is used with structlogger.
         It depends on structlog.stdlib.add_log_level being in the structlog pipeline first
         """

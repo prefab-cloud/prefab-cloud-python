@@ -8,15 +8,6 @@ import prefab_pb2 as Prefab
 LLV = Prefab.LogLevel.Value
 
 
-python_level_remapping = {
-    LLV("NOT_SET_LOG_LEVEL"): LLV("DEBUG"),
-    LLV("TRACE"): LLV("DEBUG"),
-    LLV("DEBUG"): LLV("DEBUG"),
-    LLV("INFO"): LLV("INFO"),
-    LLV("WARN"): LLV("WARN"),
-    LLV("ERROR"): LLV("ERROR"),
-    LLV("FATAL"): LLV("FATAL"),
-}
 python_log_level_name_to_prefab_log_levels = {
     "debug": LLV("DEBUG"),
     "info": LLV("INFO"),
@@ -27,6 +18,7 @@ python_log_level_name_to_prefab_log_levels = {
 }
 
 python_to_prefab_log_levels = {
+    logging.NOTSET: LLV("DEBUG"),
     logging.DEBUG: LLV("DEBUG"),
     logging.INFO: LLV("INFO"),
     logging.WARN: LLV("WARN"),
@@ -35,6 +27,7 @@ python_to_prefab_log_levels = {
 }
 
 prefab_to_python_log_levels = {
+    LLV("TRACE"): logging.DEBUG,
     LLV("DEBUG"): logging.DEBUG,
     LLV("INFO"): logging.INFO,
     LLV("WARN"): logging.WARN,

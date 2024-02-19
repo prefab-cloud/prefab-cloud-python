@@ -5,6 +5,8 @@ import prefab_pb2 as Prefab
 import re
 import sys
 
+from prefab_cloud_python.logging import LoggerProcessor
+
 project_env_id = 1
 test_env_id = 2
 default_value = "FATAL"
@@ -73,18 +75,6 @@ class TestLoggerFilter:
 
         captured = capsys.readouterr()
         assert captured.out == ""
-
-    def test_structlog_level_lookup(self, client):
-        filter = LoggerFilter(client=client)
-        assert (
-            filter._derive_structlog_numeric_level("warn", {"level_number": 30}) == 30
-        )
-        assert (
-            filter._derive_structlog_numeric_level("warn", {"level": "warning"}) == 30
-        )
-        assert filter._derive_structlog_numeric_level("warning", {}) == 30
-        assert filter._derive_structlog_numeric_level("warn", {}) == 30
-        assert filter._derive_structlog_numeric_level("debug", {}) == 10
 
     def test_log_eval_rules_on_top_level_key(self, client, capsys):
         config = Prefab.Config(
@@ -302,3 +292,22 @@ LoggingConfig = config = Prefab.Config(
         ),
     ],
 )
+
+
+class TestLoggerProcessor:
+    def test_structlog_level_lookup(self, client):
+        assert (
+            LoggerProcessor._derive_structlog_numeric_level(
+                "warn", {"level_number": 30}
+            )
+            == 30
+        )
+        assert (
+            LoggerProcessor._derive_structlog_numeric_level(
+                "warn", {"level": "warning"}
+            )
+            == 30
+        )
+        assert LoggerProcessor._derive_structlog_numeric_level("warning", {}) == 30
+        assert LoggerProcessor._derive_structlog_numeric_level("warn", {}) == 30
+        assert LoggerProcessor._derive_structlog_numeric_level("debug", {}) == 10

@@ -1,13 +1,13 @@
 from typing import Optional
 
+from . import _internal_logging
 from .options import Options as Options
 from .client import Client as Client
-from .logger_filter import LoggerFilter as LoggerFilter
+from .logging import LoggerFilter, LoggerProcessor
 from importlib.metadata import version
 from .read_write_lock import ReadWriteLock
-from ._internal_logging import InternalLogger
 
-log = InternalLogger(__name__)
+log = _internal_logging.InternalLogger(__name__)
 
 
 __base_client: Optional[Client] = None

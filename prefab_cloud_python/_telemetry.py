@@ -303,7 +303,7 @@ class TelemetryEventProcessor(object):
                 super().run()
             except Exception as e:
                 # ignore exception so thread keeps running
-                logger.warning(f"Exception in thread {self.name}: {e}")
+                logger.exception(f"Exception in thread {self.name}: {e}")
 
     def __init__(
         self,

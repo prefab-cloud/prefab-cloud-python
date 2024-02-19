@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Iterator
+from typing import Optional, Iterator, Any
 
 from structlog import DropEvent
 
@@ -32,7 +32,7 @@ class BaseLoggerFilterProcessor:
 class LoggerFilter(BaseLoggerFilterProcessor):
     """Filter for use with standard logging. Will get its client reference from prefab_python_client.get_client() unless overridden"""
 
-    def __init__(self, client=None) -> None:
+    def __init__(self, client: Client = None) -> None:
         super().__init__(client)
 
     def logger_name(self, record: logging.LogRecord) -> str:
@@ -56,11 +56,11 @@ class LoggerProcessor(BaseLoggerFilterProcessor):
     def __init__(self, client: Client = None) -> None:
         super().__init__(client)
 
-    def logger_name(self, logger, event_dict: dict) -> str:
+    def logger_name(self, logger: Any, event_dict: dict) -> Optional[str]:
         """Override this as needed to derive a different logger name"""
         return getattr(logger, "name", None) or event_dict.get("logger")
 
-    def processor(self, logger, method_name: str, event_dict: dict) -> dict:
+    def processor(self, logger: Any, method_name: str, event_dict: dict) -> dict:
         """this method is used with structlogger.
         It depends on structlog.stdlib.add_log_level being in the structlog pipeline first
         """
@@ -80,7 +80,9 @@ class LoggerProcessor(BaseLoggerFilterProcessor):
         return event_dict
 
     @staticmethod
-    def _derive_structlog_numeric_level(method_name, event_dict) -> Optional[int]:
+    def _derive_structlog_numeric_level(
+        method_name: str, event_dict: dict
+    ) -> Optional[int]:
         numeric_level_from_dict = event_dict.get(
             "level_number"
         )  # added by level_to_number processor, if active

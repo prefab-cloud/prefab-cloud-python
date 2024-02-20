@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Iterator, Any
+from typing import Optional, Any, Generator
 
 from structlog import DropEvent
 
@@ -7,7 +7,7 @@ import prefab_cloud_python
 from prefab_cloud_python import Client
 
 
-def iterate_dotted_string(s: str) -> Iterator[str]:
+def iterate_dotted_string(s: str) -> Generator[str, None, None]:
     parts = s.split(".")
     for i in range(len(parts), 0, -1):
         yield ".".join(parts[:i])
@@ -32,7 +32,7 @@ class BaseLoggerFilterProcessor:
 class LoggerFilter(BaseLoggerFilterProcessor):
     """Filter for use with standard logging. Will get its client reference from prefab_python_client.get_client() unless overridden"""
 
-    def __init__(self, client: Client = None) -> None:
+    def __init__(self, client: Optional[Client] = None) -> None:
         super().__init__(client)
 
     def logger_name(self, record: logging.LogRecord) -> str:
@@ -53,7 +53,7 @@ class LoggerFilter(BaseLoggerFilterProcessor):
 class LoggerProcessor(BaseLoggerFilterProcessor):
     """this class is for use with structlogger"""
 
-    def __init__(self, client: Client = None) -> None:
+    def __init__(self, client: Optional[Client] = None) -> None:
         super().__init__(client)
 
     def logger_name(self, logger: Any, event_dict: dict) -> Optional[str]:

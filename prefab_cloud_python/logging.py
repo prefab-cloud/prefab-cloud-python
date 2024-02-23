@@ -29,7 +29,7 @@ class BaseLoggerFilterProcessor:
         return called_method_level >= closest_log_level
 
 
-class LoggerFilter(BaseLoggerFilterProcessor):
+class LoggerFilter(BaseLoggerFilterProcessor, logging.Filter):
     """Filter for use with standard logging. Will get its client reference from prefab_python_client.get_client() unless overridden"""
 
     def __init__(self, client: Optional[Client] = None) -> None:

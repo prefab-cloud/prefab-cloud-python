@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Split structlogger-supporting LogProcessor out, make logger_name derivation overridable [#72]
+- Revise logging in telemetry thread to print backtrace [#71]
+
 ## [0.10.1] - 2024-02-16
 
 - Adds log level name to number conversion for structlog [#69]

@@ -39,9 +39,31 @@ class TestCriteriaEvaluator:
         evaluator = CriteriaEvaluator(
             config, project_env_id, resolver=None, base_client=None
         )
-        assert (
-            evaluator.evaluate(context({})).raw_config_value().string == desired_value
+        evaluation = evaluator.evaluate(context({}))
+        assert evaluation.raw_config_value().string == desired_value
+        assert evaluation.config_row_index == 0
+
+    def test_no_env_row_index_is_zero_when_no_project_row_present(self):
+        config = Prefab.Config(
+            key=key,
+            rows=[
+                Prefab.ConfigRow(
+                    values=[
+                        Prefab.ConditionalValue(
+                            criteria=[Prefab.Criterion(operator="ALWAYS_TRUE")],
+                            value=Prefab.ConfigValue(string=desired_value),
+                        )
+                    ],
+                ),
+            ],
         )
+
+        evaluator = CriteriaEvaluator(
+            config, project_env_id, resolver=None, base_client=None
+        )
+        evaluation = evaluator.evaluate(context({}))
+        assert evaluation.raw_config_value().string == desired_value
+        assert evaluation.config_row_index == 0
 
     def test_nested_props_in(self):
         config = Prefab.Config(

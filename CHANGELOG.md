@@ -4,6 +4,7 @@
 
 - Split structlogger-supporting LogProcessor out, make logger_name derivation overridable [#72]
 - Revise logging in telemetry thread to print backtrace [#71]
+- Restore logging.Filter superclass on LoggerFilter [#74]
 
 ## [0.10.1] - 2024-02-16
 

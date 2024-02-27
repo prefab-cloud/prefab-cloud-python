@@ -5,6 +5,7 @@
 - Split structlogger-supporting LogProcessor out, make logger_name derivation overridable [#72]
 - Revise logging in telemetry thread to print backtrace [#71]
 - Restore logging.Filter superclass on LoggerFilter [#74]
+- fix row-index handling when there's only a no-env-id (default) row [#75]
 
 ## [0.10.1] - 2024-02-16
 

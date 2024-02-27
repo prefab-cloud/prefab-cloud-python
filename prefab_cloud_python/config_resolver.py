@@ -92,9 +92,9 @@ class CriteriaEvaluator:
         self.base_client = base_client
 
     def evaluate(self, props):
-        for value_index, conditional_value in enumerate(
-            self.matching_environment_row_values()
-        ):
+        matching_env_row_values = self.matching_environment_row_values()
+        default_row_index = 1 if matching_env_row_values else 0
+        for value_index, conditional_value in enumerate(matching_env_row_values):
             if self.all_criteria_match(conditional_value, props):
                 return Evaluation(
                     self.config,
@@ -110,7 +110,7 @@ class CriteriaEvaluator:
                     self.config,
                     conditional_value.value,
                     value_index,
-                    1,
+                    default_row_index,
                     props,
                     self.resolver,
                 )

@@ -221,15 +221,17 @@ def run_evaluation_summary_telemetry_test(test, case, client, spy_post_method):
     expected_summary_protos = build_evaluation_summary_expected_data(
         case["expected_data"]
     )
-    assert clear_config_ids(actual_summary_protos) == clear_config_ids(
-        expected_summary_protos
-    )
+    assert clear_config_ids_and_sort(
+        actual_summary_protos
+    ) == clear_config_ids_and_sort(expected_summary_protos)
 
 
-def clear_config_ids(summary_list):
+def clear_config_ids_and_sort(summary_list):
     for summary in summary_list:
         for counter in summary.counters:
             counter.config_id = 0
+
+    return sorted(summary_list, key=lambda current_summary: current_summary.key)
 
 
 def build_loggers_expected_data(expected_data):
@@ -252,7 +254,9 @@ def build_evaluation_summary_expected_data(expected_data):
                 conditional_value_index=expected_datum["summary"][
                     "conditional_value_index"
                 ],
-                weighted_value_index=expected_datum.get("weighted_value_index"),
+                weighted_value_index=expected_datum["summary"].get(
+                    "weighted_value_index"
+                ),
                 selected_value=ConfigValueWrapper.wrap(expected_datum["value"]),
             )
         ]

@@ -5,14 +5,17 @@ from .options import Options as Options
 from .client import Client as Client
 from .logging import LoggerFilter, LoggerProcessor
 from importlib.metadata import version
-from .read_write_lock import ReadWriteLock
+from .read_write_lock import ReadWriteLock as _ReadWriteLock
+from .context import Context, NamedContext
+from .feature_flag_client import FeatureFlagClient
+from .config_client import ConfigClient
 
 log = _internal_logging.InternalLogger(__name__)
 
 
 __base_client: Optional[Client] = None
 __options: Optional[Options] = None
-__lock = ReadWriteLock()
+__lock = _ReadWriteLock()
 
 
 def set_options(options: Options) -> None:

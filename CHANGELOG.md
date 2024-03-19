@@ -1,11 +1,16 @@
 # Changelog
 
-## Unreleased
+## [0.10.3] - 2024-03-19
+
+- Make additional classes visible [#80]
+
+## [0.10.2] - 2024-03-15
 
 - Split structlogger-supporting LogProcessor out, make logger_name derivation overridable [#72]
 - Revise logging in telemetry thread to print backtrace [#71]
 - Restore logging.Filter superclass on LoggerFilter [#74]
 - fix row-index handling when there's only a no-env-id (default) row [#75]
+- fix for integration test comparing outgoing telemetry data [#78]
 
 ## [0.10.1] - 2024-02-16
 

@@ -1,6 +1,5 @@
 # Changelog
 
-
 ## [0.10.3] - 2024-03-19
 
 - Make additional classes visible [#80]

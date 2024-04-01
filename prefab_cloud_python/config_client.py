@@ -16,7 +16,7 @@ from .config_resolver import ConfigResolver
 from .config_value_unwrapper import ConfigValueUnwrapper
 from .context import Context
 from .config_resolver import Evaluation
-from .constants import NoDefaultProvided
+from .constants import NoDefaultProvided, ConfigValueType
 
 from google.protobuf.json_format import MessageToJson, Parse
 
@@ -73,7 +73,7 @@ class ConfigClient:
         key,
         default=NoDefaultProvided,
         context: Optional[dict | Context] = None,
-    ):
+    ) -> ConfigValueType:
         evaluation_result = self.__get(key, None, {}, context=context)
         if evaluation_result is not None:
             self.base_client.telemetry_manager.record_evaluation(evaluation_result)

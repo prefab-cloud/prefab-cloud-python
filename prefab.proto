@@ -4,6 +4,7 @@ package prefab;
 
 option java_package = "cloud.prefab.domain";
 option java_outer_classname = "Prefab";
+option go_package = "github.com/prefab-cloud/prefab-cloud-go/proto";
 
 message ConfigServicePointer {
   int64 project_id = 1;
@@ -24,9 +25,14 @@ message ConfigValue {
     StringList string_list = 10;
     IntRange int_range = 11;
     Provided provided = 12;
+    IsoDuration duration = 15;
   }
   optional bool confidential = 13;   // don't log or telemetry this value
   optional string decrypt_with = 14; // key name to decrypt with
+}
+
+message IsoDuration {
+  string definition = 1; // value is eg P1h30s
 }
 
 message Provided {
@@ -104,6 +110,7 @@ message Config {
     LOG_LEVEL = 9;
     STRING_LIST = 10;
     INT_RANGE = 11;
+    DURATION = 12;
   }
 }
 
@@ -254,8 +261,14 @@ message ClientConfigValue {
     LogLevel log_level = 5;
     StringList string_list = 7;
     IntRange int_range = 8;
+    ClientDuration duration = 9;
   }
   optional ConfigEvaluationMetaData config_evaluation_metadata = 6;
+}
+
+message ClientDuration {
+  int64 seconds = 1;  // the actual time is the sum of these, so 1.5 seconds would be seconds = 1, nanos = 500_000_000
+  int32 nanos = 2;
 }
 
 message ConfigEvaluations {

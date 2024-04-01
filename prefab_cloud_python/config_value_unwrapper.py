@@ -6,6 +6,7 @@ import prefab_pb2 as Prefab
 import yaml
 import os
 import hashlib
+import isodate
 from ._internal_logging import InternalLogger
 
 VTV = Prefab.Config.ValueType.Value
@@ -124,6 +125,8 @@ class ConfigValueUnwrapper:
             raw = getattr(self.value, type)
         elif type == "string_list":
             raw = self.value.string_list.values
+        elif type == "duration":
+            raw = isodate.parse_duration(self.value.duration.definition)
         else:
             raise UnknownConfigValueTypeException(type)
 

@@ -70,7 +70,7 @@ def build_options_with_overrides(options, overrides):
     return options
 
 
-TEST_PATH = "./tests/prefab-cloud-integration-test-data/tests/0.2.4.3/"
+TEST_PATH = "./tests/prefab-cloud-integration-test-data/tests/current/"
 
 
 @pytest.fixture
@@ -118,6 +118,7 @@ def run_test(
     case = test["case"]
     input = case["input"]
     expected = case["expected"]
+    type = case.get("type")
     options = build_options_with_overrides(options, case.get("client_overrides"))
     with Client(options) as client:
         if global_context:
@@ -135,9 +136,11 @@ def run_test(
                 ):
                     client.get(key, context=context)
             else:
-                assert client.get(
-                    key, default=default, context=context
-                ) == expected_modifier(expected["value"])
+                actual_value = client.get(key, default=default, context=context)
+                if type == "DURATION":
+                    assert actual_value.total_seconds() * 1000 == expected["millis"]
+                else:
+                    assert actual_value == expected_modifier(expected["value"])
         elif function == "enabled":
             assert client.enabled(key, context=context) == expected_modifier(
                 expected["value"]

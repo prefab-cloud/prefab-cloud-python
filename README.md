@@ -74,5 +74,5 @@ There are examples in [examples](examples/)
    2. Update `CHANGELOG.md`
 3. Merge the branch
 4. `git tag <version> && git push --tags`
-5. `poetry release --build`
+5. `poetry publish --build`
    1. To do this you will need an [pypi.org](https://pypi.org) account, and to be added to this project (ask Michael for an invitation)

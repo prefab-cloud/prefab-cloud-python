@@ -1,5 +1,15 @@
 # Changelog
 
+
+## [0.10.5] - 2024-06-03
+
+- Return stringlist contents as a python list [#85]
+- idna update per dependabot [#86]
+
+## [0.10.4] - 2024-04-08
+
+- adds duration support [#82]
+
 ## [0.10.3] - 2024-03-19
 
 - Make additional classes visible [#80]

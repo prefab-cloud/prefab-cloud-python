@@ -1,6 +1,5 @@
 # Changelog
 
-
 ## [0.10.5] - 2024-06-03
 
 - Return stringlist contents as a python list [#85]

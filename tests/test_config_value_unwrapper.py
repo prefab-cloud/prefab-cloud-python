@@ -123,16 +123,21 @@ class TestConfigValueUnwrapper:
         config_value = Prefab.ConfigValue(
             string_list=Prefab.StringList(values=string_list)
         )
-        assert (
-            TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT)
-            == string_list
-        )
-        assert (
-            TestConfigValueUnwrapper.reportable_value(
-                config_value, CONFIG, EMPTY_CONTEXT
-            )
-            == string_list
-        )
+        unwrapped_value = TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT)
+
+        # Check if unwrapped_value is a list
+        assert isinstance(unwrapped_value, list), "unwrapped_value should be a list"
+
+        # Check if unwrapped_value matches the original string_list
+        assert unwrapped_value == string_list, "unwrapped_value should match the original string_list"
+
+        reportable_value = TestConfigValueUnwrapper.reportable_value(config_value, CONFIG, EMPTY_CONTEXT)
+
+        # Check if reportable_value is a list
+        assert isinstance(reportable_value, list), "reportable_value should be a list"
+
+        # Check if reportable_value matches the original string_list
+        assert reportable_value == string_list, "reportable_value should match the original string_list"
 
     def test_unwrapping_weighted_values(self):
         weighted_values = self.build_weighted_values({"abc": 1})

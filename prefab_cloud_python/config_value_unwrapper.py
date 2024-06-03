@@ -124,7 +124,7 @@ class ConfigValueUnwrapper:
         if type in ["int", "string", "double", "bool", "log_level"]:
             raw = getattr(self.value, type)
         elif type == "string_list":
-            raw = self.value.string_list.values
+            raw = list(self.value.string_list.values)
         elif type == "duration":
             raw = isodate.parse_duration(self.value.duration.definition)
         else:
@@ -178,31 +178,3 @@ class ConfigValueUnwrapper:
                 raise EnvVarParseException(value_string, config, env_var_name)
         except ValueError:
             raise EnvVarParseException(value_string, config, env_var_name)
-
-    # def self.coerce_into_type(value_string, config, env_var_name)
-    #   case config.value_type
-    #   when :INT then Integer(value_string)
-    #   when :DOUBLE then Float(value_string)
-    #   when :STRING then String(value_string)
-    #   when :STRING_LIST then
-    #     maybe_string_list = YAML.load(value_string)
-    #     case maybe_string_list
-    #     when Array
-    #       maybe_string_list
-    #     else
-    #       raise raise Prefab::Errors::EnvVarParseError.new(value_string, config, env_var_name)
-    #     end
-    #   when :BOOL then
-    #     maybe_bool = YAML.load(value_string)
-    #     case maybe_bool
-    #     when TrueClass, FalseClass
-    #       maybe_bool
-    #     else
-    #       raise Prefab::Errors::EnvVarParseError.new(value_string, config, env_var_name)
-    #     end
-    #   when :NOT_SET_VALUE_TYPE
-    #     YAML.load(value_string)
-    #   else
-    #     raise Prefab::Errors::EnvVarParseError.new(value_string, config, env_var_name)
-    #   end
-    # rescue ArgumentError

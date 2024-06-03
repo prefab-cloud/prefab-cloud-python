@@ -165,7 +165,7 @@ class CriteriaEvaluator:
         ).unwrap()
         if isinstance(
             criterion_value_or_values, google._upb._message.RepeatedScalarContainer
-        ):
+        ) or isinstance(criterion_value_or_values, list):
             return str(value) in criterion_value_or_values
         return value == criterion_value_or_values
 

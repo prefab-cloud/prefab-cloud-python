@@ -178,4 +178,3 @@ class ConfigValueUnwrapper:
                 raise EnvVarParseException(value_string, config, env_var_name)
         except ValueError:
             raise EnvVarParseException(value_string, config, env_var_name)
-

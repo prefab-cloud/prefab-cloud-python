@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.10.7] - 2024-06-07
+
+- Enlarge acceptable version range for mmh3 dependency; add matrix tests to cover v3 and v4 [#93]
+
 ## [0.10.6] - 2024-06-07
 
 - Configure timer threads as daemon [#90]

@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.10.6] - 2024-06-07
+
+- Configure timer threads as daemon [#90]
+
 ## [0.10.5] - 2024-06-03
 
 - Return stringlist contents as a python list [#85]

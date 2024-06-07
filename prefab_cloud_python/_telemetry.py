@@ -100,6 +100,7 @@ class TelemetryManager(object):
         if self.report_interval:
             self.sync_started = True
             self.timer = threading.Timer(self.report_interval, self.run_sync)
+            self.timer.daemon = True
             self.timer.start()
 
     def stop(self):
@@ -111,6 +112,7 @@ class TelemetryManager(object):
         finally:
             if self.sync_started and not self.client.shutdown_flag.is_set():
                 self.timer = threading.Timer(self.report_interval, self.run_sync)
+                self.timer.daemon = True
                 self.timer.start()
 
     def record_evaluation(self, evaluation: Evaluation) -> None:

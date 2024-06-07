@@ -15,7 +15,7 @@ jobs:
     env:
       MIX_ENV: test
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    name: "[${{matrix.python}}] CI"
+    name: "[${{matrix.python}}] - mmh3 [${{matrix.mmh3-version}}]"
     strategy:
       matrix:
         python: ["3.9.15", "3.10.10", "3.11.2"]

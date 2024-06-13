@@ -145,6 +145,9 @@ class ConfigClient:
                 self.sse_client = sseclient.SSEClient(response)
 
                 for event in self.sse_client.events():
+                    if self.base_client.shutdown_flag.is_set():
+                        logger.info("Client is shutting down, exiting SSE event loop")
+                        return
                     if event.data:
                         logger.info("Loading data from SSE stream")
                         configs = Prefab.Configs.FromString(
@@ -283,5 +286,4 @@ class ConfigClient:
         return self.is_initialized.is_set()
 
     def close(self) -> None:
-        if self.sse_client:
-            self.sse_client.close()
+        pass

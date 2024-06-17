@@ -46,8 +46,9 @@ def get_client() -> Client:
 def reset_instance() -> None:
     """clears the singleton client instance so it will be recreated on the next get() call"""
     global __base_client
-    with __lock.write_locked():
-        old_client = __base_client
-        __base_client = None
-        if old_client:
-            old_client.close()
+    global __lock
+    __lock = _ReadWriteLock()
+    old_client = __base_client
+    __base_client = None
+    if old_client:
+        old_client.close()

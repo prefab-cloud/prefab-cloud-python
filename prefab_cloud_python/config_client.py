@@ -141,19 +141,22 @@ class ConfigClient:
                     auth=("authuser", self.options.api_key),
                     timeout=None,
                 )
+                if response.ok:
+                    self.sse_client = sseclient.SSEClient(response)
 
-                self.sse_client = sseclient.SSEClient(response)
-
-                for event in self.sse_client.events():
-                    if self.base_client.shutdown_flag.is_set():
-                        logger.info("Client is shutting down, exiting SSE event loop")
-                        return
-                    if event.data:
-                        logger.info("Loading data from SSE stream")
-                        configs = Prefab.Configs.FromString(
-                            base64.b64decode(event.data)
-                        )
-                        self.load_configs(configs, "sse_streaming")
+                    for event in self.sse_client.events():
+                        if self.base_client.shutdown_flag.is_set():
+                            logger.info("Client is shutting down, exiting SSE event loop")
+                            return
+                        if event.data:
+                            configs = Prefab.Configs.FromString(
+                                base64.b64decode(event.data)
+                            )
+                            self.load_configs(configs, "sse_streaming")
+                else:
+                    logger.warning("Error loading sse stream due to response with status {}. Will retry presently",
+                                   response.status_code)
+                    time.sleep(5)
             except Exception as e:
                 if not self.base_client.shutdown_flag.is_set:
                     logger.info(f"Issue with streaming connection, will restart {e}")
@@ -286,4 +289,5 @@ class ConfigClient:
         return self.is_initialized.is_set()
 
     def close(self) -> None:
-        pass
+        if self.sse_client:
+            self.sse_client.close()

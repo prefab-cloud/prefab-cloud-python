@@ -29,7 +29,15 @@ logger = InternalLogger(__name__)
 class InitializationTimeoutException(Exception):
     def __init__(self, timeout_seconds, key):
         super().__init__(
-            f"Prfeab couldn't initialize in {timeout_seconds} second timeout. Trying to fetch key `{key}`."
+            f"Prefab couldn't initialize in {timeout_seconds} second timeout. Trying to fetch key `{key}`."
+        )
+
+
+class UnauthorizedException(Exception):
+    def __init__(self, api_key):
+        api_key_prefix = api_key[:10] if api_key else ""
+        super().__init__(
+            f"Prefab attempts to fetch data are unauthorized using api key starting with {api_key_prefix}. Please check your api key."
         )
 
 
@@ -37,7 +45,6 @@ class MissingDefaultException(Exception):
     def __init__(self, key):
         super().__init__(
             f"""No value found for key '{key}' and no default was provided.
-
 If you'd prefer returning `None` rather than raising when this occurs, modify the `on_no_default` value you provide in your Options."""
         )
 
@@ -52,6 +59,7 @@ class ConfigClient:
         self.base_client = base_client
         self.options = base_client.options
         self.init_latch = CountDownLatch()
+        self.unauthorized_event = threading.Event()
         self.finish_init_mutex = threading.Lock()
         self.checkpoint_freq_secs = 60
         self.config_loader = ConfigLoader(base_client)
@@ -91,6 +99,8 @@ class ConfigClient:
         ok_to_proceed = self.init_latch.wait(
             timeout=self.options.connection_timeout_seconds
         )
+        if self.unauthorized_event.is_set():
+            raise UnauthorizedException(self.options.api_key)
         if not ok_to_proceed:
             if self.options.on_connection_failure == "RAISE":
                 raise InitializationTimeoutException(
@@ -128,7 +138,10 @@ class ConfigClient:
         self.streaming_thread.start()
 
     def streaming_loop(self):
-        while not self.base_client.shutdown_flag.is_set():
+        while (
+            not self.base_client.shutdown_flag.is_set()
+            and not self.unauthorized_event.is_set()
+        ):
             try:
                 url = "%s/api/v1/sse/config" % self.options.prefab_api_url
                 headers = {
@@ -141,30 +154,47 @@ class ConfigClient:
                     auth=("authuser", self.options.api_key),
                     timeout=None,
                 )
+                if response.ok:
+                    self.sse_client = sseclient.SSEClient(response)
 
-                self.sse_client = sseclient.SSEClient(response)
-
-                for event in self.sse_client.events():
-                    if self.base_client.shutdown_flag.is_set():
-                        logger.info("Client is shutting down, exiting SSE event loop")
-                        return
-                    if event.data:
-                        logger.info("Loading data from SSE stream")
-                        configs = Prefab.Configs.FromString(
-                            base64.b64decode(event.data)
+                    for event in self.sse_client.events():
+                        if self.base_client.shutdown_flag.is_set():
+                            logger.info(
+                                "Client is shutting down, exiting SSE event loop"
+                            )
+                            return
+                        if event.data:
+                            configs = Prefab.Configs.FromString(
+                                base64.b64decode(event.data)
+                            )
+                            self.load_configs(configs, "sse_streaming")
+                else:
+                    if response.status_code == 401:
+                        logger.error(
+                            "SSE request returned unauthorized response; will not retry"
                         )
-                        self.load_configs(configs, "sse_streaming")
+                        self.handle_unauthorized_response()
+                    logger.warning(
+                        "Error loading sse stream due to response with status {}. Will retry presently",
+                        response.status_code,
+                    )
+                    time.sleep(5)
             except Exception as e:
                 if not self.base_client.shutdown_flag.is_set:
                     logger.info(f"Issue with streaming connection, will restart {e}")
 
     def checkpointing_loop(self):
-        while not self.base_client.shutdown_flag.is_set():
+        while (
+            not self.base_client.shutdown_flag.is_set()
+            and not self.unauthorized_event.is_set()
+        ):
             try:
                 self.load_checkpoint()
                 time.sleep(self.checkpoint_freq_secs)
+            except UnauthorizedException:
+                raise
             except Exception as e:
-                logger.warn(f"Issue checkpointing, will restart {e}")
+                logger.warning(f"Issue checkpointing, will restart {e}")
 
     def load_checkpoint_from_api_cdn(self):
         url = "%s/api/v1/configs/0" % self.options.url_for_api_cdn
@@ -177,6 +207,11 @@ class ConfigClient:
             self.load_configs(configs, "remote_api_cdn")
             return True
         else:
+            if response.status_code == 401:
+                logger.error(
+                    "Config request returned unauthorized response code; will not retry"
+                )
+                self.handle_unauthorized_response()
             logger.info(
                 "Checkpoint remote_cdn_api failed to load",
             )
@@ -285,5 +320,11 @@ class ConfigClient:
     def is_ready(self) -> bool:
         return self.is_initialized.is_set()
 
+    def handle_unauthorized_response(self):
+        logger.error("Received unauthorized response")
+        self.unauthorized_event.set()
+        self.init_latch.count_down()
+
     def close(self) -> None:
-        pass
+        if self.sse_client:
+            self.sse_client.close()

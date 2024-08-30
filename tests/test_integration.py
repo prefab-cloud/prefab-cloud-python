@@ -78,7 +78,7 @@ def options():
     return Options(
         api_key=os.environ["PREFAB_INTEGRATION_TEST_API_KEY"],
         prefab_api_urls=[
-            "https://boot.staging-prefab.cloud",
+            "https://belt.staging-prefab.cloud",
             "https://suspenders.staging-prefab.cloud",
         ],
         prefab_telemetry_url="https://telemetry.staging-prefab.cloud",

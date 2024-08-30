@@ -271,7 +271,8 @@ class ConfigClient:
             self.init_latch.count_down()
             if not was_initialized:
                 logger.warning(f"Unlocked config via {source}")
-                self.start_streaming()
+                if self.options.is_loading_from_api():
+                    self.start_streaming()
                 if self.options.on_ready_callback:
                     threading.Thread(
                         target=self.options.on_ready_callback, daemon=True

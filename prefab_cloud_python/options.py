@@ -114,6 +114,9 @@ class Options:
     def has_datafile(self) -> bool:
         return self.datafile is not None
 
+    def is_loading_from_api(self):
+        return not (self.is_local_only or self.has_datafile())
+
     @staticmethod
     def __validate_datasource(datasource: Optional[str]) -> str:
         if os.getenv("PREFAB_DATASOURCES") == "LOCAL_ONLY":

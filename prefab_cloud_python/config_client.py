@@ -123,7 +123,7 @@ class ConfigClient:
 
     def start_checkpointing_thread(self):
         self.checkpointing_thread = threading.Thread(
-            target=self.load_checkpoint(), daemon=True
+            target=self.load_checkpoint, daemon=True
         )
         self.checkpointing_thread.start()
 

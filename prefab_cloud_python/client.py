@@ -44,12 +44,12 @@ class Client:
         self.telemetry_manager = TelemetryManager(self, options)
         if not options.is_local_only():
             self.telemetry_manager.start_periodic_sync()
-        self.api_url = options.prefab_api_url
+        self.api_urls = options.prefab_api_urls
         # Define the retry strategy
         retry_strategy = Retry(
             total=2,  # Maximum number of retries
             status_forcelist=[429, 500, 502, 503, 504],  # HTTP status codes to retry on
-            allowed_methods=["POST"],
+            allowed_methods=["POST", "GET"],
         )
         # Create an TimeoutHTTPAdapter adapter with the retry strategy and a standard timeout and mount it to session
         adapter = TimeoutHTTPAdapter(max_retries=retry_strategy, timeout=5)
@@ -62,7 +62,7 @@ class Client:
             logger.info(
                 f"Prefab {Version} connecting to %s, secure %s"
                 % (
-                    options.prefab_api_url,
+                    options.prefab_api_urls,
                     options.http_secure,
                 ),
             )
@@ -147,7 +147,7 @@ class Client:
             "Accept": "application/x-protobuf",
         }
 
-        endpoint = urljoin(self.options.prefab_api_url or "", path)
+        endpoint = urljoin(self.options.telemetry_url or "", path)
 
         return self.session.post(
             endpoint,

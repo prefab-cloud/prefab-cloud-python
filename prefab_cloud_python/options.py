@@ -105,7 +105,6 @@ class Options:
             or logging.WARNING
         )
         self.global_context = Context.normalize_context_arg(global_context)
-        self.foobar = "james"
         self.on_ready_callback = on_ready_callback
 
     def is_local_only(self) -> bool:

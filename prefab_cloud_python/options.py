@@ -114,7 +114,7 @@ class Options:
         return self.datafile is not None
 
     def is_loading_from_api(self) -> bool:
-        return not (self.is_local_only or self.has_datafile)
+        return not (self.is_local_only() or self.has_datafile())
 
     @staticmethod
     def __validate_datasource(datasource: Optional[str]) -> str:

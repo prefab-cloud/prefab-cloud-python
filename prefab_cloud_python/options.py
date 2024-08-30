@@ -147,7 +147,7 @@ class Options:
         self.prefab_api_urls = self.validate_and_process_urls(api_url_list)
 
     @staticmethod
-    def validate_url(api_url):
+    def validate_url(api_url: str) -> str:
         parsed_url = urlparse(str(api_url))
         if parsed_url.scheme in ["http", "https"]:
             return api_url.rstrip("/")
@@ -155,13 +155,13 @@ class Options:
             raise InvalidApiUrlException(api_url)
 
     @staticmethod
-    def api_urls_from_env():
+    def api_urls_from_env() -> Optional[list[str]]:
         envvar = os.environ.get("PREFAB_API_URL")
         if envvar:
             return envvar.split(",")
         return None
 
-    def validate_and_process_urls(self, api_url_list):
+    def validate_and_process_urls(self, api_url_list: list[str]) -> list[str]:
         valid_urls = []
         for api_url in api_url_list:
             try:

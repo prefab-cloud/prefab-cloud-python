@@ -19,7 +19,6 @@ class ConfigResolver:
         self.config_loader = config_loader
         self.project_env_id = 0
         self.default_context = {}
-        self.base_context = base_client.options.global_context.to_dict()
         self.make_local()
 
     def get(self, key, context=None) -> "Evaluation | None":
@@ -55,7 +54,7 @@ class ConfigResolver:
 
     def evaluation_context(self, context):
         merged_context = Context()
-        merged_context.merge_context_dict(self.base_context)
+        merged_context.merge_context_dict(self.base_client.global_context.to_dict())
         merged_context.merge_context_dict(self.default_context)
         if Context.get_current():
             merged_context.merge_context_dict(Context.get_current().to_dict())

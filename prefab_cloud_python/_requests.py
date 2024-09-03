@@ -12,6 +12,8 @@ from tenacity import (
     retry_if_exception_type,
 )
 
+from .client import VersionHeader, Version
+
 logger = InternalLogger(__name__)
 
 DEFAULT_TIMEOUT = 5  # seconds
@@ -66,6 +68,7 @@ class ApiClient:
         self.session = requests.Session()
         self.session.mount("https://", NoRetryAdapter())
         self.session.mount("http://", NoRetryAdapter())
+        self.session.headers.update({VersionHeader: f"prefab-cloud-python-{Version}"})
 
     def get_host(self, attempt_number):
         return self.hosts[attempt_number % len(self.hosts)]

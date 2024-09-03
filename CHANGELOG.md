@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.8] - 2024-09-03
+
+- Allow re-setting the global context [#102]
+- Change config loading -- now load from belt/suspenders API pair for increased reliability. Load full config once then SSE rather than polling all the time [#98]
+- Fail fast on invalid credentials (401 response) [#97]
+- Locking fixes in reset_instance command [#95]
+
 ## [0.10.7] - 2024-06-07
 
 - Enlarge acceptable version range for mmh3 dependency; add matrix tests to cover v3 and v4 [#93]

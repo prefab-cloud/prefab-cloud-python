@@ -1,7 +1,12 @@
+from __future__ import annotations
+
+from typing import Optional
+
 import pytest
 
 from prefab_cloud_python import Options
 from prefab_cloud_python.config_resolver import ConfigResolver
+from prefab_cloud_python.constants import ContextDictType
 from prefab_cloud_python.context import Context
 
 
@@ -16,6 +21,13 @@ class FakeConfigLoader:
 class FakeClient:
     def __init__(self, options=None):
         self.options = options
+        self.global_context = options.global_context
+
+    def set_global_context(
+        self, global_context: Optional[ContextDictType | Context] = None
+    ):
+        self.global_context = Context.normalize_context_arg(global_context)
+        return self
 
 
 class ConfigResolverFactoryFixture:
@@ -23,13 +35,11 @@ class ConfigResolverFactoryFixture:
         self.client = None
 
     def create(self, global_context={}, default_context={}) -> ConfigResolver:
-        options = Options(
-            global_context=global_context, prefab_datasources="LOCAL_ONLY"
-        )
-        config_resolver = ConfigResolver(
-            FakeClient(options=options), FakeConfigLoader()
-        )
+        options = Options(prefab_datasources="LOCAL_ONLY")
+        client = FakeClient(options=options)
+        config_resolver = ConfigResolver(client, FakeConfigLoader())
         config_resolver.default_context = default_context
+        client.set_global_context(global_context)
         return config_resolver
 
 
@@ -38,7 +48,7 @@ def config_resolver_factory():
     return ConfigResolverFactoryFixture()
 
 
-class ContextMergingTests:
+class TestContextMerging:
     def test_empty_contexts(self, config_resolver_factory):
         config_resolver = config_resolver_factory.create()
         assert config_resolver.evaluation_context(None).to_dict() == {}

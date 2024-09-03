@@ -40,6 +40,7 @@ class Client:
     def __init__(self, options: Options) -> None:
         self.shutdown_flag = threading.Event()
         self.options = options
+        self.global_context = options.global_context
         self.instance_hash = str(uuid.uuid4())
         self.telemetry_manager = TelemetryManager(self, options)
         if not options.is_local_only():
@@ -163,6 +164,12 @@ class Client:
 
     def is_ready(self) -> bool:
         return self.config_client().is_ready()
+
+    def set_global_context(
+        self, global_context: Optional[ContextDictType | Context] = None
+    ) -> Client:
+        self.global_context = Context.normalize_context_arg(global_context)
+        return self
 
     def close(self) -> None:
         if not self.shutdown_flag.is_set():

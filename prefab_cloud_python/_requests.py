@@ -13,8 +13,13 @@ from tenacity import (
 )
 
 from .client import VersionHeader, Version
+from importlib.metadata import version
+
 
 logger = InternalLogger(__name__)
+
+Version = version("prefab-cloud-python")
+VersionHeader = "X-PrefabCloud-Client-Version"
 
 DEFAULT_TIMEOUT = 5  # seconds
 

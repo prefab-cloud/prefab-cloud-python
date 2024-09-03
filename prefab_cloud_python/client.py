@@ -16,19 +16,16 @@ from .context import Context, ScopedContext
 from .config_client import ConfigClient
 from .feature_flag_client import FeatureFlagClient
 from .options import Options
-from ._requests import TimeoutHTTPAdapter
+from ._requests import TimeoutHTTPAdapter, VersionHeader, Version
 from typing import Optional, Union
 import prefab_pb2 as Prefab
 import uuid
 import requests
 from urllib.parse import urljoin
-from importlib.metadata import version
 from .constants import NoDefaultProvided, ConfigValueType, ContextDictType
 from ._internal_constants import LOG_LEVEL_BASE_KEY
 
 PostBodyType = Union[Prefab.Loggers, Prefab.ContextShapes, Prefab.TelemetryEvents]
-Version = version("prefab-cloud-python")
-VersionHeader = "X-PrefabCloud-Client-Version"
 logger = InternalLogger(__name__)
 LLV = Prefab.LogLevel.Value
 

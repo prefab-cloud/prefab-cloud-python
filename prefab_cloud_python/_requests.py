@@ -11,11 +11,7 @@ from tenacity import (
     wait_exponential,
     retry_if_exception_type,
 )
-
-from .client import VersionHeader, Version
 from importlib.metadata import version
-
-
 logger = InternalLogger(__name__)
 
 Version = version("prefab-cloud-python")

@@ -51,7 +51,8 @@ class Options:
     def __init__(
         self,
         api_key: Optional[str] = None,
-        prefab_api_url: Optional[str] = None,
+        prefab_api_urls: Optional[list[str]] = None,
+        prefab_telemetry_url: Optional[str] = None,
         prefab_datasources: Optional[str] = None,
         connection_timeout_seconds: int = 10,
         prefab_config_override_dir: Optional[str] = os.environ.get("HOME"),
@@ -76,9 +77,12 @@ class Options:
         self.datafile = x_datafile
         self.__set_api_key(api_key or os.environ.get("PREFAB_API_KEY"))
         self.__set_api_url(
-            prefab_api_url
-            or os.environ.get("PREFAB_API_URL")
-            or "https://api.prefab.cloud"
+            prefab_api_urls
+            or self.api_urls_from_env()
+            or ["https://belt.prefab.cloud", "https://suspenders.prefab.cloud"]
+        )
+        self.telemetry_url = self.validate_url(
+            prefab_telemetry_url or "https://telemetry.prefab.cloud"
         )
         self.connection_timeout_seconds = connection_timeout_seconds
         self.prefab_config_override_dir = prefab_config_override_dir
@@ -88,7 +92,6 @@ class Options:
         self.stats = None
         self.shared_cache = None
         self.use_local_cache = x_use_local_cache
-        self.__set_url_for_api_cdn()
         self.__set_on_no_default(on_no_default)
         self.__set_on_connection_failure(on_connection_failure)
         self.__set_log_collection(collect_logs, collect_max_paths, self.is_local_only())
@@ -102,7 +105,6 @@ class Options:
             or logging.WARNING
         )
         self.global_context = Context.normalize_context_arg(global_context)
-        self.foobar = "james"
         self.on_ready_callback = on_ready_callback
 
     def is_local_only(self) -> bool:
@@ -111,19 +113,8 @@ class Options:
     def has_datafile(self) -> bool:
         return self.datafile is not None
 
-    def __set_url_for_api_cdn(self) -> None:
-        if self.prefab_datasources == "LOCAL_ONLY":
-            self.url_for_api_cdn = None
-        else:
-            cdn_url_from_env = os.environ.get("PREFAB_CDN_URL")
-            if cdn_url_from_env is not None:
-                self.url_for_api_cdn = cdn_url_from_env
-            elif self.prefab_api_url:
-                self.url_for_api_cdn = (
-                    self.prefab_api_url.replace(".", "-") + ".global.ssl.fastly.net"
-                )
-            else:
-                self.url_for_api_cdn = None  # TODO: should we warn?
+    def is_loading_from_api(self) -> bool:
+        return not (self.is_local_only() or self.has_datafile())
 
     @staticmethod
     def __validate_datasource(datasource: Optional[str]) -> str:
@@ -151,17 +142,35 @@ class Options:
         self.api_key = api_key
         self.api_key_id = api_key.split("-")[0]
 
-    def __set_api_url(self, api_url: Optional[str]) -> None:
+    def __set_api_url(self, api_url_list: list[str]) -> None:
         if self.prefab_datasources == "LOCAL_ONLY":
-            self.prefab_api_url = None
+            self.prefab_api_urls = None
             return
+        self.prefab_api_urls = self.validate_and_process_urls(api_url_list)
 
-        api_url = str(api_url)
-        parsed_url = urlparse(api_url)
+    @staticmethod
+    def validate_url(api_url: str) -> str:
+        parsed_url = urlparse(str(api_url))
         if parsed_url.scheme in ["http", "https"]:
-            self.prefab_api_url = api_url.rstrip("/")
+            return api_url.rstrip("/")
         else:
             raise InvalidApiUrlException(api_url)
+
+    @staticmethod
+    def api_urls_from_env() -> Optional[list[str]]:
+        envvar = os.environ.get("PREFAB_API_URL")
+        if envvar:
+            return envvar.split(",")
+        return None
+
+    def validate_and_process_urls(self, api_url_list: list[str]) -> list[str]:
+        valid_urls = []
+        for api_url in api_url_list:
+            try:
+                valid_urls.append(self.validate_url(api_url))
+            except InvalidApiUrlException as e:
+                raise e
+        return valid_urls
 
     @classmethod
     def __construct_prefab_envs(cls, envs_from_input: list[str]) -> list[str]:

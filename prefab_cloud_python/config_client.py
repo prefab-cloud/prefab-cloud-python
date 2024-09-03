@@ -11,6 +11,7 @@ import prefab_pb2 as Prefab
 import os
 
 from ._count_down_latch import CountDownLatch
+from ._requests import ApiClient, UnauthorizedException
 from .config_loader import ConfigLoader
 from .config_resolver import ConfigResolver
 from .config_value_unwrapper import ConfigValueUnwrapper
@@ -30,14 +31,6 @@ class InitializationTimeoutException(Exception):
     def __init__(self, timeout_seconds, key):
         super().__init__(
             f"Prefab couldn't initialize in {timeout_seconds} second timeout. Trying to fetch key `{key}`."
-        )
-
-
-class UnauthorizedException(Exception):
-    def __init__(self, api_key):
-        api_key_prefix = api_key[:10] if api_key else ""
-        super().__init__(
-            f"Prefab attempts to fetch data are unauthorized using api key starting with {api_key_prefix}. Please check your api key."
         )
 
 
@@ -66,6 +59,7 @@ class ConfigClient:
         self.config_resolver = ConfigResolver(base_client, self.config_loader)
         self._cache_path = None
         self.set_cache_path()
+        self.api_client = ApiClient(self.options)
 
         if self.options.is_local_only():
             self.finish_init("local only")
@@ -74,7 +68,6 @@ class ConfigClient:
         else:
             # don't load checkpoint here, that'll block the caller. let the thread do it
             self.start_checkpointing_thread()
-            self.start_streaming()
 
     def get(
         self,
@@ -119,15 +112,18 @@ class ConfigClient:
         return None
 
     def load_checkpoint(self):
-        if self.load_checkpoint_from_api_cdn():
-            return
-        if self.load_cache():
-            return
-        logger.warning("No success loading checkpoints")
+        try:
+            if self.load_checkpoint_from_api_cdn():
+                return
+            if self.load_cache():
+                return
+            logger.warning("No success loading checkpoints")
+        except UnauthorizedException:
+            self.handle_unauthorized_response()
 
     def start_checkpointing_thread(self):
         self.checkpointing_thread = threading.Thread(
-            target=self.checkpointing_loop, daemon=True
+            target=self.load_checkpoint, daemon=True
         )
         self.checkpointing_thread.start()
 
@@ -143,12 +139,12 @@ class ConfigClient:
             and not self.unauthorized_event.is_set()
         ):
             try:
-                url = "%s/api/v1/sse/config" % self.options.prefab_api_url
                 headers = {
                     "x-prefab-start-at-id": f"{self.config_loader.highwater_mark}",
+                    "accept": "text/event-stream",
                 }
-                response = self.base_client.session.get(
-                    url,
+                response = self.api_client.resilient_request(
+                    "/api/v1/sse/config",
                     headers=headers,
                     stream=True,
                     auth=("authuser", self.options.api_key),
@@ -169,53 +165,39 @@ class ConfigClient:
                             )
                             self.load_configs(configs, "sse_streaming")
                 else:
-                    if response.status_code == 401:
-                        logger.error(
-                            "SSE request returned unauthorized response; will not retry"
-                        )
-                        self.handle_unauthorized_response()
                     logger.warning(
                         "Error loading sse stream due to response with status {}. Will retry presently",
                         response.status_code,
                     )
                     time.sleep(5)
+            except UnauthorizedException:
+                self.handle_unauthorized_response()
             except Exception as e:
                 if not self.base_client.shutdown_flag.is_set:
                     logger.info(f"Issue with streaming connection, will restart {e}")
 
-    def checkpointing_loop(self):
-        while (
-            not self.base_client.shutdown_flag.is_set()
-            and not self.unauthorized_event.is_set()
-        ):
-            try:
-                self.load_checkpoint()
-                time.sleep(self.checkpoint_freq_secs)
-            except UnauthorizedException:
-                raise
-            except Exception as e:
-                logger.warning(f"Issue checkpointing, will restart {e}")
+    def load_initial_data(self):
+        try:
+            self.load_checkpoint()
+        except UnauthorizedException:
+            self.handle_unauthorized_response()
 
     def load_checkpoint_from_api_cdn(self):
-        url = "%s/api/v1/configs/0" % self.options.url_for_api_cdn
-        logger.info(f"Loading config from {url}")
-        response = self.base_client.session.get(
-            url, auth=("authuser", self.options.api_key)
-        )
-        if response.ok:
-            configs = Prefab.Configs.FromString(response.content)
-            self.load_configs(configs, "remote_api_cdn")
-            return True
-        else:
-            if response.status_code == 401:
-                logger.error(
-                    "Config request returned unauthorized response code; will not retry"
-                )
-                self.handle_unauthorized_response()
-            logger.info(
-                "Checkpoint remote_cdn_api failed to load",
+        try:
+            response = self.api_client.resilient_request(
+                "/api/v1/configs/0", auth=("authuser", self.options.api_key)
             )
-            return False
+            if response.ok:
+                configs = Prefab.Configs.FromString(response.content)
+                self.load_configs(configs, "remote_api_cdn")
+                return True
+            else:
+                logger.info(
+                    "Checkpoint remote_cdn_api failed to load",
+                )
+                return False
+        except UnauthorizedException:
+            self.handle_unauthorized_response()
 
     def load_configs(self, configs, source):
         project_id = configs.config_service_pointer.project_id
@@ -289,6 +271,8 @@ class ConfigClient:
             self.init_latch.count_down()
             if not was_initialized:
                 logger.warning(f"Unlocked config via {source}")
+                if self.options.is_loading_from_api():
+                    self.start_streaming()
                 if self.options.on_ready_callback:
                     threading.Thread(
                         target=self.options.on_ready_callback, daemon=True

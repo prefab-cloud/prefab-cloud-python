@@ -71,35 +71,38 @@ class TestOptionsApiUrl:
             }
         ):
             options = Options()
-            assert options.prefab_api_url == "https://api.dev-prefab.cloud"
+            assert options.prefab_api_urls == ["https://api.dev-prefab.cloud"]
 
     def test_api_url_from_input(self):
         with extended_env({"PREFAB_API_KEY": "1-api"}):
-            options = Options(prefab_api_url="https://api.test-prefab.cloud")
-            assert options.prefab_api_url == "https://api.test-prefab.cloud"
+            options = Options(prefab_api_urls=["https://api.test-prefab.cloud"])
+            assert options.prefab_api_urls == ["https://api.test-prefab.cloud"]
 
     def test_prefab_api_url_default_fallback(self):
         with extended_env({"PREFAB_API_KEY": "1-api"}):
             options = Options()
-            assert options.prefab_api_url == "https://api.prefab.cloud"
+            assert options.prefab_api_urls == [
+                "https://belt.prefab.cloud",
+                "https://suspenders.prefab.cloud",
+            ]
 
     def test_prefab_api_url_errors_on_invalid_format(self):
         with extended_env({"PREFAB_API_KEY": "1-api"}):
             with pytest.raises(InvalidApiUrlException) as context:
-                Options(prefab_api_url="httttp://api.prefab.cloud")
+                Options(prefab_api_urls=["httttp://api.prefab.cloud"])
 
             assert "Invalid API URL found: httttp://api.prefab.cloud" in str(context)
 
     def test_prefab_api_url_doesnt_matter_local_only_set_in_env(self):
         with extended_env({"PREFAB_DATASOURCES": "LOCAL_ONLY"}):
-            options = Options(prefab_api_url="http://api.prefab.cloud")
-            assert options.prefab_api_url is None
+            options = Options(prefab_api_urls=["http://api.prefab.cloud"])
+            assert options.prefab_api_urls is None
 
     def test_prefab_api_url_doesnt_matter_local_only(self):
         options = Options(
-            prefab_api_url="http://api.prefab.cloud", prefab_datasources="LOCAL_ONLY"
+            prefab_api_urls=["http://api.prefab.cloud"], prefab_datasources="LOCAL_ONLY"
         )
-        assert options.prefab_api_url is None
+        assert options.prefab_api_urls is None
 
 
 class TestOptionsPrefabEnvs:
@@ -134,37 +137,6 @@ class TestOptionsPrefabEnvs:
         ):
             options = Options(prefab_envs="testing")
             assert options.prefab_envs == ["development", "testing", "unit_tests"]
-
-
-class TestOptionsCdnUrl:
-    def test_is_none_when_local_only(self):
-        with extended_env({"PREFAB_DATASOURCES": "LOCAL_ONLY"}):
-            options = Options()
-            assert options.url_for_api_cdn is None
-
-    def test_formats_from_the_api_url(self):
-        with extended_env(
-            {
-                "PREFAB_API_KEY": "2-test-api-key",
-                "PREFAB_API_URL": "https://api.staging-prefab.cloud",
-            }
-        ):
-            options = Options()
-            assert (
-                options.url_for_api_cdn
-                == "https://api-staging-prefab-cloud.global.ssl.fastly.net"
-            )
-
-    def test_prefers_to_read_from_env(self):
-        with extended_env(
-            {
-                "PREFAB_API_KEY": "2-test-api-key",
-                "PREFAB_API_URL": "https://api.staging-prefab.cloud",
-                "PREFAB_CDN_URL": "prefab-cdn-url",
-            }
-        ):
-            options = Options()
-            assert options.url_for_api_cdn == "prefab-cdn-url"
 
 
 class TestOptionsOnNoDefault:

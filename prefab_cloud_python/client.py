@@ -16,19 +16,16 @@ from .context import Context, ScopedContext
 from .config_client import ConfigClient
 from .feature_flag_client import FeatureFlagClient
 from .options import Options
-from ._requests import TimeoutHTTPAdapter
+from ._requests import TimeoutHTTPAdapter, VersionHeader, Version
 from typing import Optional, Union
 import prefab_pb2 as Prefab
 import uuid
 import requests
 from urllib.parse import urljoin
-from importlib.metadata import version
 from .constants import NoDefaultProvided, ConfigValueType, ContextDictType
 from ._internal_constants import LOG_LEVEL_BASE_KEY
 
 PostBodyType = Union[Prefab.Loggers, Prefab.ContextShapes, Prefab.TelemetryEvents]
-Version = version("prefab-cloud-python")
-VersionHeader = "X-PrefabCloud-Client-Version"
 logger = InternalLogger(__name__)
 LLV = Prefab.LogLevel.Value
 
@@ -45,12 +42,12 @@ class Client:
         self.telemetry_manager = TelemetryManager(self, options)
         if not options.is_local_only():
             self.telemetry_manager.start_periodic_sync()
-        self.api_url = options.prefab_api_url
+        self.api_urls = options.prefab_api_urls
         # Define the retry strategy
         retry_strategy = Retry(
             total=2,  # Maximum number of retries
             status_forcelist=[429, 500, 502, 503, 504],  # HTTP status codes to retry on
-            allowed_methods=["POST"],
+            allowed_methods=["POST", "GET"],
         )
         # Create an TimeoutHTTPAdapter adapter with the retry strategy and a standard timeout and mount it to session
         adapter = TimeoutHTTPAdapter(max_retries=retry_strategy, timeout=5)
@@ -63,7 +60,7 @@ class Client:
             logger.info(
                 f"Prefab {Version} connecting to %s, secure %s"
                 % (
-                    options.prefab_api_url,
+                    options.prefab_api_urls,
                     options.http_secure,
                 ),
             )
@@ -148,7 +145,7 @@ class Client:
             "Accept": "application/x-protobuf",
         }
 
-        endpoint = urljoin(self.options.prefab_api_url or "", path)
+        endpoint = urljoin(self.options.telemetry_url or "", path)
 
         return self.session.post(
             endpoint,

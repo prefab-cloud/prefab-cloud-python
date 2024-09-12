@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import prefab_pb2 as Prefab
+from prefab_cloud_python import Options
 
 
 class ConfigClientInterface(ABC):
@@ -8,7 +9,7 @@ class ConfigClientInterface(ABC):
         pass
 
     @abstractmethod
-    def highwater_mark(self) -> str:
+    def highwater_mark(self) -> int:
         pass
 
     @abstractmethod
@@ -25,5 +26,5 @@ class ConfigClientInterface(ABC):
 
     @property
     @abstractmethod
-    def options(self):
+    def options(self) -> Options:
         pass

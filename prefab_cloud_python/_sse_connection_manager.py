@@ -1,7 +1,8 @@
 import base64
 import time
+from typing import Optional, Callable
 
-import sseclient
+import sseclient  # type: ignore
 from requests import Response
 
 from prefab_cloud_python._internal_logging import InternalLogger
@@ -26,7 +27,7 @@ class SSEConnectionManager:
     def __init__(self, api_client: ApiClient, config_client: ConfigClientInterface):
         self.api_client = api_client
         self.config_client = config_client
-        self.sse_client = None
+        self.sse_client: Optional[sseclient.SSEClient] = None
         self.timing = Timing()
 
     def streaming_loop(self) -> None:
@@ -83,21 +84,20 @@ class SSEConnectionManager:
 
     def process_response(self, response: Response) -> None:
         self.sse_client = sseclient.SSEClient(response)
-
-        for event in self.sse_client.events():
-            if self.config_client.is_shutting_down():
-                logger.info("Client is shutting down, exiting SSE event loop")
-                return
-            if event.data:
-                configs = Prefab.Configs.FromString(base64.b64decode(event.data))
-                self.config_client.load_configs(configs, "sse_streaming")
-
-        self.sse_client.close()
-        self.sse_client = None
+        if self.sse_client is not None:
+            for event in self.sse_client.events():
+                if self.config_client.is_shutting_down():
+                    logger.info("Client is shutting down, exiting SSE event loop")
+                    return
+                if event.data:
+                    configs = Prefab.Configs.FromString(base64.b64decode(event.data))
+                    self.config_client.load_configs(configs, "sse_streaming")
+            self.sse_client.close()
+            self.sse_client = None
 
 
 class Timing:
-    def time_execution(self, func) -> float:
+    def time_execution(self, func: Callable[[], None]) -> float:
         """Executes the given function and returns the time it took to execute."""
         start_time = self.now()
         func()  # Execute the block of code

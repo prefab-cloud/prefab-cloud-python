@@ -144,7 +144,7 @@ class ConfigClient(ConfigClientInterface):
     def continue_connection_processing(self):
         return not self.is_shutting_down() and not self.unauthorized_event.is_set()
 
-    def highwater_mark(self):
+    def highwater_mark(self) -> int:
         return self.config_loader.highwater_mark
 
     def load_initial_data(self):

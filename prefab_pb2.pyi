@@ -149,6 +149,7 @@ class ConfigValue(google.protobuf.message.Message):
     INT_RANGE_FIELD_NUMBER: builtins.int
     PROVIDED_FIELD_NUMBER: builtins.int
     DURATION_FIELD_NUMBER: builtins.int
+    JSON_FIELD_NUMBER: builtins.int
     CONFIDENTIAL_FIELD_NUMBER: builtins.int
     DECRYPT_WITH_FIELD_NUMBER: builtins.int
     int: builtins.int
@@ -169,6 +170,8 @@ class ConfigValue(google.protobuf.message.Message):
     def provided(self) -> global___Provided: ...
     @property
     def duration(self) -> global___IsoDuration: ...
+    @property
+    def json(self) -> global___Json: ...
     confidential: builtins.bool
     """don't log or telemetry this value"""
     decrypt_with: builtins.str
@@ -188,19 +191,35 @@ class ConfigValue(google.protobuf.message.Message):
         int_range: global___IntRange | None = ...,
         provided: global___Provided | None = ...,
         duration: global___IsoDuration | None = ...,
+        json: global___Json | None = ...,
         confidential: builtins.bool | None = ...,
         decrypt_with: builtins.str | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["_confidential", b"_confidential", "_decrypt_with", b"_decrypt_with", "bool", b"bool", "bytes", b"bytes", "confidential", b"confidential", "decrypt_with", b"decrypt_with", "double", b"double", "duration", b"duration", "int", b"int", "int_range", b"int_range", "limit_definition", b"limit_definition", "log_level", b"log_level", "provided", b"provided", "string", b"string", "string_list", b"string_list", "type", b"type", "weighted_values", b"weighted_values"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["_confidential", b"_confidential", "_decrypt_with", b"_decrypt_with", "bool", b"bool", "bytes", b"bytes", "confidential", b"confidential", "decrypt_with", b"decrypt_with", "double", b"double", "duration", b"duration", "int", b"int", "int_range", b"int_range", "limit_definition", b"limit_definition", "log_level", b"log_level", "provided", b"provided", "string", b"string", "string_list", b"string_list", "type", b"type", "weighted_values", b"weighted_values"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_confidential", b"_confidential", "_decrypt_with", b"_decrypt_with", "bool", b"bool", "bytes", b"bytes", "confidential", b"confidential", "decrypt_with", b"decrypt_with", "double", b"double", "duration", b"duration", "int", b"int", "int_range", b"int_range", "json", b"json", "limit_definition", b"limit_definition", "log_level", b"log_level", "provided", b"provided", "string", b"string", "string_list", b"string_list", "type", b"type", "weighted_values", b"weighted_values"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_confidential", b"_confidential", "_decrypt_with", b"_decrypt_with", "bool", b"bool", "bytes", b"bytes", "confidential", b"confidential", "decrypt_with", b"decrypt_with", "double", b"double", "duration", b"duration", "int", b"int", "int_range", b"int_range", "json", b"json", "limit_definition", b"limit_definition", "log_level", b"log_level", "provided", b"provided", "string", b"string", "string_list", b"string_list", "type", b"type", "weighted_values", b"weighted_values"]) -> None: ...
     @typing.overload
     def WhichOneof(self, oneof_group: typing_extensions.Literal["_confidential", b"_confidential"]) -> typing_extensions.Literal["confidential"] | None: ...
     @typing.overload
     def WhichOneof(self, oneof_group: typing_extensions.Literal["_decrypt_with", b"_decrypt_with"]) -> typing_extensions.Literal["decrypt_with"] | None: ...
     @typing.overload
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["type", b"type"]) -> typing_extensions.Literal["int", "string", "bytes", "double", "bool", "weighted_values", "limit_definition", "log_level", "string_list", "int_range", "provided", "duration"] | None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["type", b"type"]) -> typing_extensions.Literal["int", "string", "bytes", "double", "bool", "weighted_values", "limit_definition", "log_level", "string_list", "int_range", "provided", "duration", "json"] | None: ...
 
 global___ConfigValue = ConfigValue
+
+@typing_extensions.final
+class Json(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    JSON_FIELD_NUMBER: builtins.int
+    json: builtins.str
+    def __init__(
+        self,
+        *,
+        json: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["json", b"json"]) -> None: ...
+
+global___Json = Json
 
 @typing_extensions.final
 class IsoDuration(google.protobuf.message.Message):
@@ -410,6 +429,7 @@ class Config(google.protobuf.message.Message):
         STRING_LIST: Config._ValueType.ValueType  # 10
         INT_RANGE: Config._ValueType.ValueType  # 11
         DURATION: Config._ValueType.ValueType  # 12
+        JSON: Config._ValueType.ValueType  # 13
 
     class ValueType(_ValueType, metaclass=_ValueTypeEnumTypeWrapper): ...
     NOT_SET_VALUE_TYPE: Config.ValueType.ValueType  # 0
@@ -424,6 +444,7 @@ class Config(google.protobuf.message.Message):
     STRING_LIST: Config.ValueType.ValueType  # 10
     INT_RANGE: Config.ValueType.ValueType  # 11
     DURATION: Config.ValueType.ValueType  # 12
+    JSON: Config.ValueType.ValueType  # 13
 
     ID_FIELD_NUMBER: builtins.int
     PROJECT_ID_FIELD_NUMBER: builtins.int
@@ -968,6 +989,7 @@ class ClientConfigValue(google.protobuf.message.Message):
     STRING_LIST_FIELD_NUMBER: builtins.int
     INT_RANGE_FIELD_NUMBER: builtins.int
     DURATION_FIELD_NUMBER: builtins.int
+    JSON_FIELD_NUMBER: builtins.int
     CONFIG_EVALUATION_METADATA_FIELD_NUMBER: builtins.int
     int: builtins.int
     string: builtins.str
@@ -981,6 +1003,8 @@ class ClientConfigValue(google.protobuf.message.Message):
     @property
     def duration(self) -> global___ClientDuration: ...
     @property
+    def json(self) -> global___Json: ...
+    @property
     def config_evaluation_metadata(self) -> global___ConfigEvaluationMetaData: ...
     def __init__(
         self,
@@ -993,14 +1017,15 @@ class ClientConfigValue(google.protobuf.message.Message):
         string_list: global___StringList | None = ...,
         int_range: global___IntRange | None = ...,
         duration: global___ClientDuration | None = ...,
+        json: global___Json | None = ...,
         config_evaluation_metadata: global___ConfigEvaluationMetaData | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["_config_evaluation_metadata", b"_config_evaluation_metadata", "bool", b"bool", "config_evaluation_metadata", b"config_evaluation_metadata", "double", b"double", "duration", b"duration", "int", b"int", "int_range", b"int_range", "log_level", b"log_level", "string", b"string", "string_list", b"string_list", "type", b"type"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["_config_evaluation_metadata", b"_config_evaluation_metadata", "bool", b"bool", "config_evaluation_metadata", b"config_evaluation_metadata", "double", b"double", "duration", b"duration", "int", b"int", "int_range", b"int_range", "log_level", b"log_level", "string", b"string", "string_list", b"string_list", "type", b"type"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_config_evaluation_metadata", b"_config_evaluation_metadata", "bool", b"bool", "config_evaluation_metadata", b"config_evaluation_metadata", "double", b"double", "duration", b"duration", "int", b"int", "int_range", b"int_range", "json", b"json", "log_level", b"log_level", "string", b"string", "string_list", b"string_list", "type", b"type"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_config_evaluation_metadata", b"_config_evaluation_metadata", "bool", b"bool", "config_evaluation_metadata", b"config_evaluation_metadata", "double", b"double", "duration", b"duration", "int", b"int", "int_range", b"int_range", "json", b"json", "log_level", b"log_level", "string", b"string", "string_list", b"string_list", "type", b"type"]) -> None: ...
     @typing.overload
     def WhichOneof(self, oneof_group: typing_extensions.Literal["_config_evaluation_metadata", b"_config_evaluation_metadata"]) -> typing_extensions.Literal["config_evaluation_metadata"] | None: ...
     @typing.overload
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["type", b"type"]) -> typing_extensions.Literal["int", "string", "double", "bool", "log_level", "string_list", "int_range", "duration"] | None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["type", b"type"]) -> typing_extensions.Literal["int", "string", "double", "bool", "log_level", "string_list", "int_range", "duration", "json"] | None: ...
 
 global___ClientConfigValue = ClientConfigValue
 
@@ -1010,16 +1035,19 @@ class ClientDuration(google.protobuf.message.Message):
 
     SECONDS_FIELD_NUMBER: builtins.int
     NANOS_FIELD_NUMBER: builtins.int
+    DEFINITION_FIELD_NUMBER: builtins.int
     seconds: builtins.int
     """the actual time is the sum of these, so 1.5 seconds would be seconds = 1, nanos = 500_000_000"""
     nanos: builtins.int
+    definition: builtins.str
     def __init__(
         self,
         *,
         seconds: builtins.int = ...,
         nanos: builtins.int = ...,
+        definition: builtins.str = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["nanos", b"nanos", "seconds", b"seconds"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["definition", b"definition", "nanos", b"nanos", "seconds", b"seconds"]) -> None: ...
 
 global___ClientDuration = ClientDuration
 

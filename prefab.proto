@@ -26,10 +26,16 @@ message ConfigValue {
     IntRange int_range = 11;
     Provided provided = 12;
     IsoDuration duration = 15;
+    Json json = 16;
   }
   optional bool confidential = 13;   // don't log or telemetry this value
   optional string decrypt_with = 14; // key name to decrypt with
 }
+
+message Json {
+  string json = 1;
+}
+
 
 message IsoDuration {
   string definition = 1; // value is eg P1h30s
@@ -111,6 +117,7 @@ message Config {
     STRING_LIST = 10;
     INT_RANGE = 11;
     DURATION = 12;
+    JSON = 13;
   }
 }
 
@@ -262,6 +269,7 @@ message ClientConfigValue {
     StringList string_list = 7;
     IntRange int_range = 8;
     ClientDuration duration = 9;
+    Json json = 10;
   }
   optional ConfigEvaluationMetaData config_evaluation_metadata = 6;
 }
@@ -269,6 +277,7 @@ message ClientConfigValue {
 message ClientDuration {
   int64 seconds = 1;  // the actual time is the sum of these, so 1.5 seconds would be seconds = 1, nanos = 500_000_000
   int32 nanos = 2;
+  string definition = 3;
 }
 
 message ConfigEvaluations {

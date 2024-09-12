@@ -296,6 +296,15 @@ class TestConfigValueUnwrapper:
             == "*****27151"
         )
 
+    def test_unwrapping_json(self):
+        config_value = Prefab.ConfigValue(json=Prefab.Json(json='{"hello": "world"}'))
+        assert TestConfigValueUnwrapper.unwrap(config_value, CONFIG, EMPTY_CONTEXT) == {
+            "hello": "world"
+        }
+        assert TestConfigValueUnwrapper.reportable_value(
+            config_value, CONFIG, EMPTY_CONTEXT
+        ) == {"hello": "world"}
+
     def test_reportable_value_for_confidential(self):
         clear_text = "kind of secret stuff"
         config_value = Prefab.ConfigValue(string=clear_text, confidential=True)

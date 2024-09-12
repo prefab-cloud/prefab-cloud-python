@@ -1,3 +1,5 @@
+import json
+
 from .weighted_value_resolver import WeightedValueResolver
 from .config_value_wrapper import ConfigValueWrapper
 from .context import Context
@@ -127,6 +129,8 @@ class ConfigValueUnwrapper:
             raw = list(self.value.string_list.values)
         elif type == "duration":
             raw = isodate.parse_duration(self.value.duration.definition)
+        elif type == "json":
+            raw = json.loads(self.value.json.json)
         else:
             raise UnknownConfigValueTypeException(type)
 

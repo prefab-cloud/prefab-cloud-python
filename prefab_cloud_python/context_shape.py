@@ -1,4 +1,6 @@
-MAPPING = {int: 1, str: 2, float: 4, bool: 5, list: 10}
+import json
+
+MAPPING = {int: 1, str: 2, float: 4, bool: 5, list: 10, json: 16}
 
 
 class ContextShape:

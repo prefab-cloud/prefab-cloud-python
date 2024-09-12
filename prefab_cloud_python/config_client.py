@@ -1,17 +1,17 @@
 from __future__ import annotations
 
+
 from ._internal_logging import InternalLogger
 import threading
 import time
 from typing import Optional
 
-import sseclient
-import base64
 import prefab_pb2 as Prefab
 import os
-
 from ._count_down_latch import CountDownLatch
 from ._requests import ApiClient, UnauthorizedException
+from ._sse_connection_manager import SSEConnectionManager
+from .config_client_interface import ConfigClientInterface
 from .config_loader import ConfigLoader
 from .config_resolver import ConfigResolver
 from .config_value_unwrapper import ConfigValueUnwrapper
@@ -42,7 +42,7 @@ If you'd prefer returning `None` rather than raising when this occurs, modify th
         )
 
 
-class ConfigClient:
+class ConfigClient(ConfigClientInterface):
     def __init__(self, base_client):
         self.is_initialized = threading.Event()
         self.checkpointing_thread = None
@@ -50,7 +50,7 @@ class ConfigClient:
         self.sse_client = None
         logger.info("Initializing ConfigClient")
         self.base_client = base_client
-        self.options = base_client.options
+        self._options = base_client.options
         self.init_latch = CountDownLatch()
         self.unauthorized_event = threading.Event()
         self.finish_init_mutex = threading.Lock()
@@ -60,6 +60,7 @@ class ConfigClient:
         self._cache_path = None
         self.set_cache_path()
         self.api_client = ApiClient(self.options)
+        self.sse_connection_manager = SSEConnectionManager(self.api_client, self)
 
         if self.options.is_local_only():
             self.finish_init("local only")
@@ -104,6 +105,10 @@ class ConfigClient:
             )
         return self.config_resolver.get(key, context=context)
 
+    @property
+    def options(self):
+        return self._options
+
     def handle_default(self, key, default):
         if default != NoDefaultProvided:
             return default
@@ -129,52 +134,18 @@ class ConfigClient:
 
     def start_streaming(self):
         self.streaming_thread = threading.Thread(
-            target=self.streaming_loop, daemon=True
+            target=self.sse_connection_manager.streaming_loop, daemon=True
         )
         self.streaming_thread.start()
 
-    def streaming_loop(self):
-        while (
-            not self.base_client.shutdown_flag.is_set()
-            and not self.unauthorized_event.is_set()
-        ):
-            try:
-                headers = {
-                    "x-prefab-start-at-id": f"{self.config_loader.highwater_mark}",
-                    "accept": "text/event-stream",
-                }
-                response = self.api_client.resilient_request(
-                    "/api/v1/sse/config",
-                    headers=headers,
-                    stream=True,
-                    auth=("authuser", self.options.api_key),
-                    timeout=None,
-                )
-                if response.ok:
-                    self.sse_client = sseclient.SSEClient(response)
+    def is_shutting_down(self):
+        return self.base_client.shutdown_flag.is_set()
 
-                    for event in self.sse_client.events():
-                        if self.base_client.shutdown_flag.is_set():
-                            logger.info(
-                                "Client is shutting down, exiting SSE event loop"
-                            )
-                            return
-                        if event.data:
-                            configs = Prefab.Configs.FromString(
-                                base64.b64decode(event.data)
-                            )
-                            self.load_configs(configs, "sse_streaming")
-                else:
-                    logger.warning(
-                        "Error loading sse stream due to response with status {}. Will retry presently",
-                        response.status_code,
-                    )
-                    time.sleep(5)
-            except UnauthorizedException:
-                self.handle_unauthorized_response()
-            except Exception as e:
-                if not self.base_client.shutdown_flag.is_set:
-                    logger.info(f"Issue with streaming connection, will restart {e}")
+    def continue_connection_processing(self):
+        return not self.is_shutting_down() and not self.unauthorized_event.is_set()
+
+    def highwater_mark(self):
+        return self.config_loader.highwater_mark
 
     def load_initial_data(self):
         try:
@@ -185,7 +156,7 @@ class ConfigClient:
     def load_checkpoint_from_api_cdn(self):
         try:
             response = self.api_client.resilient_request(
-                "/api/v1/configs/0", auth=("authuser", self.options.api_key)
+                "/api/v1/configs/0", auth=("authuser", self.options.api_key), timeout=4
             )
             if response.ok:
                 configs = Prefab.Configs.FromString(response.content)
@@ -199,7 +170,7 @@ class ConfigClient:
         except UnauthorizedException:
             self.handle_unauthorized_response()
 
-    def load_configs(self, configs, source):
+    def load_configs(self, configs: Prefab.Configs, source: str) -> None:
         project_id = configs.config_service_pointer.project_id
         project_env_id = configs.config_service_pointer.project_env_id
         self.config_resolver.project_env_id = project_env_id

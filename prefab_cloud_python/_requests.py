@@ -80,7 +80,7 @@ class ApiClient:
         wait=wait_exponential(multiplier=1, min=0.05, max=2),
         retry=retry_if_exception_type((RequestException, ConnectionError, OSError)),
     )
-    def resilient_request(self, path, method="GET", **kwargs):
+    def resilient_request(self, path, method="GET", **kwargs) -> Response:
         # Get the current attempt number from tenacity's context
         attempt_number = self.resilient_request.statistics["attempt_number"]
         host = self.get_host(

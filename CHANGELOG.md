@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.9] - 2024-09-12
+
+- Support json config type [#105]
+- better sse connection handling, adds backoffs [#104]
+
 ## [0.10.8] - 2024-09-03
 
 - Allow re-setting the global context [#102]

@@ -24,11 +24,17 @@ logger = InternalLogger(__name__)
 
 
 class SSEConnectionManager:
-    def __init__(self, api_client: ApiClient, config_client: ConfigClientInterface):
+    def __init__(
+        self,
+        api_client: ApiClient,
+        config_client: ConfigClientInterface,
+        urls: list[str],
+    ):
         self.api_client = api_client
         self.config_client = config_client
         self.sse_client: Optional[sseclient.SSEClient] = None
         self.timing = Timing()
+        self.urls = urls
 
     def streaming_loop(self) -> None:
         too_short_connection_count = 0
@@ -47,6 +53,7 @@ class SSEConnectionManager:
                     stream=True,
                     auth=("authuser", self.config_client.options.api_key),
                     timeout=(5, 60),
+                    hosts=self.urls,
                 )
                 response.raise_for_status()
                 if response.ok:

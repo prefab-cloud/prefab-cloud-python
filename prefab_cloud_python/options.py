@@ -4,7 +4,7 @@ import logging
 import os
 from enum import Enum
 from urllib.parse import urlparse
-from typing import Optional, Union, Callable
+from typing import Optional, Union, Callable, Type
 
 from .context import Context
 from .constants import ContextDictType
@@ -37,6 +37,15 @@ class InvalidApiUrlException(Exception):
         super().__init__(f"Invalid API URL found: {url}")
 
 
+class InvalidStreamUrlException(Exception):
+    """
+    Raised when an invalid API URL is given
+    """
+
+    def __init__(self, url: str) -> None:
+        super().__init__(f"Invalid Stream URL found: {url}")
+
+
 VALID_DATASOURCES = ("LOCAL_ONLY", "ALL")
 VALID_ON_NO_DEFAULT = ("RAISE", "RETURN_NONE")
 VALID_ON_CONNECTION_FAILURE = ("RETURN", "RAISE")
@@ -52,6 +61,7 @@ class Options:
         self,
         api_key: Optional[str] = None,
         prefab_api_urls: Optional[list[str]] = None,
+        prefab_stream_urls: Optional[list[str]] = None,
         prefab_telemetry_url: Optional[str] = None,
         prefab_datasources: Optional[str] = None,
         connection_timeout_seconds: int = 10,
@@ -80,6 +90,11 @@ class Options:
             prefab_api_urls
             or self.api_urls_from_env()
             or ["https://belt.prefab.cloud", "https://suspenders.prefab.cloud"]
+        )
+        self.__set_stream_url(
+            prefab_stream_urls
+            or self.stream_urls_from_env()
+            or ["https://stream.prefab.cloud"]
         )
         self.telemetry_url = self.validate_url(
             prefab_telemetry_url or "https://telemetry.prefab.cloud"
@@ -146,28 +161,52 @@ class Options:
         if self.prefab_datasources == "LOCAL_ONLY":
             self.prefab_api_urls = None
             return
-        self.prefab_api_urls = self.validate_and_process_urls(api_url_list)
+        self.prefab_api_urls = self.validate_and_process_urls(
+            api_url_list, InvalidApiUrlException
+        )
+
+    def __set_stream_url(self, stream_url_list: list[str]) -> None:
+        if self.prefab_datasources == "LOCAL_ONLY":
+            self.prefab_stream_urls = None
+            return
+        self.prefab_stream_urls = self.validate_and_process_urls(
+            stream_url_list, InvalidStreamUrlException
+        )
 
     @staticmethod
-    def validate_url(api_url: str) -> str:
+    def validate_url(
+        api_url: str, exception_type: Type[Exception] = InvalidApiUrlException
+    ) -> str:
         parsed_url = urlparse(str(api_url))
         if parsed_url.scheme in ["http", "https"]:
             return api_url.rstrip("/")
         else:
-            raise InvalidApiUrlException(api_url)
+            raise exception_type(api_url)
 
     @staticmethod
-    def api_urls_from_env() -> Optional[list[str]]:
-        envvar = os.environ.get("PREFAB_API_URL")
+    def urls_from_env_var(env_var_name: str) -> Optional[list[str]]:
+        envvar = os.environ.get(env_var_name)
         if envvar:
             return envvar.split(",")
         return None
 
-    def validate_and_process_urls(self, api_url_list: list[str]) -> list[str]:
+    @staticmethod
+    def api_urls_from_env() -> Optional[list[str]]:
+        return Options.urls_from_env_var("PREFAB_API_URL")
+
+    @staticmethod
+    def stream_urls_from_env() -> Optional[list[str]]:
+        return Options.urls_from_env_var("PREFAB_STREAM_URL")
+
+    def validate_and_process_urls(
+        self,
+        api_url_list: list[str],
+        exception_type: Type[Exception] = InvalidApiUrlException,
+    ) -> list[str]:
         valid_urls = []
         for api_url in api_url_list:
             try:
-                valid_urls.append(self.validate_url(api_url))
+                valid_urls.append(self.validate_url(api_url, exception_type))
             except InvalidApiUrlException as e:
                 raise e
         return valid_urls

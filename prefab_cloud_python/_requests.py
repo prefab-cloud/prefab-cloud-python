@@ -1,4 +1,6 @@
 from socket import socket
+from typing import Optional
+
 from ._internal_logging import (
     InternalLogger,
 )
@@ -72,19 +74,21 @@ class ApiClient:
         self.session.mount("http://", NoRetryAdapter())
         self.session.headers.update({VersionHeader: f"prefab-cloud-python-{Version}"})
 
-    def get_host(self, attempt_number):
-        return self.hosts[attempt_number % len(self.hosts)]
+    def get_host(self, attempt_number, host_list):
+        return host_list[attempt_number % len(host_list)]
 
     @retry(
         stop=stop_after_delay(8),
         wait=wait_exponential(multiplier=1, min=0.05, max=2),
         retry=retry_if_exception_type((RequestException, ConnectionError, OSError)),
     )
-    def resilient_request(self, path, method="GET", **kwargs) -> Response:
+    def resilient_request(
+        self, path, method="GET", hosts: Optional[list[str]] = None, **kwargs
+    ) -> Response:
         # Get the current attempt number from tenacity's context
         attempt_number = self.resilient_request.statistics["attempt_number"]
         host = self.get_host(
-            attempt_number - 1
+            attempt_number - 1, hosts or self.hosts
         )  # Subtract 1 because attempt_number starts at 1
         url = f"{host.rstrip('/')}/{path.lstrip('/')}"
 

@@ -3,6 +3,7 @@ from prefab_cloud_python.options import (
     MissingApiKeyException,
     InvalidApiKeyException,
     InvalidApiUrlException,
+    InvalidStreamUrlException,
 )
 
 import os
@@ -112,6 +113,53 @@ class TestOptionsApiUrl:
             prefab_api_urls=["http://api.prefab.cloud"], prefab_datasources="LOCAL_ONLY"
         )
         assert options.prefab_api_urls is None
+
+
+class TestOptionsStreamUrl:
+    def test_prefab_stream_url_from_env(self):
+        with extended_env(
+            {
+                "PREFAB_API_KEY": "1-api",
+                "PREFAB_API_URL": "https://api.dev-prefab.cloud",
+                "PREFAB_STREAM_URL": "https://s.api.dev-prefab.cloud",
+            }
+        ):
+            options = Options()
+            assert options.prefab_stream_urls == ["https://s.api.dev-prefab.cloud"]
+
+    def test_api_url_from_input(self):
+        with extended_env({"PREFAB_API_KEY": "1-api"}):
+            options = Options(
+                prefab_api_urls=["https://api.test-prefab.cloud"],
+                prefab_stream_urls=["https://foo.test-prefab.cloud"],
+            )
+            assert options.prefab_stream_urls == ["https://foo.test-prefab.cloud"]
+
+    def test_prefab_api_url_default_fallback(self):
+        with extended_env({"PREFAB_API_KEY": "1-api"}):
+            options = Options()
+            assert options.prefab_stream_urls == ["https://stream.prefab.cloud"]
+
+    def test_prefab_api_url_errors_on_invalid_format(self):
+        with extended_env({"PREFAB_API_KEY": "1-api"}):
+            with pytest.raises(InvalidStreamUrlException) as context:
+                Options(prefab_stream_urls=["httttp://stream.prefab.cloud"])
+
+            assert "Invalid Stream URL found: httttp://stream.prefab.cloud" in str(
+                context
+            )
+
+    def test_prefab_api_url_doesnt_matter_local_only_set_in_env(self):
+        with extended_env({"PREFAB_DATASOURCES": "LOCAL_ONLY"}):
+            options = Options(prefab_stream_urls=["http://stream.prefab.cloud"])
+            assert options.prefab_stream_urls is None
+
+    def test_prefab_api_url_doesnt_matter_local_only(self):
+        options = Options(
+            prefab_stream_urls=["http://stream.prefab.cloud"],
+            prefab_datasources="LOCAL_ONLY",
+        )
+        assert options.prefab_stream_urls is None
 
 
 class TestOptionsPrefabEnvs:

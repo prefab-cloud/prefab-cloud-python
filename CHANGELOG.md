@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.10] - 2024-09-18
+
+- add separate configuration for the streaming (SSE) config subsystem [#108]
+- trim whitespace from api key [#107]
+
 ## [0.10.9] - 2024-09-12
 
 - Support json config type [#105]

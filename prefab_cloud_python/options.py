@@ -136,7 +136,7 @@ class Options:
 
         if api_key is None:
             raise MissingApiKeyException()
-        api_key = str(api_key)
+        api_key = str(api_key).strip()
         if "-" not in api_key:
             raise InvalidApiKeyException(api_key)
         self.api_key = api_key

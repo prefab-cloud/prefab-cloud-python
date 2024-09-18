@@ -61,6 +61,15 @@ class TestOptionsApiKey:
         options = Options(api_key="bad_api_key", prefab_datasources="LOCAL_ONLY")
         assert options.api_key is None
 
+    def test_api_key_strips_whitespace(self):
+        options = Options(api_key="2-test-api-key\n")
+        assert options.api_key == "2-test-api-key"
+
+    def test_api_key_strips_whitespace_sourced_from_env(self):
+        with extended_env({"PREFAB_API_KEY": " 2-test-api-key\n"}):
+            options = Options()
+            assert options.api_key == "2-test-api-key"
+
 
 class TestOptionsApiUrl:
     def test_prefab_api_url_from_env(self):

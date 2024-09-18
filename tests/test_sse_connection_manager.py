@@ -22,7 +22,9 @@ class TestSSEConnectionManager(unittest.TestCase):
         ]
         self.config_client.highwater_mark.return_value = "123"
         self.config_client.options.api_key = "test_api_key"
-        self.sse_manager = SSEConnectionManager(self.api_client, self.config_client)
+        self.sse_manager = SSEConnectionManager(
+            self.api_client, self.config_client, ["https://stream.test-prefab.cloud"]
+        )
 
     @patch("prefab_cloud_python._sse_connection_manager.time.sleep")
     def test_backoff_on_failed_response(self, mock_sleep):
@@ -51,13 +53,24 @@ class TestSSEConnectionManager(unittest.TestCase):
 
         mock_sleep.assert_has_calls(expected_calls, any_order=False)
 
+        self.api_client.resilient_request.assert_called_with(
+            "/api/v1/sse/config",
+            headers={"x-prefab-start-at-id": "123", "accept": "text/event-stream"},
+            stream=True,
+            auth=("authuser", "test_api_key"),
+            timeout=(5, 60),
+            hosts=["https://stream.test-prefab.cloud"],
+        )
+
         # Check that resilient_request was called three times
         self.assertEqual(self.api_client.resilient_request.call_count, 3)
 
     @patch("prefab_cloud_python._sse_connection_manager.Timing")
     @patch("prefab_cloud_python._sse_connection_manager.time.sleep")
     def test_backoff_on_too_quick_connection(self, mock_sleep, mock_timing):
-        self.sse_manager = SSEConnectionManager(self.api_client, self.config_client)
+        self.sse_manager = SSEConnectionManager(
+            self.api_client, self.config_client, ["https://stream.test-prefab.cloud"]
+        )
 
         # Mock Timing instance returned from the constructor
         mock_timing_instance = mock_timing.return_value
@@ -95,6 +108,15 @@ class TestSSEConnectionManager(unittest.TestCase):
         ]
 
         mock_sleep.assert_has_calls(expected_calls, any_order=False)
+
+        self.api_client.resilient_request.assert_called_with(
+            "/api/v1/sse/config",
+            headers={"x-prefab-start-at-id": "123", "accept": "text/event-stream"},
+            stream=True,
+            auth=("authuser", "test_api_key"),
+            timeout=(5, 60),
+            hosts=["https://stream.test-prefab.cloud"],
+        )
 
     @patch("prefab_cloud_python._sse_connection_manager.time.sleep")
     def test_backoff_on_unauthorized_exception(self, mock_sleep):
@@ -126,11 +148,21 @@ class TestSSEConnectionManager(unittest.TestCase):
         ]
 
         mock_sleep.assert_has_calls(expected_calls, any_order=False)
+        self.api_client.resilient_request.assert_called_with(
+            "/api/v1/sse/config",
+            headers={"x-prefab-start-at-id": "123", "accept": "text/event-stream"},
+            stream=True,
+            auth=("authuser", "test_api_key"),
+            timeout=(5, 60),
+            hosts=["https://stream.test-prefab.cloud"],
+        )
 
     @patch("prefab_cloud_python._sse_connection_manager.Timing")
     @patch("prefab_cloud_python._sse_connection_manager.time.sleep")
     def test_backoff_reset_on_successful_connection(self, mock_sleep, mock_timing):
-        self.sse_manager = SSEConnectionManager(self.api_client, self.config_client)
+        self.sse_manager = SSEConnectionManager(
+            self.api_client, self.config_client, ["https://stream.test-prefab.cloud"]
+        )
 
         # Mock Timing instance returned from the constructor
         mock_timing_instance = mock_timing.return_value
@@ -169,6 +201,14 @@ class TestSSEConnectionManager(unittest.TestCase):
         ]
 
         mock_sleep.assert_has_calls(expected_calls, any_order=False)
+        self.api_client.resilient_request.assert_called_with(
+            "/api/v1/sse/config",
+            headers={"x-prefab-start-at-id": "123", "accept": "text/event-stream"},
+            stream=True,
+            auth=("authuser", "test_api_key"),
+            timeout=(5, 60),
+            hosts=["https://stream.test-prefab.cloud"],
+        )
 
     def test_process_response(self):
         mock_response = Mock()

@@ -60,7 +60,9 @@ class ConfigClient(ConfigClientInterface):
         self._cache_path = None
         self.set_cache_path()
         self.api_client = ApiClient(self.options)
-        self.sse_connection_manager = SSEConnectionManager(self.api_client, self)
+        self.sse_connection_manager = SSEConnectionManager(
+            self.api_client, self, self.options.prefab_stream_urls
+        )
 
         if self.options.is_local_only():
             self.finish_init("local only")

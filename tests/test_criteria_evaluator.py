@@ -376,16 +376,16 @@ class TestCriteriaEvaluator:
 
         assert evaluator.evaluate({}).raw_config_value().string == default_value
         assert (
-                evaluator.evaluate(context({"user": {"email": "nope"}}))
-                .raw_config_value()
-                .string
-                == default_value
+            evaluator.evaluate(context({"user": {"email": "nope"}}))
+            .raw_config_value()
+            .string
+            == default_value
         )
         assert (
-                evaluator.evaluate(context({"user": {"email": "two"}}))
-                .raw_config_value()
-                .string
-                == desired_value
+            evaluator.evaluate(context({"user": {"email": "two"}}))
+            .raw_config_value()
+            .string
+            == desired_value
         )
 
     def test_prop_does_not_start_with_one_of(self):
@@ -421,18 +421,17 @@ class TestCriteriaEvaluator:
 
         assert evaluator.evaluate({}).raw_config_value().string == desired_value
         assert (
-                evaluator.evaluate(context({"user": {"email": "nope"}}))
-                .raw_config_value()
-                .string
-                == desired_value
+            evaluator.evaluate(context({"user": {"email": "nope"}}))
+            .raw_config_value()
+            .string
+            == desired_value
         )
         assert (
-                evaluator.evaluate(context({"user": {"email": "two"}}))
-                .raw_config_value()
-                .string
-                == default_value
+            evaluator.evaluate(context({"user": {"email": "two"}}))
+            .raw_config_value()
+            .string
+            == default_value
         )
-
 
     def test_prop_contains_one_of(self):
         config = Prefab.Config(
@@ -467,16 +466,16 @@ class TestCriteriaEvaluator:
 
         assert evaluator.evaluate({}).raw_config_value().string == default_value
         assert (
-                evaluator.evaluate(context({"user": {"email": "nope"}}))
-                .raw_config_value()
-                .string
-                == default_value
+            evaluator.evaluate(context({"user": {"email": "nope"}}))
+            .raw_config_value()
+            .string
+            == default_value
         )
         assert (
-                evaluator.evaluate(context({"user": {"email": "foo two bar"}}))
-                .raw_config_value()
-                .string
-                == desired_value
+            evaluator.evaluate(context({"user": {"email": "foo two bar"}}))
+            .raw_config_value()
+            .string
+            == desired_value
         )
 
     def test_prop_does_not_contain_one_of(self):
@@ -512,16 +511,16 @@ class TestCriteriaEvaluator:
 
         assert evaluator.evaluate({}).raw_config_value().string == desired_value
         assert (
-                evaluator.evaluate(context({"user": {"email": "nope"}}))
-                .raw_config_value()
-                .string
-                == desired_value
+            evaluator.evaluate(context({"user": {"email": "nope"}}))
+            .raw_config_value()
+            .string
+            == desired_value
         )
         assert (
-                evaluator.evaluate(context({"user": {"email": "foo two bar"}}))
-                .raw_config_value()
-                .string
-                == default_value
+            evaluator.evaluate(context({"user": {"email": "foo two bar"}}))
+            .raw_config_value()
+            .string
+            == default_value
         )
 
     def test_in_seg(self):

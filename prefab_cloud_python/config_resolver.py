@@ -142,6 +142,26 @@ class CriteriaEvaluator:
                     for ending in criterion.value_to_match.string_list.values
                 ]
             ))
+        if criterion.operator in [OPS.PROP_STARTS_WITH_ONE_OF, OPS.PROP_DOES_NOT_START_WITH_ONE_OF]:
+            negative = criterion.operator == OPS.PROP_DOES_NOT_START_WITH_ONE_OF
+            if value_from_properties is None:
+                return self.negate(negative, False)
+            return self.negate(negative, any(
+                [
+                    str(value_from_properties).startswith(beginning)
+                    for beginning in criterion.value_to_match.string_list.values
+                ]
+            ))
+        if criterion.operator in [OPS.PROP_CONTAINS_ONE_OF, OPS.PROP_DOES_NOT_CONTAIN_ONE_OF]:
+            negative = criterion.operator == OPS.PROP_DOES_NOT_CONTAIN_ONE_OF
+            if value_from_properties is None:
+                return self.negate(negative, False)
+            return self.negate(negative, any(
+                [
+                    string in str(value_from_properties)
+                    for string in criterion.value_to_match.string_list.values
+                ]
+            ))
         if criterion.operator == OPS.HIERARCHICAL_MATCH:
             return value_from_properties.startswith(criterion.value_to_match.string)
         if criterion.operator == OPS.ALWAYS_TRUE:

@@ -343,6 +343,187 @@ class TestCriteriaEvaluator:
             == default_value
         )
 
+    def test_prop_starts_with_one_of(self):
+        config = Prefab.Config(
+            key=key,
+            rows=[
+                default_row,
+                Prefab.ConfigRow(
+                    project_env_id=project_env_id,
+                    values=[
+                        Prefab.ConditionalValue(
+                            criteria=[
+                                Prefab.Criterion(
+                                    operator="PROP_STARTS_WITH_ONE_OF",
+                                    value_to_match=Prefab.ConfigValue(
+                                        string_list=Prefab.StringList(
+                                            values=["one", "two", "three"]
+                                        )
+                                    ),
+                                    property_name="user.email",
+                                )
+                            ],
+                            value=Prefab.ConfigValue(string=desired_value),
+                        )
+                    ],
+                ),
+            ],
+        )
+
+        evaluator = CriteriaEvaluator(
+            config, project_env_id, resolver=None, base_client=None
+        )
+
+        assert evaluator.evaluate({}).raw_config_value().string == default_value
+        assert (
+                evaluator.evaluate(context({"user": {"email": "nope"}}))
+                .raw_config_value()
+                .string
+                == default_value
+        )
+        assert (
+                evaluator.evaluate(context({"user": {"email": "two"}}))
+                .raw_config_value()
+                .string
+                == desired_value
+        )
+
+    def test_prop_does_not_start_with_one_of(self):
+        config = Prefab.Config(
+            key=key,
+            rows=[
+                default_row,
+                Prefab.ConfigRow(
+                    project_env_id=project_env_id,
+                    values=[
+                        Prefab.ConditionalValue(
+                            criteria=[
+                                Prefab.Criterion(
+                                    operator=Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_START_WITH_ONE_OF,
+                                    value_to_match=Prefab.ConfigValue(
+                                        string_list=Prefab.StringList(
+                                            values=["one", "two", "three"]
+                                        )
+                                    ),
+                                    property_name="user.email",
+                                )
+                            ],
+                            value=Prefab.ConfigValue(string=desired_value),
+                        )
+                    ],
+                ),
+            ],
+        )
+
+        evaluator = CriteriaEvaluator(
+            config, project_env_id, resolver=None, base_client=None
+        )
+
+        assert evaluator.evaluate({}).raw_config_value().string == desired_value
+        assert (
+                evaluator.evaluate(context({"user": {"email": "nope"}}))
+                .raw_config_value()
+                .string
+                == desired_value
+        )
+        assert (
+                evaluator.evaluate(context({"user": {"email": "two"}}))
+                .raw_config_value()
+                .string
+                == default_value
+        )
+
+
+    def test_prop_contains_one_of(self):
+        config = Prefab.Config(
+            key=key,
+            rows=[
+                default_row,
+                Prefab.ConfigRow(
+                    project_env_id=project_env_id,
+                    values=[
+                        Prefab.ConditionalValue(
+                            criteria=[
+                                Prefab.Criterion(
+                                    operator=Prefab.Criterion.CriterionOperator.PROP_CONTAINS_ONE_OF,
+                                    value_to_match=Prefab.ConfigValue(
+                                        string_list=Prefab.StringList(
+                                            values=["one", "two", "three"]
+                                        )
+                                    ),
+                                    property_name="user.email",
+                                )
+                            ],
+                            value=Prefab.ConfigValue(string=desired_value),
+                        )
+                    ],
+                ),
+            ],
+        )
+
+        evaluator = CriteriaEvaluator(
+            config, project_env_id, resolver=None, base_client=None
+        )
+
+        assert evaluator.evaluate({}).raw_config_value().string == default_value
+        assert (
+                evaluator.evaluate(context({"user": {"email": "nope"}}))
+                .raw_config_value()
+                .string
+                == default_value
+        )
+        assert (
+                evaluator.evaluate(context({"user": {"email": "foo two bar"}}))
+                .raw_config_value()
+                .string
+                == desired_value
+        )
+
+    def test_prop_does_not_contain_one_of(self):
+        config = Prefab.Config(
+            key=key,
+            rows=[
+                default_row,
+                Prefab.ConfigRow(
+                    project_env_id=project_env_id,
+                    values=[
+                        Prefab.ConditionalValue(
+                            criteria=[
+                                Prefab.Criterion(
+                                    operator=Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_CONTAIN_ONE_OF,
+                                    value_to_match=Prefab.ConfigValue(
+                                        string_list=Prefab.StringList(
+                                            values=["one", "two", "three"]
+                                        )
+                                    ),
+                                    property_name="user.email",
+                                )
+                            ],
+                            value=Prefab.ConfigValue(string=desired_value),
+                        )
+                    ],
+                ),
+            ],
+        )
+
+        evaluator = CriteriaEvaluator(
+            config, project_env_id, resolver=None, base_client=None
+        )
+
+        assert evaluator.evaluate({}).raw_config_value().string == desired_value
+        assert (
+                evaluator.evaluate(context({"user": {"email": "nope"}}))
+                .raw_config_value()
+                .string
+                == desired_value
+        )
+        assert (
+                evaluator.evaluate(context({"user": {"email": "foo two bar"}}))
+                .raw_config_value()
+                .string
+                == default_value
+        )
+
     def test_in_seg(self):
         segment_key = "segment_key"
 

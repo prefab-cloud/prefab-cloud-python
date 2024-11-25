@@ -132,24 +132,16 @@ class CriteriaEvaluator:
             return self.in_segment(criterion, properties)
         if criterion.operator == OPS.NOT_IN_SEG:
             return not self.in_segment(criterion, properties)
-        if criterion.operator == OPS.PROP_ENDS_WITH_ONE_OF:
+        if criterion.operator in [OPS.PROP_ENDS_WITH_ONE_OF, OPS.PROP_DOES_NOT_END_WITH_ONE_OF]:
+            negative = criterion.operator == OPS.PROP_DOES_NOT_END_WITH_ONE_OF
             if value_from_properties is None:
-                return False
-            return any(
+                return self.negate(negative, False)
+            return self.negate(negative, any(
                 [
                     str(value_from_properties).endswith(ending)
                     for ending in criterion.value_to_match.string_list.values
                 ]
-            )
-        if criterion.operator == OPS.PROP_DOES_NOT_END_WITH_ONE_OF:
-            if value_from_properties is None:
-                return True
-            return not any(
-                [
-                    str(value_from_properties).endswith(ending)
-                    for ending in criterion.value_to_match.string_list.values
-                ]
-            )
+            ))
         if criterion.operator == OPS.HIERARCHICAL_MATCH:
             return value_from_properties.startswith(criterion.value_to_match.string)
         if criterion.operator == OPS.ALWAYS_TRUE:
@@ -157,6 +149,10 @@ class CriteriaEvaluator:
 
         logger.info(f"Unknown criterion operator {criterion.operator}")
         return False
+
+    @staticmethod
+    def negate(negate, value):
+        return not value if negate else value
 
     def matches(self, criterion, value, properties):
         criterion_value_or_values = ConfigValueUnwrapper.deepest_value(

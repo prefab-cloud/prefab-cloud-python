@@ -601,6 +601,16 @@ class Criterion(google.protobuf.message.Message):
         PROP_DOES_NOT_END_WITH_ONE_OF: Criterion._CriterionOperator.ValueType  # 9
         HIERARCHICAL_MATCH: Criterion._CriterionOperator.ValueType  # 10
         IN_INT_RANGE: Criterion._CriterionOperator.ValueType  # 11
+        PROP_STARTS_WITH_ONE_OF: Criterion._CriterionOperator.ValueType  # 12
+        PROP_DOES_NOT_START_WITH_ONE_OF: Criterion._CriterionOperator.ValueType  # 13
+        PROP_CONTAINS_ONE_OF: Criterion._CriterionOperator.ValueType  # 14
+        PROP_DOES_NOT_CONTAIN_ONE_OF: Criterion._CriterionOperator.ValueType  # 15
+        PROP_LESS_THAN: Criterion._CriterionOperator.ValueType  # 16
+        PROP_LESS_THAN_OR_EQUAL: Criterion._CriterionOperator.ValueType  # 17
+        PROP_GREATER_THAN: Criterion._CriterionOperator.ValueType  # 18
+        PROP_GREATER_THAN_OR_EQUAL: Criterion._CriterionOperator.ValueType  # 19
+        PROP_BEFORE: Criterion._CriterionOperator.ValueType  # 20
+        PROP_AFTER: Criterion._CriterionOperator.ValueType  # 21
 
     class CriterionOperator(_CriterionOperator, metaclass=_CriterionOperatorEnumTypeWrapper): ...
     NOT_SET: Criterion.CriterionOperator.ValueType  # 0
@@ -616,6 +626,16 @@ class Criterion(google.protobuf.message.Message):
     PROP_DOES_NOT_END_WITH_ONE_OF: Criterion.CriterionOperator.ValueType  # 9
     HIERARCHICAL_MATCH: Criterion.CriterionOperator.ValueType  # 10
     IN_INT_RANGE: Criterion.CriterionOperator.ValueType  # 11
+    PROP_STARTS_WITH_ONE_OF: Criterion.CriterionOperator.ValueType  # 12
+    PROP_DOES_NOT_START_WITH_ONE_OF: Criterion.CriterionOperator.ValueType  # 13
+    PROP_CONTAINS_ONE_OF: Criterion.CriterionOperator.ValueType  # 14
+    PROP_DOES_NOT_CONTAIN_ONE_OF: Criterion.CriterionOperator.ValueType  # 15
+    PROP_LESS_THAN: Criterion.CriterionOperator.ValueType  # 16
+    PROP_LESS_THAN_OR_EQUAL: Criterion.CriterionOperator.ValueType  # 17
+    PROP_GREATER_THAN: Criterion.CriterionOperator.ValueType  # 18
+    PROP_GREATER_THAN_OR_EQUAL: Criterion.CriterionOperator.ValueType  # 19
+    PROP_BEFORE: Criterion.CriterionOperator.ValueType  # 20
+    PROP_AFTER: Criterion.CriterionOperator.ValueType  # 21
 
     PROPERTY_NAME_FIELD_NUMBER: builtins.int
     OPERATOR_FIELD_NUMBER: builtins.int

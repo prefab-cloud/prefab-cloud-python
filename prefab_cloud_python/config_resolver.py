@@ -6,7 +6,8 @@ from .read_write_lock import ReadWriteLock
 from .config_value_unwrapper import ConfigValueUnwrapper
 from .context import Context
 from ._internal_logging import InternalLogger
-from .simple_criterion_evaluators import NumericOperators, StringOperators, DateOperators
+from .simple_criterion_evaluators import NumericOperators, StringOperators, DateOperators, SemverOperators, \
+    RegexMatchOperators
 import prefab_pb2 as Prefab
 import google
 
@@ -147,11 +148,10 @@ class CriteriaEvaluator:
             return DateOperators.evaluate(criterion.operator, unwrapped_criterion_value, value_from_properties)
         if criterion.operator in NumericOperators.SUPPORTED_OPERATORS:
             return NumericOperators.evaluate(criterion.operator, unwrapped_criterion_value, value_from_properties)
-        if criterion.operator in [OPS.PROP_MATCHES, OPS.PROP_NOT_MATCHES]:
-            return self.matches(criterion, value_from_properties, properties)
-
-        if criterion.operator in [OPS.PROP_SEMVER_LESS_THAN, OPS.PROP_SEMVER_EQUAL, OPS.PROP_SEMVER_GREATER_THAN]:
-            return self.semver_comparison(criterion, value_from_properties)
+        if criterion.operator in RegexMatchOperators.SUPPORTED_OPERATORS:
+            return RegexMatchOperators.evaluate(criterion.operator, unwrapped_criterion_value, value_from_properties)
+        if criterion.operator in SemverOperators.SUPPORTED_OPERATORS:
+            return SemverOperators.evaluate(criterion.operator, unwrapped_criterion_value, value_from_properties)
 
         logger.info(f"Unknown criterion operator {criterion.operator}")
         return False
@@ -159,10 +159,6 @@ class CriteriaEvaluator:
     @staticmethod
     def negate(negate, value):
         return not value if negate else value
-
-
-    def matches(self, criterion, value_from_properties, properties):
-        return False
 
     def one_of(self, criterion, value, properties):
         criterion_value_or_values = ConfigValueUnwrapper.deepest_value(
@@ -198,21 +194,6 @@ class CriteriaEvaluator:
             return []
         else:
             return env_rows[0].values
-
-
-    def semver_comparison(self, criterion, value_from_properties):
-        return False
-
-    def date_comparison(self, criterion, value_from_properties):
-        return False
-
-    @staticmethod
-    def compare_to(a, b):
-        if a < b:
-            return -1
-        elif a > b:
-            return 1
-        return 0
 
 
 class Evaluation:

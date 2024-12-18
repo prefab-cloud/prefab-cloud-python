@@ -3,7 +3,8 @@ from datetime import datetime, timezone
 
 import pytest
 import prefab_pb2 as Prefab
-from prefab_cloud_python.simple_criterion_evaluators import NumericOperators, StringOperators, DateOperators
+from prefab_cloud_python.simple_criterion_evaluators import NumericOperators, StringOperators, DateOperators, \
+    SemverOperators, RegexMatchOperators
 
 
 class TestNumericComparisons:
@@ -252,3 +253,211 @@ class TestDateOperations:
             case.operator,
             case.criterionValue)
         assert result == case.expectedMatchResult
+
+
+from collections import namedtuple
+import pytest
+
+class TestSemverOperators:
+    OperatorTestCase = namedtuple(
+        "OperatorTestCase",
+        ["description", "context_value", "operator", "criterion_value", "expected_result"]
+    )
+
+    @pytest.mark.parametrize("case", [
+        # Valid semver comparisons
+        OperatorTestCase(
+            "equal versions return true",
+            "1.2.3",
+            Prefab.Criterion.CriterionOperator.PROP_SEMVER_EQUAL,
+            "1.2.3",
+            True
+        ),
+        OperatorTestCase(
+            "equal versions with prerelease return true",
+            "1.2.3-alpha",
+            Prefab.Criterion.CriterionOperator.PROP_SEMVER_EQUAL,
+            "1.2.3-alpha",
+            True
+        ),
+        OperatorTestCase(
+            "greater than comparison returns true",
+            "2.0.0",
+            Prefab.Criterion.CriterionOperator.PROP_SEMVER_GREATER_THAN,
+            "1.9.9",
+            True
+        ),
+        OperatorTestCase(
+            "less than comparison returns true",
+            "1.9.9",
+            Prefab.Criterion.CriterionOperator.PROP_SEMVER_LESS_THAN,
+            "2.0.0",
+            True
+        ),
+
+        # Invalid versions
+        OperatorTestCase(
+            "invalid context value returns false",
+            "not.a.version",
+            Prefab.Criterion.CriterionOperator.PROP_SEMVER_EQUAL,
+            "1.0.0",
+            False
+        ),
+        OperatorTestCase(
+            "invalid criterion value returns false",
+            "1.0.0",
+            Prefab.Criterion.CriterionOperator.PROP_SEMVER_EQUAL,
+            "not.a.version",
+            False
+        ),
+        OperatorTestCase(
+            "both invalid versions return false",
+            "invalid1",
+            Prefab.Criterion.CriterionOperator.PROP_SEMVER_EQUAL,
+            "invalid2",
+            False
+        ),
+
+        # Unsupported operator
+        OperatorTestCase(
+            "unsupported operator returns false",
+            "1.0.0",
+            "UNSUPPORTED_OPERATOR",
+            "1.0.0",
+            False
+        ),
+    ], ids=lambda c: c.description)
+    def test_operator(self, case: OperatorTestCase) -> None:
+        result = SemverOperators.evaluate(
+            case.context_value,
+            case.operator,
+            case.criterion_value)
+        assert result == case.expected_result
+
+
+class TestRegexMatchOperators:
+    RegexTestCase = namedtuple(
+        "RegexTestCase",
+        ["description", "context_value", "operator", "criterion_value", "expected_result"]
+    )
+
+    @pytest.mark.parametrize("case", [
+        # Basic matching
+        RegexTestCase(
+            "simple regex match returns true",
+            "hello world",
+            Prefab.Criterion.CriterionOperator.PROP_MATCHES,
+            "world",
+            True
+        ),
+        RegexTestCase(
+            "simple regex non-match returns false",
+            "hello world",
+            Prefab.Criterion.CriterionOperator.PROP_MATCHES,
+            "universe",
+            False
+        ),
+        RegexTestCase(
+            "does not match returns true for non-matching regex",
+            "hello world",
+            Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_MATCH,
+            "universe",
+            True
+        ),
+
+        # Pattern features
+        RegexTestCase(
+            "match with wildcard returns true",
+            "hello world",
+            Prefab.Criterion.CriterionOperator.PROP_MATCHES,
+            "hel+o",
+            True
+        ),
+        RegexTestCase(
+            "match with character class returns true",
+            "hello123",
+            Prefab.Criterion.CriterionOperator.PROP_MATCHES,
+            r"\d+",
+            True
+        ),
+        RegexTestCase(
+            "match with start anchor returns false if not at start",
+            "hello world",
+            Prefab.Criterion.CriterionOperator.PROP_MATCHES,
+            "^world",
+            False
+        ),
+
+        # Invalid patterns
+        RegexTestCase(
+            "invalid regex pattern returns false",
+            "hello world",
+            Prefab.Criterion.CriterionOperator.PROP_MATCHES,
+            "[unclosed",
+            False
+        ),
+        RegexTestCase(
+            "invalid regex with does_not_match returns false",
+            "hello world",
+            Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_MATCH,
+            "[unclosed",
+            False
+        ),
+
+        # Non-string inputs
+        RegexTestCase(
+            "numeric context value returns false",
+            123,
+            Prefab.Criterion.CriterionOperator.PROP_MATCHES,
+            r"\d+",
+            False
+        ),
+        RegexTestCase(
+            "numeric pattern returns false",
+            "123",
+            Prefab.Criterion.CriterionOperator.PROP_MATCHES,
+            123,
+            False
+        ),
+
+        # Empty strings
+        RegexTestCase(
+            "empty context value can still match",
+            "",
+            Prefab.Criterion.CriterionOperator.PROP_MATCHES,
+            "^$",
+            True
+        ),
+        RegexTestCase(
+            "empty pattern is valid regex",
+            "hello",
+            Prefab.Criterion.CriterionOperator.PROP_MATCHES,
+            "",
+            True
+        ),
+
+        # Special cases
+        RegexTestCase(
+            "None context value returns false",
+            None,
+            Prefab.Criterion.CriterionOperator.PROP_MATCHES,
+            ".*",
+            False
+        ),
+        RegexTestCase(
+            "None pattern returns false",
+            "hello",
+            Prefab.Criterion.CriterionOperator.PROP_MATCHES,
+            None,
+            False
+        ),
+    ], ids=lambda c: c.description)
+    def test_operator(self, case: RegexTestCase) -> None:
+        result = RegexMatchOperators.evaluate(
+            case.context_value,
+            case.operator,
+            case.criterion_value)
+        assert result == case.expected_result
+
+
+

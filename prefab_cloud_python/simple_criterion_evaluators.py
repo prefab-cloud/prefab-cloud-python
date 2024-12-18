@@ -1,8 +1,11 @@
+import re
 from datetime import datetime
-from typing import Callable, Mapping, FrozenSet, Union
+from typing import Callable, Mapping, FrozenSet, Union, Optional
 import prefab_pb2 as Prefab
 from types import MappingProxyType
 from numbers import Real  # includes both int and float
+
+from prefab_cloud_python.semantic_version import SemanticVersion
 
 
 def negate(negate, value):
@@ -155,4 +158,82 @@ class DateOperators:
                 return False
 
         except (ValueError, TypeError):
+            return False
+
+
+class SemverOperators:
+    """Handles semver comparisons for criterion evaluation."""
+
+    SUPPORTED_OPERATORS: FrozenSet[Prefab.Criterion.CriterionOperator] = frozenset({
+        Prefab.Criterion.CriterionOperator.PROP_SEMVER_EQUAL,
+        Prefab.Criterion.CriterionOperator.PROP_SEMVER_GREATER_THAN,
+        Prefab.Criterion.CriterionOperator.PROP_SEMVER_LESS_THAN,
+    })
+
+    @staticmethod
+    def evaluate(
+            context_value: str,
+            operator: Prefab.Criterion.CriterionOperator,
+            criterion_value: str
+    ) -> bool:
+        # Parse both versions, return False if either parse fails
+        context_semver = SemanticVersion.parse_quietly(context_value)
+        criterion_semver = SemanticVersion.parse_quietly(criterion_value)
+
+        if context_semver is None or criterion_semver is None:
+            return False
+
+        if operator == Prefab.Criterion.CriterionOperator.PROP_SEMVER_EQUAL:
+            return context_semver == criterion_semver
+
+        if operator == Prefab.Criterion.CriterionOperator.PROP_SEMVER_GREATER_THAN:
+            return context_semver > criterion_semver
+
+        if operator == Prefab.Criterion.CriterionOperator.PROP_SEMVER_LESS_THAN:
+            return context_semver < criterion_semver
+
+        return False  # Unsupported operator
+
+
+class RegexMatchOperators:
+    """Handles regex matching comparisons for criterion evaluation."""
+
+    SUPPORTED_OPERATORS: FrozenSet[Prefab.Criterion.CriterionOperator] = frozenset({
+        Prefab.Criterion.CriterionOperator.PROP_MATCHES,
+        Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_MATCH,
+    })
+
+    @staticmethod
+    def _compile_pattern(pattern: str) -> Optional[re.Pattern]:
+        """
+        Attempts to compile a regex pattern, returning None if compilation fails.
+        """
+        try:
+            return re.compile(pattern)
+        except (re.error, TypeError):
+            return None
+
+    @staticmethod
+    def evaluate(
+            context_value: str,
+            operator: Prefab.Criterion.CriterionOperator,
+            criterion_value: str
+    ) -> bool:
+        # Handle non-string inputs
+        if not isinstance(context_value, str) or not isinstance(criterion_value, str):
+            return False
+
+        # Try to compile the pattern
+        pattern = RegexMatchOperators._compile_pattern(criterion_value)
+        if pattern is None:
+            return False
+
+        # Perform the match
+        try:
+            matches = bool(pattern.search(context_value))
+            return negate(
+                operator == Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_MATCH,
+                matches
+            )
+        except (re.error, TypeError):
             return False

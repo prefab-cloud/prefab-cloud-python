@@ -126,9 +126,9 @@ class CriteriaEvaluator:
 
     def evaluate_criterion(self, criterion, properties):
         value_from_properties = properties.get(criterion.property_name)
-        unwrapped_criterion_value = ConfigValueUnwrapper.deepest_value(
+        deepest_value = ConfigValueUnwrapper.deepest_value(
             criterion.value_to_match, self.config, properties
-        ).unwrap()
+        )
 
         if criterion.operator in [OPS.LOOKUP_KEY_IN, OPS.PROP_IS_ONE_OF]:
             return self.one_of(criterion, value_from_properties, properties)
@@ -139,19 +139,19 @@ class CriteriaEvaluator:
         if criterion.operator == OPS.NOT_IN_SEG:
             return not self.in_segment(criterion, properties)
         if criterion.operator in StringOperators.SUPPORTED_OPERATORS:
-            return StringOperators.evaluate(criterion.operator, unwrapped_criterion_value, value_from_properties)
+            return StringOperators.evaluate(value_from_properties, criterion.operator, deepest_value.unwrap())
         if criterion.operator == OPS.HIERARCHICAL_MATCH:
             return value_from_properties.startswith(criterion.value_to_match.string)
         if criterion.operator == OPS.ALWAYS_TRUE:
             return True
         if criterion.operator in DateOperators.SUPPORTED_OPERATORS:
-            return DateOperators.evaluate(criterion.operator, unwrapped_criterion_value, value_from_properties)
+            return DateOperators.evaluate(value_from_properties, criterion.operator,  deepest_value.unwrap())
         if criterion.operator in NumericOperators.SUPPORTED_OPERATORS:
-            return NumericOperators.evaluate(criterion.operator, unwrapped_criterion_value, value_from_properties)
+            return NumericOperators.evaluate(value_from_properties,  criterion.operator,   deepest_value.unwrap())
         if criterion.operator in RegexMatchOperators.SUPPORTED_OPERATORS:
-            return RegexMatchOperators.evaluate(criterion.operator, unwrapped_criterion_value, value_from_properties)
+            return RegexMatchOperators.evaluate(value_from_properties ,criterion.operator,  deepest_value.unwrap())
         if criterion.operator in SemverOperators.SUPPORTED_OPERATORS:
-            return SemverOperators.evaluate(criterion.operator, unwrapped_criterion_value, value_from_properties)
+            return SemverOperators.evaluate(value_from_properties,  criterion.operator,   deepest_value.unwrap())
 
         logger.info(f"Unknown criterion operator {criterion.operator}")
         return False

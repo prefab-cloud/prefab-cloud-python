@@ -1,10 +1,12 @@
 from __future__ import annotations
 import functools
+from typing import Dict, Callable
 
 from .read_write_lock import ReadWriteLock
 from .config_value_unwrapper import ConfigValueUnwrapper
 from .context import Context
 from ._internal_logging import InternalLogger
+from .simple_criterion_evaluators import NumericOperators, StringOperators
 import prefab_pb2 as Prefab
 import google
 
@@ -123,67 +125,36 @@ class CriteriaEvaluator:
 
     def evaluate_criterion(self, criterion, properties):
         value_from_properties = properties.get(criterion.property_name)
+        unwrapped_criterion_value = ConfigValueUnwrapper.deepest_value(
+            criterion.value_to_match, self.config, properties
+        ).unwrap()
 
         if criterion.operator in [OPS.LOOKUP_KEY_IN, OPS.PROP_IS_ONE_OF]:
-            return self.matches(criterion, value_from_properties, properties)
+            return self.one_of(criterion, value_from_properties, properties)
         if criterion.operator in [OPS.LOOKUP_KEY_NOT_IN, OPS.PROP_IS_NOT_ONE_OF]:
-            return not self.matches(criterion, value_from_properties, properties)
+            return not self.one_of(criterion, value_from_properties, properties)
         if criterion.operator == OPS.IN_SEG:
             return self.in_segment(criterion, properties)
         if criterion.operator == OPS.NOT_IN_SEG:
             return not self.in_segment(criterion, properties)
-        if criterion.operator in [
-            OPS.PROP_ENDS_WITH_ONE_OF,
-            OPS.PROP_DOES_NOT_END_WITH_ONE_OF,
-        ]:
-            negative = criterion.operator == OPS.PROP_DOES_NOT_END_WITH_ONE_OF
-            if value_from_properties is None:
-                return self.negate(negative, False)
-            return self.negate(
-                negative,
-                any(
-                    [
-                        str(value_from_properties).endswith(ending)
-                        for ending in criterion.value_to_match.string_list.values
-                    ]
-                ),
-            )
-        if criterion.operator in [
-            OPS.PROP_STARTS_WITH_ONE_OF,
-            OPS.PROP_DOES_NOT_START_WITH_ONE_OF,
-        ]:
-            negative = criterion.operator == OPS.PROP_DOES_NOT_START_WITH_ONE_OF
-            if value_from_properties is None:
-                return self.negate(negative, False)
-            return self.negate(
-                negative,
-                any(
-                    [
-                        str(value_from_properties).startswith(beginning)
-                        for beginning in criterion.value_to_match.string_list.values
-                    ]
-                ),
-            )
-        if criterion.operator in [
-            OPS.PROP_CONTAINS_ONE_OF,
-            OPS.PROP_DOES_NOT_CONTAIN_ONE_OF,
-        ]:
-            negative = criterion.operator == OPS.PROP_DOES_NOT_CONTAIN_ONE_OF
-            if value_from_properties is None:
-                return self.negate(negative, False)
-            return self.negate(
-                negative,
-                any(
-                    [
-                        string in str(value_from_properties)
-                        for string in criterion.value_to_match.string_list.values
-                    ]
-                ),
-            )
+        if criterion.operator in StringOperators.SUPPORTED_OPERATORS:
+            return StringOperators.evaluate(criterion.operator, unwrapped_criterion_value, value_from_properties)
         if criterion.operator == OPS.HIERARCHICAL_MATCH:
             return value_from_properties.startswith(criterion.value_to_match.string)
         if criterion.operator == OPS.ALWAYS_TRUE:
             return True
+
+        if criterion.operator in [OPS.PROP_BEFORE, OPS.PROP_AFTER]:
+            return self.date_comparison(criterion, value_from_properties)
+
+        if criterion.operator in NumericOperators.SUPPORTED_OPERATORS:
+            return NumericOperators.evaluate(criterion.operator, unwrapped_criterion_value, value_from_properties)
+
+        if criterion.operator in [OPS.PROP_MATCHES, OPS.PROP_NOT_MATCHES]:
+            return self.matches(criterion, value_from_properties, properties)
+
+        if criterion.operator in [OPS.PROP_SEMVER_LESS_THAN, OPS.PROP_SEMVER_EQUAL, OPS.PROP_SEMVER_GREATER_THAN]:
+            return self.semver_comparison(criterion, value_from_properties)
 
         logger.info(f"Unknown criterion operator {criterion.operator}")
         return False
@@ -192,9 +163,13 @@ class CriteriaEvaluator:
     def negate(negate, value):
         return not value if negate else value
 
-    def matches(self, criterion, value, properties):
+
+    def matches(self, criterion, value_from_properties, properties):
+        return False
+
+    def one_of(self, criterion, value, properties):
         criterion_value_or_values = ConfigValueUnwrapper.deepest_value(
-            criterion.value_to_match, self.config.key, properties
+            criterion.value_to_match, self.config, properties
         ).unwrap()
         if isinstance(
             criterion_value_or_values, google._upb._message.RepeatedScalarContainer
@@ -226,6 +201,21 @@ class CriteriaEvaluator:
             return []
         else:
             return env_rows[0].values
+
+
+    def semver_comparison(self, criterion, value_from_properties):
+        return False
+
+    def date_comparison(self, criterion, value_from_properties):
+        return False
+
+    @staticmethod
+    def compare_to(a, b):
+        if a < b:
+            return -1
+        elif a > b:
+            return 1
+        return 0
 
 
 class Evaluation:

@@ -1,5 +1,13 @@
 import json
 
+
+from typing import TYPE_CHECKING, ForwardRef
+
+if TYPE_CHECKING:
+    from .config_resolver import ConfigResolver
+else:
+    ConfigResolver = ForwardRef('ConfigResolver')
+
 from .weighted_value_resolver import WeightedValueResolver
 from .config_value_wrapper import ConfigValueWrapper
 from .context import Context
@@ -77,8 +85,8 @@ class ConfigValueUnwrapper:
     @staticmethod
     def deepest_value(
         config_value: Prefab.ConfigValue,
-        config,
-        resolver,
+        config: Prefab.Config,
+        resolver: ConfigResolver,
         context=Context.get_current(),
     ):
         if config_value and config_value.WhichOneof("type") == "weighted_values":

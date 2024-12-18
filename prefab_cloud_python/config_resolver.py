@@ -6,7 +6,7 @@ from .read_write_lock import ReadWriteLock
 from .config_value_unwrapper import ConfigValueUnwrapper
 from .context import Context
 from ._internal_logging import InternalLogger
-from .simple_criterion_evaluators import NumericOperators, StringOperators
+from .simple_criterion_evaluators import NumericOperators, StringOperators, DateOperators
 import prefab_pb2 as Prefab
 import google
 
@@ -143,13 +143,10 @@ class CriteriaEvaluator:
             return value_from_properties.startswith(criterion.value_to_match.string)
         if criterion.operator == OPS.ALWAYS_TRUE:
             return True
-
-        if criterion.operator in [OPS.PROP_BEFORE, OPS.PROP_AFTER]:
-            return self.date_comparison(criterion, value_from_properties)
-
+        if criterion.operator in DateOperators.SUPPORTED_OPERATORS:
+            return DateOperators.evaluate(criterion.operator, unwrapped_criterion_value, value_from_properties)
         if criterion.operator in NumericOperators.SUPPORTED_OPERATORS:
             return NumericOperators.evaluate(criterion.operator, unwrapped_criterion_value, value_from_properties)
-
         if criterion.operator in [OPS.PROP_MATCHES, OPS.PROP_NOT_MATCHES]:
             return self.matches(criterion, value_from_properties, properties)
 

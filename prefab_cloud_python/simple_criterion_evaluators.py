@@ -1,4 +1,5 @@
-from typing import Callable, Mapping, FrozenSet
+from datetime import datetime
+from typing import Callable, Mapping, FrozenSet, Union
 import prefab_pb2 as Prefab
 from types import MappingProxyType
 from numbers import Real  # includes both int and float
@@ -114,3 +115,44 @@ class StringOperators:
                 for test_value in criterion_value
             )
         )
+
+
+class DateOperators:
+    """Handles date comparisons for criterion evaluation."""
+
+    SUPPORTED_OPERATORS: FrozenSet[Prefab.Criterion.CriterionOperator] = frozenset({
+        Prefab.Criterion.CriterionOperator.PROP_BEFORE,
+        Prefab.Criterion.CriterionOperator.PROP_AFTER
+    })
+
+    @staticmethod
+    def evaluate(
+            context_value: Union[str, Real],
+            operator: Prefab.Criterion.CriterionOperator,
+            criterion_value: int
+    ) -> bool:
+        if not (isinstance(context_value, (str, Real)) and isinstance(criterion_value, int)):
+            return False
+
+        try:
+            # Convert context_value to milliseconds since epoch
+            if isinstance(context_value, str):
+                # Handle RFC3339 string
+                # Replace 'Z' with '+00:00' for compatibility with fromisoformat
+                if context_value.endswith('Z'):
+                    context_value = context_value[:-1] + '+00:00'
+                dt = datetime.fromisoformat(context_value)
+                context_millis = int(dt.timestamp() * 1000)
+            else:
+                context_millis = int(float(context_value))
+
+            # Perform comparison based on operator
+            if operator == Prefab.Criterion.CriterionOperator.PROP_BEFORE:
+                return context_millis < criterion_value
+            elif operator == Prefab.Criterion.CriterionOperator.PROP_AFTER:
+                return context_millis > criterion_value
+            else:
+                return False
+
+        except (ValueError, TypeError):
+            return False

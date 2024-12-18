@@ -1,7 +1,9 @@
 from collections import namedtuple
+from datetime import datetime, timezone
+
 import pytest
 import prefab_pb2 as Prefab
-from prefab_cloud_python.simple_criterion_evaluators import NumericOperators, StringOperators
+from prefab_cloud_python.simple_criterion_evaluators import NumericOperators, StringOperators, DateOperators
 
 
 class TestNumericComparisons:
@@ -162,3 +164,91 @@ class TestStringOperations:
             case.criterionValue)
         assert result == case.expectedMatchResult
 
+
+class TestDateOperations:
+    DateTestCase = namedtuple(
+        "DateComparisonTestCase",
+        ["description", "contextValue", "operator", "criterionValue", "expectedMatchResult"]
+    )
+
+    # Reference timestamps for testing
+    REFERENCE_TIME = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+    REFERENCE_MILLIS = int(REFERENCE_TIME.timestamp() * 1000)
+
+    ONE_HOUR_MILLIS = 3600 * 1000
+    ONE_DAY_MILLIS = 24 * ONE_HOUR_MILLIS
+
+    @pytest.mark.parametrize("case", [
+        # Tests with RFC3339 strings
+        DateTestCase(
+            "RFC3339 date before reference time returns true",
+            "2023-12-31T12:00:00Z",
+            Prefab.Criterion.CriterionOperator.PROP_BEFORE,
+            REFERENCE_MILLIS,
+            True
+        ),
+        DateTestCase(
+            "RFC3339 date after reference time returns false",
+            "2023-12-31T12:00:00Z",
+            Prefab.Criterion.CriterionOperator.PROP_AFTER,
+            REFERENCE_MILLIS,
+            False
+        ),
+        DateTestCase(
+            "RFC3339 date with timezone offset before reference returns true",
+            "2023-12-31T14:00:00+02:00",  # Same as 12:00 UTC
+            Prefab.Criterion.CriterionOperator.PROP_BEFORE,
+            REFERENCE_MILLIS,
+            True
+        ),
+        DateTestCase(
+            "RFC3339 exact match with before returns false",
+            "2024-01-01T12:00:00Z",
+            Prefab.Criterion.CriterionOperator.PROP_BEFORE,
+            REFERENCE_MILLIS,
+            False
+        ),
+        # Tests with millisecond timestamps
+        DateTestCase(
+            "Millisecond timestamp before reference returns true",
+            REFERENCE_MILLIS - ONE_DAY_MILLIS,
+            Prefab.Criterion.CriterionOperator.PROP_BEFORE,
+            REFERENCE_MILLIS,
+            True
+        ),
+        DateTestCase(
+            "Millisecond timestamp after reference returns true",
+            REFERENCE_MILLIS + ONE_HOUR_MILLIS,
+            Prefab.Criterion.CriterionOperator.PROP_AFTER,
+            REFERENCE_MILLIS,
+            True
+        ),
+        # Edge cases and invalid inputs
+        DateTestCase(
+            "Invalid RFC3339 format returns false",
+            "2024-13-01T12:00:00Z",  # Invalid month
+            Prefab.Criterion.CriterionOperator.PROP_BEFORE,
+            REFERENCE_MILLIS,
+            False
+        ),
+        DateTestCase(
+            "Non-supported operator returns false",
+            "2024-01-01T12:00:00Z",
+            "UNSUPPORTED_OPERATOR",
+            REFERENCE_MILLIS,
+            False
+        ),
+        DateTestCase(
+            "Invalid millisecond timestamp format returns false",
+            "not_a_number",
+            Prefab.Criterion.CriterionOperator.PROP_BEFORE,
+            REFERENCE_MILLIS,
+            False
+        ),
+    ], ids=lambda c: c.description)
+    def test_operator(self, case: DateTestCase) -> None:
+        result = DateOperators.evaluate(
+            case.contextValue,
+            case.operator,
+            case.criterionValue)
+        assert result == case.expectedMatchResult

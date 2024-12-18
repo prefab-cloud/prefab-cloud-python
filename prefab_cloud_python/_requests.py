@@ -1,3 +1,4 @@
+import importlib
 from socket import socket
 from typing import Optional
 
@@ -17,7 +18,14 @@ from importlib.metadata import version
 
 logger = InternalLogger(__name__)
 
-Version = version("prefab-cloud-python")
+
+try:
+    from importlib.metadata import version
+    Version = version("prefab-cloud-python")
+except importlib.metadata.PackageNotFoundError:
+    Version = "development"
+
+
 VersionHeader = "X-PrefabCloud-Client-Version"
 
 DEFAULT_TIMEOUT = 5  # seconds

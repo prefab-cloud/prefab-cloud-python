@@ -14,11 +14,8 @@ from tenacity import (
     wait_exponential,
     retry_if_exception_type,
 )
-from importlib.metadata import version
 
 logger = InternalLogger(__name__)
-
-
 try:
     from importlib.metadata import version
 

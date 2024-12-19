@@ -14,7 +14,7 @@ from prefab_cloud_python.simple_criterion_evaluators import (
 
 class TestNumericComparisons:
     NumberTestCase = namedtuple(
-        "NumericComparisonTestCase",  # Kept your original name
+        "NumberTestCase",  # Kept your original name
         [
             "description",
             "contextValue",
@@ -123,7 +123,7 @@ class TestNumericComparisons:
 
 class TestStringOperations:
     StringTestCase = namedtuple(
-        "StringComparisonTestCase",  # Kept your original name
+        "StringTestCase",  # Kept your original name
         [
             "description",
             "contextValue",
@@ -190,7 +190,7 @@ class TestStringOperations:
 
 class TestDateOperations:
     DateTestCase = namedtuple(
-        "DateComparisonTestCase",
+        "DateTestCase",
         [
             "description",
             "contextValue",
@@ -300,10 +300,6 @@ class TestDateOperations:
             case.contextValue, case.operator, case.criterionValue
         )
         assert result == case.expectedMatchResult
-
-
-from collections import namedtuple
-import pytest
 
 
 class TestSemverOperators:

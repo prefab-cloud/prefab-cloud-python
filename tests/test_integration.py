@@ -46,27 +46,28 @@ ContextUploadMode = {
 }
 
 
-def build_options_with_overrides(options, overrides):
-    if overrides is None:
-        return options
-    if overrides.get("on_no_default") == 2:
-        options.on_no_default = "RETURN_NONE"
-    if overrides.get("namespace") is not None:
-        options.namespace = overrides["namespace"]
-    on_connection_failure = overrides.get("on_init_failure")
-    if on_connection_failure:
-        if on_connection_failure not in OnConnectionFailure:
-            raise Exception(
-                f"value of on_init_failure {on_connection_failure} maps to no known value"
-            )
-        options.on_connection_failure = OnConnectionFailure[on_connection_failure]
-    options.connection_timeout_seconds = overrides.get(
-        "initialization_timeout_sec", options.connection_timeout_seconds
-    )
-    if overrides.get("context_upload_mode"):
-        options.context_upload_mode = ContextUploadMode[
-            overrides["context_upload_mode"]
-        ]
+def build_options_with_overrides(options, overrides, global_context):
+    if overrides:
+        if overrides.get("on_no_default") == 2:
+            options.on_no_default = "RETURN_NONE"
+        if overrides.get("namespace") is not None:
+            options.namespace = overrides["namespace"]
+        on_connection_failure = overrides.get("on_init_failure")
+        if on_connection_failure:
+            if on_connection_failure not in OnConnectionFailure:
+                raise Exception(
+                    f"value of on_init_failure {on_connection_failure} maps to no known value"
+                )
+            options.on_connection_failure = OnConnectionFailure[on_connection_failure]
+        options.connection_timeout_seconds = overrides.get(
+            "initialization_timeout_sec", options.connection_timeout_seconds
+        )
+        if overrides.get("context_upload_mode"):
+            options.context_upload_mode = ContextUploadMode[
+                overrides["context_upload_mode"]
+            ]
+    if global_context:
+        options.global_context = global_context
     return options
 
 
@@ -94,7 +95,7 @@ def load_test_cases_from_file(filename):
     for test_set in yaml_data["tests"]:
         test_info = {
             "name": test_set.get("name") or "",
-            "globalContext": test_set.get("context"),
+            "globalContext": test_set.get("contexts", {}).get("global"),
             "fileName": filename,
         }
         for case in test_set["cases"]:
@@ -116,21 +117,23 @@ def run_test(
     options,
     input_key="key",
     function="get",
-    global_context=None,
     expected_modifier=(lambda x: x),
 ):
     case = test["case"]
     input = case["input"]
     expected = case["expected"]
     type = case.get("type")
-    options = build_options_with_overrides(options, case.get("client_overrides"))
+    options = build_options_with_overrides(options, case.get("client_overrides"), global_context=case.get("contexts",{}).get("global"))
     with Client(options) as client:
-        if global_context:
-            Context.set_current(Context(global_context))
+        block_context = case.get("contexts",{}).get("block")
+        if block_context:
+            Context.set_current(Context(block_context))
         key = input[input_key]
         default = input.get("default")
-        if input.get("context"):
-            context = Context(input["context"])
+
+        local_context = case.get("contexts",{}).get("local")
+        if local_context:
+            context = Context(local_context)
         else:
             context = None
         if function == "get":
@@ -155,9 +158,13 @@ def run_test(
 
 def run_telemetry_test(test, options, global_context=None):
     case = test["case"]
-    options = build_options_with_overrides(options, case.get("client_overrides"))
-    if global_context:
-        Context.set_current(Context(global_context))
+    options = build_options_with_overrides(options, case.get("client_overrides"), global_context=global_context)
+    block_context = case.get("contexts", {}).get("block")
+    if block_context:
+        Context.set_current(Context(block_context))
+    local_context = case.get("contexts", {}).get("local")
+    if local_context:
+       raise RuntimeError("local_context not supported yet in telemetry test")
     client = Client(options)
     with patch.object(client, "post", wraps=client.post) as spy_method:
         if case["aggregator"] == "log_path":
@@ -217,7 +224,7 @@ def run_context_instances_telemetry_test(test, case, client, spy_post_method):
 
 
 def run_evaluation_summary_telemetry_test(test, case, client, spy_post_method):
-    for key in case["data"]:
+    for key in case.get("data", {})["keys"]:
         client.config_client().get(key)
     client.telemetry_manager.flush_and_block()
     url, telemetry_events = spy_post_method.call_args.args
@@ -295,7 +302,6 @@ class TestIntegration:
             options,
             input_key="flag",
             function="enabled",
-            global_context=testcase["testInfo"].get("globalContext"),
         )
 
     @pytest.mark.parametrize(
@@ -321,7 +327,6 @@ class TestIntegration:
         run_test(
             testcase,
             options,
-            global_context=testcase["testInfo"].get("globalContext"),
             expected_modifier=(lambda x: LLV(x)),
         )
 
@@ -347,4 +352,4 @@ class TestIntegration:
         ids=make_id_from_test_case,
     )
     def test_post(self, options, testcase):
-        run_telemetry_test(testcase, options)
+        run_telemetry_test(testcase, options, global_context=None)

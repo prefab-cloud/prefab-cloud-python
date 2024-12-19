@@ -1,8 +1,8 @@
-import json
 
-MAPPING = {int: 1, str: 2, float: 4, bool: 5, list: 10, json: 16}
+MAPPING = {int: 1, str: 2, float: 4, bool: 5, list: 10, dict: 16}
 
 
 class ContextShape:
+    @staticmethod
     def field_type_number(value):
-        return MAPPING.setdefault(type(value), MAPPING[str])
+        return MAPPING.get(type(value), 2) # default to string type

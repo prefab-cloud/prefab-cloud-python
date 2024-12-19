@@ -1,5 +1,5 @@
 from collections import namedtuple
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import pytest
 import prefab_pb2 as Prefab
@@ -224,6 +224,23 @@ class TestDateOperations:
             REFERENCE_MILLIS,
             True
         ),
+        # Tests with Datetime instances
+        DateTestCase(
+            "datetime before reference returns true",
+            REFERENCE_TIME - timedelta(days=1),
+            Prefab.Criterion.CriterionOperator.PROP_BEFORE,
+            REFERENCE_MILLIS,
+            True
+        ),
+        # Tests with Date instances (will assume midnight)
+        DateTestCase(
+            "datetime before reference returns true",
+            (REFERENCE_TIME - timedelta(days=1)).date(),
+            Prefab.Criterion.CriterionOperator.PROP_BEFORE,
+            REFERENCE_MILLIS,
+            True
+        ),
+
         # Edge cases and invalid inputs
         DateTestCase(
             "Invalid RFC3339 format returns false",

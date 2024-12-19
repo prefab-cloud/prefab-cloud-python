@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, date, timezone
 from typing import Callable, Mapping, FrozenSet, Union, Optional
 import prefab_pb2 as Prefab
 from types import MappingProxyType
@@ -130,11 +130,11 @@ class DateOperators:
 
     @staticmethod
     def evaluate(
-            context_value: Union[str, Real],
+            context_value: Union[str, Real, datetime, date],
             operator: Prefab.Criterion.CriterionOperator,
             criterion_value: int
     ) -> bool:
-        if not (isinstance(context_value, (str, Real)) and isinstance(criterion_value, int)):
+        if not (isinstance(context_value, (str, Real, datetime, date)) and isinstance(criterion_value, int)):
             return False
 
         try:
@@ -146,6 +146,10 @@ class DateOperators:
                     context_value = context_value[:-1] + '+00:00'
                 dt = datetime.fromisoformat(context_value)
                 context_millis = int(dt.timestamp() * 1000)
+            elif isinstance(context_value, datetime):
+                context_millis = int(context_value.timestamp() * 1000)
+            elif isinstance(context_value, date):
+                context_millis = int(datetime.combine(context_value, datetime.min.time(), timezone.utc).timestamp()) * 1000
             else:
                 context_millis = int(float(context_value))
 

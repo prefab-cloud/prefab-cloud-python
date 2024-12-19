@@ -160,15 +160,19 @@ class CriteriaEvaluator:
     def negate(negate, value):
         return not value if negate else value
 
+    @staticmethod
+    def _ensure_list(value):
+        return value if isinstance(value, (list, google._upb._message.RepeatedScalarContainer)) else [value]
+
     def one_of(self, criterion, value, properties):
         criterion_value_or_values = ConfigValueUnwrapper.deepest_value(
             criterion.value_to_match, self.config, properties
         ).unwrap()
-        if isinstance(
-            criterion_value_or_values, google._upb._message.RepeatedScalarContainer
-        ) or isinstance(criterion_value_or_values, list):
-            return str(value) in criterion_value_or_values
-        return value == criterion_value_or_values
+
+        criterion_values = self._ensure_list(criterion_value_or_values)
+        values = self._ensure_list(value)
+
+        return any(str(v1) == str(v2) for v1 in criterion_values for v2 in values)
 
     def in_segment(self, criterion, properties):
         return (

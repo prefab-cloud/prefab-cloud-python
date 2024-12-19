@@ -20,14 +20,20 @@ class ConfigValueWrapper:
                 confidential=confidential,
             )
         elif value_type == datetime:
-            return Prefab.ConfigValue(string=ConfigValueWrapper._format_date_time(value), confidential=confidential)
+            return Prefab.ConfigValue(
+                string=ConfigValueWrapper._format_date_time(value),
+                confidential=confidential,
+            )
         elif value_type == date:
-            return Prefab.ConfigValue(string=ConfigValueWrapper._format_date_time(datetime.combine(value, datetime.min.time(), timezone.utc )), confidential=confidential)
+            return Prefab.ConfigValue(
+                string=ConfigValueWrapper._format_date_time(
+                    datetime.combine(value, datetime.min.time(), timezone.utc)
+                ),
+                confidential=confidential,
+            )
         else:
             return Prefab.ConfigValue(string=value, confidential=confidential)
 
-
-
     @staticmethod
-    def _format_date_time(value:datetime):
-        return value.strftime('%Y-%m-%dT%H:%M:%SZ')
+    def _format_date_time(value: datetime):
+        return value.strftime("%Y-%m-%dT%H:%M:%SZ")

@@ -123,15 +123,19 @@ def run_test(
     input = case["input"]
     expected = case["expected"]
     type = case.get("type")
-    options = build_options_with_overrides(options, case.get("client_overrides"), global_context=case.get("contexts",{}).get("global"))
+    options = build_options_with_overrides(
+        options,
+        case.get("client_overrides"),
+        global_context=case.get("contexts", {}).get("global"),
+    )
     with Client(options) as client:
-        block_context = case.get("contexts",{}).get("block")
+        block_context = case.get("contexts", {}).get("block")
         if block_context:
             Context.set_current(Context(block_context))
         key = input[input_key]
         default = input.get("default")
 
-        local_context = case.get("contexts",{}).get("local")
+        local_context = case.get("contexts", {}).get("local")
         if local_context:
             context = Context(local_context)
         else:
@@ -158,13 +162,15 @@ def run_test(
 
 def run_telemetry_test(test, options, global_context=None):
     case = test["case"]
-    options = build_options_with_overrides(options, case.get("client_overrides"), global_context=global_context)
+    options = build_options_with_overrides(
+        options, case.get("client_overrides"), global_context=global_context
+    )
     block_context = case.get("contexts", {}).get("block")
     if block_context:
         Context.set_current(Context(block_context))
     local_context = case.get("contexts", {}).get("local")
     if local_context:
-       raise RuntimeError("local_context not supported yet in telemetry test")
+        raise RuntimeError("local_context not supported yet in telemetry test")
     client = Client(options)
     with patch.object(client, "post", wraps=client.post) as spy_method:
         if case["aggregator"] == "log_path":

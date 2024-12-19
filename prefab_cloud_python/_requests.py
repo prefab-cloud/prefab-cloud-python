@@ -21,6 +21,7 @@ logger = InternalLogger(__name__)
 
 try:
     from importlib.metadata import version
+
     Version = version("prefab-cloud-python")
 except importlib.metadata.PackageNotFoundError:
     Version = "development"

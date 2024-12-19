@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, ForwardRef
 if TYPE_CHECKING:
     from .config_resolver import ConfigResolver
 else:
-    ConfigResolver = ForwardRef('ConfigResolver')
+    ConfigResolver = ForwardRef("ConfigResolver")
 
 from .weighted_value_resolver import WeightedValueResolver
 from .config_value_wrapper import ConfigValueWrapper

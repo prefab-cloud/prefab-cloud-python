@@ -1,13 +1,17 @@
 from __future__ import annotations
 import functools
-from typing import Dict, Callable
 
 from .read_write_lock import ReadWriteLock
 from .config_value_unwrapper import ConfigValueUnwrapper
 from .context import Context
 from ._internal_logging import InternalLogger
-from .simple_criterion_evaluators import NumericOperators, StringOperators, DateOperators, SemverOperators, \
-    RegexMatchOperators
+from .simple_criterion_evaluators import (
+    NumericOperators,
+    StringOperators,
+    DateOperators,
+    SemverOperators,
+    RegexMatchOperators,
+)
 import prefab_pb2 as Prefab
 import google
 
@@ -139,19 +143,29 @@ class CriteriaEvaluator:
         if criterion.operator == OPS.NOT_IN_SEG:
             return not self.in_segment(criterion, properties)
         if criterion.operator in StringOperators.SUPPORTED_OPERATORS:
-            return StringOperators.evaluate(value_from_properties, criterion.operator, deepest_value.unwrap())
+            return StringOperators.evaluate(
+                value_from_properties, criterion.operator, deepest_value.unwrap()
+            )
         if criterion.operator == OPS.HIERARCHICAL_MATCH:
             return value_from_properties.startswith(criterion.value_to_match.string)
         if criterion.operator == OPS.ALWAYS_TRUE:
             return True
         if criterion.operator in DateOperators.SUPPORTED_OPERATORS:
-            return DateOperators.evaluate(value_from_properties, criterion.operator,  deepest_value.unwrap())
+            return DateOperators.evaluate(
+                value_from_properties, criterion.operator, deepest_value.unwrap()
+            )
         if criterion.operator in NumericOperators.SUPPORTED_OPERATORS:
-            return NumericOperators.evaluate(value_from_properties,  criterion.operator,   deepest_value.unwrap())
+            return NumericOperators.evaluate(
+                value_from_properties, criterion.operator, deepest_value.unwrap()
+            )
         if criterion.operator in RegexMatchOperators.SUPPORTED_OPERATORS:
-            return RegexMatchOperators.evaluate(value_from_properties ,criterion.operator,  deepest_value.unwrap())
+            return RegexMatchOperators.evaluate(
+                value_from_properties, criterion.operator, deepest_value.unwrap()
+            )
         if criterion.operator in SemverOperators.SUPPORTED_OPERATORS:
-            return SemverOperators.evaluate(value_from_properties,  criterion.operator,   deepest_value.unwrap())
+            return SemverOperators.evaluate(
+                value_from_properties, criterion.operator, deepest_value.unwrap()
+            )
 
         logger.info(f"Unknown criterion operator {criterion.operator}")
         return False
@@ -162,7 +176,11 @@ class CriteriaEvaluator:
 
     @staticmethod
     def _ensure_list(value):
-        return value if isinstance(value, (list, google._upb._message.RepeatedScalarContainer)) else [value]
+        return (
+            value
+            if isinstance(value, (list, google._upb._message.RepeatedScalarContainer))
+            else [value]
+        )
 
     def one_of(self, criterion, value, properties):
         criterion_value_or_values = ConfigValueUnwrapper.deepest_value(

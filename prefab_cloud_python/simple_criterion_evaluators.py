@@ -15,20 +15,28 @@ def negate(negate, value):
 class NumericOperators:
     """Handles numeric comparisons for criterion evaluation."""
 
-    _COMPARE_TO_EVAL: Mapping[Prefab.Criterion.CriterionOperator, Callable[[int], bool]] = MappingProxyType({
-        Prefab.Criterion.CriterionOperator.PROP_GREATER_THAN: lambda v: v > 0,
-        Prefab.Criterion.CriterionOperator.PROP_GREATER_THAN_OR_EQUAL: lambda v: v >= 0,
-        Prefab.Criterion.CriterionOperator.PROP_LESS_THAN: lambda v: v < 0,
-        Prefab.Criterion.CriterionOperator.PROP_LESS_THAN_OR_EQUAL: lambda v: v <= 0
-    })
+    _COMPARE_TO_EVAL: Mapping[
+        Prefab.Criterion.CriterionOperator, Callable[[int], bool]
+    ] = MappingProxyType(
+        {
+            Prefab.Criterion.CriterionOperator.PROP_GREATER_THAN: lambda v: v > 0,
+            Prefab.Criterion.CriterionOperator.PROP_GREATER_THAN_OR_EQUAL: lambda v: v
+            >= 0,
+            Prefab.Criterion.CriterionOperator.PROP_LESS_THAN: lambda v: v < 0,
+            Prefab.Criterion.CriterionOperator.PROP_LESS_THAN_OR_EQUAL: lambda v: v
+            <= 0,
+        }
+    )
 
-    SUPPORTED_OPERATORS: FrozenSet[Prefab.Criterion.CriterionOperator] = frozenset(_COMPARE_TO_EVAL.keys())
+    SUPPORTED_OPERATORS: FrozenSet[Prefab.Criterion.CriterionOperator] = frozenset(
+        _COMPARE_TO_EVAL.keys()
+    )
 
     @staticmethod
     def evaluate(
-            context_value: Real,
-            operator: Prefab.Criterion.CriterionOperator,
-            criterion_value: Real
+        context_value: Real,
+        operator: Prefab.Criterion.CriterionOperator,
+        criterion_value: Real,
     ) -> bool:
         """
         Evaluates a numeric comparison between two values.
@@ -57,53 +65,48 @@ class NumericOperators:
         return 0
 
 
-
-
 class StringOperators:
     """Handles string comparisons for criterion evaluation."""
 
     # Group operators by their base operation
     _CONTAINS_OPERATORS = {
         Prefab.Criterion.CriterionOperator.PROP_CONTAINS_ONE_OF,
-        Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_CONTAIN_ONE_OF
+        Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_CONTAIN_ONE_OF,
     }
 
     _STARTS_WITH_OPERATORS = {
         Prefab.Criterion.CriterionOperator.PROP_STARTS_WITH_ONE_OF,
-        Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_START_WITH_ONE_OF
+        Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_START_WITH_ONE_OF,
     }
 
     _ENDS_WITH_OPERATORS = {
         Prefab.Criterion.CriterionOperator.PROP_ENDS_WITH_ONE_OF,
-        Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_END_WITH_ONE_OF
+        Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_END_WITH_ONE_OF,
     }
 
     SUPPORTED_OPERATORS: FrozenSet[Prefab.Criterion.CriterionOperator] = frozenset(
         _CONTAINS_OPERATORS | _STARTS_WITH_OPERATORS | _ENDS_WITH_OPERATORS
     )
 
-    _NEGATIVE_OPERATORS: FrozenSet[Prefab.Criterion.CriterionOperator] = frozenset({
-        Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_CONTAIN_ONE_OF,
-        Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_START_WITH_ONE_OF,
-        Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_END_WITH_ONE_OF
-    })
+    _NEGATIVE_OPERATORS: FrozenSet[Prefab.Criterion.CriterionOperator] = frozenset(
+        {
+            Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_CONTAIN_ONE_OF,
+            Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_START_WITH_ONE_OF,
+            Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_END_WITH_ONE_OF,
+        }
+    )
 
-    _STRING_OPERATIONS = MappingProxyType({
-                                              op: lambda s, x: x in s
-                                              for op in _CONTAINS_OPERATORS
-                                          } | {
-                                              op: str.startswith
-                                              for op in _STARTS_WITH_OPERATORS
-                                          } | {
-                                              op: str.endswith
-                                              for op in _ENDS_WITH_OPERATORS
-                                          })
+    _STRING_OPERATIONS = MappingProxyType(
+        {op: lambda s, x: x in s for op in _CONTAINS_OPERATORS}
+        | {op: str.startswith for op in _STARTS_WITH_OPERATORS}
+        | {op: str.endswith for op in _ENDS_WITH_OPERATORS}
+    )
 
     @staticmethod
     def evaluate(
-            context_value: str,
-            operator: Prefab.Criterion.CriterionOperator,
-            criterion_value: list[str]
+        context_value: str,
+        operator: Prefab.Criterion.CriterionOperator,
+        criterion_value: list[str],
     ) -> bool:
         if not (isinstance(context_value, str) and isinstance(criterion_value, list)):
             return False
@@ -116,25 +119,30 @@ class StringOperators:
             any(
                 operation(str(context_value), test_value)
                 for test_value in criterion_value
-            )
+            ),
         )
 
 
 class DateOperators:
     """Handles date comparisons for criterion evaluation."""
 
-    SUPPORTED_OPERATORS: FrozenSet[Prefab.Criterion.CriterionOperator] = frozenset({
-        Prefab.Criterion.CriterionOperator.PROP_BEFORE,
-        Prefab.Criterion.CriterionOperator.PROP_AFTER
-    })
+    SUPPORTED_OPERATORS: FrozenSet[Prefab.Criterion.CriterionOperator] = frozenset(
+        {
+            Prefab.Criterion.CriterionOperator.PROP_BEFORE,
+            Prefab.Criterion.CriterionOperator.PROP_AFTER,
+        }
+    )
 
     @staticmethod
     def evaluate(
-            context_value: Union[str, Real, datetime, date],
-            operator: Prefab.Criterion.CriterionOperator,
-            criterion_value: int
+        context_value: Union[str, Real, datetime, date],
+        operator: Prefab.Criterion.CriterionOperator,
+        criterion_value: int,
     ) -> bool:
-        if not (isinstance(context_value, (str, Real, datetime, date)) and isinstance(criterion_value, int)):
+        if not (
+            isinstance(context_value, (str, Real, datetime, date))
+            and isinstance(criterion_value, int)
+        ):
             return False
 
         try:
@@ -142,14 +150,21 @@ class DateOperators:
             if isinstance(context_value, str):
                 # Handle RFC3339 string
                 # Replace 'Z' with '+00:00' for compatibility with fromisoformat
-                if context_value.endswith('Z'):
-                    context_value = context_value[:-1] + '+00:00'
+                if context_value.endswith("Z"):
+                    context_value = context_value[:-1] + "+00:00"
                 dt = datetime.fromisoformat(context_value)
                 context_millis = int(dt.timestamp() * 1000)
             elif isinstance(context_value, datetime):
                 context_millis = int(context_value.timestamp() * 1000)
             elif isinstance(context_value, date):
-                context_millis = int(datetime.combine(context_value, datetime.min.time(), timezone.utc).timestamp()) * 1000
+                context_millis = (
+                    int(
+                        datetime.combine(
+                            context_value, datetime.min.time(), timezone.utc
+                        ).timestamp()
+                    )
+                    * 1000
+                )
             else:
                 context_millis = int(float(context_value))
 
@@ -168,17 +183,19 @@ class DateOperators:
 class SemverOperators:
     """Handles semver comparisons for criterion evaluation."""
 
-    SUPPORTED_OPERATORS: FrozenSet[Prefab.Criterion.CriterionOperator] = frozenset({
-        Prefab.Criterion.CriterionOperator.PROP_SEMVER_EQUAL,
-        Prefab.Criterion.CriterionOperator.PROP_SEMVER_GREATER_THAN,
-        Prefab.Criterion.CriterionOperator.PROP_SEMVER_LESS_THAN,
-    })
+    SUPPORTED_OPERATORS: FrozenSet[Prefab.Criterion.CriterionOperator] = frozenset(
+        {
+            Prefab.Criterion.CriterionOperator.PROP_SEMVER_EQUAL,
+            Prefab.Criterion.CriterionOperator.PROP_SEMVER_GREATER_THAN,
+            Prefab.Criterion.CriterionOperator.PROP_SEMVER_LESS_THAN,
+        }
+    )
 
     @staticmethod
     def evaluate(
-            context_value: str,
-            operator: Prefab.Criterion.CriterionOperator,
-            criterion_value: str
+        context_value: str,
+        operator: Prefab.Criterion.CriterionOperator,
+        criterion_value: str,
     ) -> bool:
         # Parse both versions, return False if either parse fails
         context_semver = SemanticVersion.parse_quietly(context_value)
@@ -202,10 +219,12 @@ class SemverOperators:
 class RegexMatchOperators:
     """Handles regex matching comparisons for criterion evaluation."""
 
-    SUPPORTED_OPERATORS: FrozenSet[Prefab.Criterion.CriterionOperator] = frozenset({
-        Prefab.Criterion.CriterionOperator.PROP_MATCHES,
-        Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_MATCH,
-    })
+    SUPPORTED_OPERATORS: FrozenSet[Prefab.Criterion.CriterionOperator] = frozenset(
+        {
+            Prefab.Criterion.CriterionOperator.PROP_MATCHES,
+            Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_MATCH,
+        }
+    )
 
     @staticmethod
     def _compile_pattern(pattern: str) -> Optional[re.Pattern]:
@@ -219,9 +238,9 @@ class RegexMatchOperators:
 
     @staticmethod
     def evaluate(
-            context_value: str,
-            operator: Prefab.Criterion.CriterionOperator,
-            criterion_value: str
+        context_value: str,
+        operator: Prefab.Criterion.CriterionOperator,
+        criterion_value: str,
     ) -> bool:
         # Handle non-string inputs
         if not isinstance(context_value, str) or not isinstance(criterion_value, str):
@@ -237,7 +256,7 @@ class RegexMatchOperators:
             matches = bool(pattern.search(context_value))
             return negate(
                 operator == Prefab.Criterion.CriterionOperator.PROP_DOES_NOT_MATCH,
-                matches
+                matches,
             )
         except (re.error, TypeError):
             return False

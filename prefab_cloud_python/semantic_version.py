@@ -1,23 +1,23 @@
 from __future__ import annotations
 import re
-from typing import Optional, List
+from typing import Optional
 
 
 class SemanticVersion:
     _SEMVER_PATTERN = re.compile(
-        r'^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)'
-        r'(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)'
-        r'(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?'
-        r'(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
+        r"^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)"
+        r"(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)"
+        r"(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"
+        r"(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
     )
 
     def __init__(
-            self,
-            major: int,
-            minor: int,
-            patch: int,
-            prerelease: str = "",
-            build_metadata: str = ""
+        self,
+        major: int,
+        minor: int,
+        patch: int,
+        prerelease: str = "",
+        build_metadata: str = "",
     ):
         self._major = major
         self._minor = minor
@@ -45,9 +45,9 @@ class SemanticVersion:
 
         matches = match.groupdict()
         try:
-            major = int(matches['major'])
-            minor = int(matches['minor'])
-            patch = int(matches['patch'])
+            major = int(matches["major"])
+            minor = int(matches["minor"])
+            patch = int(matches["patch"])
         except ValueError as e:
             raise ValueError(f"invalid version number format: {str(e)}")
 
@@ -55,8 +55,8 @@ class SemanticVersion:
             major=major,
             minor=minor,
             patch=patch,
-            prerelease=matches['prerelease'] or "",
-            build_metadata=matches['buildmetadata'] or ""
+            prerelease=matches["prerelease"] or "",
+            build_metadata=matches["buildmetadata"] or "",
         )
 
     @property
@@ -104,8 +104,8 @@ class SemanticVersion:
         if not other.prerelease:
             return -1
 
-        self_ids = self.prerelease.split('.')
-        other_ids = other.prerelease.split('.')
+        self_ids = self.prerelease.split(".")
+        other_ids = other.prerelease.split(".")
 
         for id1, id2 in zip(self_ids, other_ids):
             result = self._compare_prerelease_identifiers(id1, id2)
@@ -144,10 +144,10 @@ class SemanticVersion:
         if not isinstance(other, SemanticVersion):
             return NotImplemented
         return (
-                self.major == other.major
-                and self.minor == other.minor
-                and self.patch == other.patch
-                and self.prerelease == other.prerelease
+            self.major == other.major
+            and self.minor == other.minor
+            and self.patch == other.patch
+            and self.prerelease == other.prerelease
             # Build metadata is ignored in equality checks
         )
 

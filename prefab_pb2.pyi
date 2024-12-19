@@ -611,6 +611,11 @@ class Criterion(google.protobuf.message.Message):
         PROP_GREATER_THAN_OR_EQUAL: Criterion._CriterionOperator.ValueType  # 19
         PROP_BEFORE: Criterion._CriterionOperator.ValueType  # 20
         PROP_AFTER: Criterion._CriterionOperator.ValueType  # 21
+        PROP_MATCHES: Criterion._CriterionOperator.ValueType  # 22
+        PROP_DOES_NOT_MATCH: Criterion._CriterionOperator.ValueType  # 23
+        PROP_SEMVER_LESS_THAN: Criterion._CriterionOperator.ValueType  # 24
+        PROP_SEMVER_EQUAL: Criterion._CriterionOperator.ValueType  # 25
+        PROP_SEMVER_GREATER_THAN: Criterion._CriterionOperator.ValueType  # 26
 
     class CriterionOperator(_CriterionOperator, metaclass=_CriterionOperatorEnumTypeWrapper): ...
     NOT_SET: Criterion.CriterionOperator.ValueType  # 0
@@ -636,6 +641,11 @@ class Criterion(google.protobuf.message.Message):
     PROP_GREATER_THAN_OR_EQUAL: Criterion.CriterionOperator.ValueType  # 19
     PROP_BEFORE: Criterion.CriterionOperator.ValueType  # 20
     PROP_AFTER: Criterion.CriterionOperator.ValueType  # 21
+    PROP_MATCHES: Criterion.CriterionOperator.ValueType  # 22
+    PROP_DOES_NOT_MATCH: Criterion.CriterionOperator.ValueType  # 23
+    PROP_SEMVER_LESS_THAN: Criterion.CriterionOperator.ValueType  # 24
+    PROP_SEMVER_EQUAL: Criterion.CriterionOperator.ValueType  # 25
+    PROP_SEMVER_GREATER_THAN: Criterion.CriterionOperator.ValueType  # 26
 
     PROPERTY_NAME_FIELD_NUMBER: builtins.int
     OPERATOR_FIELD_NUMBER: builtins.int

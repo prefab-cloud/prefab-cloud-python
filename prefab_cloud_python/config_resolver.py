@@ -1,5 +1,6 @@
 from __future__ import annotations
 import functools
+from collections.abc import Sequence
 
 from .read_write_lock import ReadWriteLock
 from .config_value_unwrapper import ConfigValueUnwrapper
@@ -13,7 +14,6 @@ from .simple_criterion_evaluators import (
     RegexMatchOperators,
 )
 import prefab_pb2 as Prefab
-import google
 
 logger = InternalLogger(__name__)
 
@@ -176,11 +176,11 @@ class CriteriaEvaluator:
 
     @staticmethod
     def _ensure_list(value):
-        return (
-            value
-            if isinstance(value, (list, google._upb._message.RepeatedScalarContainer))
-            else [value]
-        )
+        if isinstance(value, list):
+            return value
+        if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
+            return list(value)  # Convert other sequences to lists
+        return [value]  # Wrap everything else in a list
 
     def one_of(self, criterion, value, properties):
         criterion_value_or_values = ConfigValueUnwrapper.deepest_value(

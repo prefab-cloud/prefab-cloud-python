@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.11.0] - 2025-02-07
+
+- removes reference to protobuf internal class [#113]
+- adds semver, regex, number comparison operator support [#112]
+- adds more string operator support [#111]
+
 ## [0.10.10] - 2024-09-18
 
 - add separate configuration for the streaming (SSE) config subsystem [#108]

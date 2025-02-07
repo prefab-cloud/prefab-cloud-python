@@ -163,7 +163,9 @@ class CriteriaEvaluator:
             criterion.value_to_match, self.config.key, properties
         ).unwrap()
 
-        if isinstance(criterion_value_or_values, Sequence) and not isinstance(criterion_value_or_values, (str, bytes)):
+        if isinstance(criterion_value_or_values, Sequence) and not isinstance(
+            criterion_value_or_values, (str, bytes)
+        ):
             return str(value) in criterion_value_or_values
 
         return value == criterion_value_or_values

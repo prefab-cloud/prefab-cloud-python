@@ -1,12 +1,12 @@
 from __future__ import annotations
 import functools
+from collections.abc import Sequence
 
 from .read_write_lock import ReadWriteLock
 from .config_value_unwrapper import ConfigValueUnwrapper
 from .context import Context
 from ._internal_logging import InternalLogger
 import prefab_pb2 as Prefab
-import google
 
 logger = InternalLogger(__name__)
 
@@ -162,10 +162,10 @@ class CriteriaEvaluator:
         criterion_value_or_values = ConfigValueUnwrapper.deepest_value(
             criterion.value_to_match, self.config.key, properties
         ).unwrap()
-        if isinstance(
-            criterion_value_or_values, google._upb._message.RepeatedScalarContainer
-        ) or isinstance(criterion_value_or_values, list):
+
+        if isinstance(criterion_value_or_values, Sequence) and not isinstance(criterion_value_or_values, (str, bytes)):
             return str(value) in criterion_value_or_values
+
         return value == criterion_value_or_values
 
     def in_segment(self, criterion, properties):

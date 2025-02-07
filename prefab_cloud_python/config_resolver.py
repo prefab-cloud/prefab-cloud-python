@@ -5,6 +5,13 @@ from .read_write_lock import ReadWriteLock
 from .config_value_unwrapper import ConfigValueUnwrapper
 from .context import Context
 from ._internal_logging import InternalLogger
+from .simple_criterion_evaluators import (
+    NumericOperators,
+    StringOperators,
+    DateOperators,
+    SemverOperators,
+    RegexMatchOperators,
+)
 import prefab_pb2 as Prefab
 import google
 
@@ -123,67 +130,42 @@ class CriteriaEvaluator:
 
     def evaluate_criterion(self, criterion, properties):
         value_from_properties = properties.get(criterion.property_name)
+        deepest_value = ConfigValueUnwrapper.deepest_value(
+            criterion.value_to_match, self.config, properties
+        )
 
         if criterion.operator in [OPS.LOOKUP_KEY_IN, OPS.PROP_IS_ONE_OF]:
-            return self.matches(criterion, value_from_properties, properties)
+            return self.one_of(criterion, value_from_properties, properties)
         if criterion.operator in [OPS.LOOKUP_KEY_NOT_IN, OPS.PROP_IS_NOT_ONE_OF]:
-            return not self.matches(criterion, value_from_properties, properties)
+            return not self.one_of(criterion, value_from_properties, properties)
         if criterion.operator == OPS.IN_SEG:
             return self.in_segment(criterion, properties)
         if criterion.operator == OPS.NOT_IN_SEG:
             return not self.in_segment(criterion, properties)
-        if criterion.operator in [
-            OPS.PROP_ENDS_WITH_ONE_OF,
-            OPS.PROP_DOES_NOT_END_WITH_ONE_OF,
-        ]:
-            negative = criterion.operator == OPS.PROP_DOES_NOT_END_WITH_ONE_OF
-            if value_from_properties is None:
-                return self.negate(negative, False)
-            return self.negate(
-                negative,
-                any(
-                    [
-                        str(value_from_properties).endswith(ending)
-                        for ending in criterion.value_to_match.string_list.values
-                    ]
-                ),
-            )
-        if criterion.operator in [
-            OPS.PROP_STARTS_WITH_ONE_OF,
-            OPS.PROP_DOES_NOT_START_WITH_ONE_OF,
-        ]:
-            negative = criterion.operator == OPS.PROP_DOES_NOT_START_WITH_ONE_OF
-            if value_from_properties is None:
-                return self.negate(negative, False)
-            return self.negate(
-                negative,
-                any(
-                    [
-                        str(value_from_properties).startswith(beginning)
-                        for beginning in criterion.value_to_match.string_list.values
-                    ]
-                ),
-            )
-        if criterion.operator in [
-            OPS.PROP_CONTAINS_ONE_OF,
-            OPS.PROP_DOES_NOT_CONTAIN_ONE_OF,
-        ]:
-            negative = criterion.operator == OPS.PROP_DOES_NOT_CONTAIN_ONE_OF
-            if value_from_properties is None:
-                return self.negate(negative, False)
-            return self.negate(
-                negative,
-                any(
-                    [
-                        string in str(value_from_properties)
-                        for string in criterion.value_to_match.string_list.values
-                    ]
-                ),
+        if criterion.operator in StringOperators.SUPPORTED_OPERATORS:
+            return StringOperators.evaluate(
+                value_from_properties, criterion.operator, deepest_value.unwrap()
             )
         if criterion.operator == OPS.HIERARCHICAL_MATCH:
             return value_from_properties.startswith(criterion.value_to_match.string)
         if criterion.operator == OPS.ALWAYS_TRUE:
             return True
+        if criterion.operator in DateOperators.SUPPORTED_OPERATORS:
+            return DateOperators.evaluate(
+                value_from_properties, criterion.operator, deepest_value.unwrap()
+            )
+        if criterion.operator in NumericOperators.SUPPORTED_OPERATORS:
+            return NumericOperators.evaluate(
+                value_from_properties, criterion.operator, deepest_value.unwrap()
+            )
+        if criterion.operator in RegexMatchOperators.SUPPORTED_OPERATORS:
+            return RegexMatchOperators.evaluate(
+                value_from_properties, criterion.operator, deepest_value.unwrap()
+            )
+        if criterion.operator in SemverOperators.SUPPORTED_OPERATORS:
+            return SemverOperators.evaluate(
+                value_from_properties, criterion.operator, deepest_value.unwrap()
+            )
 
         logger.info(f"Unknown criterion operator {criterion.operator}")
         return False
@@ -192,15 +174,23 @@ class CriteriaEvaluator:
     def negate(negate, value):
         return not value if negate else value
 
-    def matches(self, criterion, value, properties):
+    @staticmethod
+    def _ensure_list(value):
+        return (
+            value
+            if isinstance(value, (list, google._upb._message.RepeatedScalarContainer))
+            else [value]
+        )
+
+    def one_of(self, criterion, value, properties):
         criterion_value_or_values = ConfigValueUnwrapper.deepest_value(
-            criterion.value_to_match, self.config.key, properties
+            criterion.value_to_match, self.config, properties
         ).unwrap()
-        if isinstance(
-            criterion_value_or_values, google._upb._message.RepeatedScalarContainer
-        ) or isinstance(criterion_value_or_values, list):
-            return str(value) in criterion_value_or_values
-        return value == criterion_value_or_values
+
+        criterion_values = self._ensure_list(criterion_value_or_values)
+        values = self._ensure_list(value)
+
+        return any(str(v1) == str(v2) for v1 in criterion_values for v2 in values)
 
     def in_segment(self, criterion, properties):
         return (

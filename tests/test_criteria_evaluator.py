@@ -329,7 +329,7 @@ class TestCriteriaEvaluator:
             config, project_env_id, resolver=None, base_client=None
         )
 
-        assert evaluator.evaluate({}).raw_config_value().string == desired_value
+        assert evaluator.evaluate({}).raw_config_value().string == default_value
         assert (
             evaluator.evaluate(context({"user": {"email": "example@prefab.cloud"}}))
             .raw_config_value()
@@ -419,7 +419,7 @@ class TestCriteriaEvaluator:
             config, project_env_id, resolver=None, base_client=None
         )
 
-        assert evaluator.evaluate({}).raw_config_value().string == desired_value
+        assert evaluator.evaluate({}).raw_config_value().string == default_value
         assert (
             evaluator.evaluate(context({"user": {"email": "nope"}}))
             .raw_config_value()
@@ -509,7 +509,7 @@ class TestCriteriaEvaluator:
             config, project_env_id, resolver=None, base_client=None
         )
 
-        assert evaluator.evaluate({}).raw_config_value().string == desired_value
+        assert evaluator.evaluate({}).raw_config_value().string == default_value
         assert (
             evaluator.evaluate(context({"user": {"email": "nope"}}))
             .raw_config_value()

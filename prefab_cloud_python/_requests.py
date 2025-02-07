@@ -1,3 +1,4 @@
+import importlib
 from socket import socket
 from typing import Optional
 
@@ -13,11 +14,16 @@ from tenacity import (
     wait_exponential,
     retry_if_exception_type,
 )
-from importlib.metadata import version
 
 logger = InternalLogger(__name__)
+try:
+    from importlib.metadata import version
 
-Version = version("prefab-cloud-python")
+    Version = version("prefab-cloud-python")
+except importlib.metadata.PackageNotFoundError:
+    Version = "development"
+
+
 VersionHeader = "X-PrefabCloud-Client-Version"
 
 DEFAULT_TIMEOUT = 5  # seconds

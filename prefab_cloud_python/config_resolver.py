@@ -13,7 +13,6 @@ from .simple_criterion_evaluators import (
     RegexMatchOperators,
 )
 import prefab_pb2 as Prefab
-import google
 
 logger = InternalLogger(__name__)
 
@@ -176,11 +175,7 @@ class CriteriaEvaluator:
 
     @staticmethod
     def _ensure_list(value):
-        return (
-            value
-            if isinstance(value, (list, google._upb._message.RepeatedScalarContainer))
-            else [value]
-        )
+        return value if isinstance(value, list) else [value]
 
     def one_of(self, criterion, value, properties):
         criterion_value_or_values = ConfigValueUnwrapper.deepest_value(

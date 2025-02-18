@@ -1,7 +1,8 @@
 import unittest
 from unittest.mock import patch
 from requests import Response
-from prefab_cloud_python._requests import ApiClient
+from prefab_cloud_python._requests import ApiClient, CacheEntry
+import time
 
 
 # Dummy options for testing.
@@ -106,6 +107,42 @@ class TestApiClient(unittest.TestCase):
         self.assertEqual(resp2.status_code, 200)
         self.assertEqual(resp2.content, b"cached_response")
         self.assertEqual(resp2.headers.get("X-Cache"), "HIT")
+
+    @patch.object(ApiClient, "_send_request")
+    def test_if_none_match_header_added(self, mock_send_request):
+        # Pre-populate the cache with a stale entry.
+        # Set the expires_at to a time in the past so that it's considered stale.
+        stale_time = time.time() - 10
+        cache_url = "https://a.example.com/api/v1/configs/0"
+        self.client.cache.set(
+            cache_url,
+            CacheEntry(
+                data=b"old_response",
+                etag="abc123",
+                expires_at=stale_time,
+                url=cache_url,
+            ),
+        )
+
+        # Prepare a dummy 304 Not Modified response.
+        response_304 = self.create_response(
+            status_code=304, content=b"", headers={}, url=cache_url
+        )
+        mock_send_request.return_value = response_304
+
+        # Call resilient_request with caching enabled.
+        resp = self.client.resilient_request("/api/v1/configs/0", allow_cache=True)
+
+        # Verify that _send_request was called with an "If-None-Match" header.
+        args, kwargs = mock_send_request.call_args
+        headers = kwargs.get("headers", {})
+        self.assertIn("If-None-Match", headers)
+        self.assertEqual(headers["If-None-Match"], "abc123")
+
+        # Also, the response should be synthesized from the cache (a HIT).
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.content, b"old_response")
+        self.assertEqual(resp.headers.get("X-Cache"), "HIT")
 
 
 if __name__ == "__main__":

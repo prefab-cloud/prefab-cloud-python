@@ -180,8 +180,9 @@ class ApiClient:
 
     def _update_cache(self, url: str, response: Response) -> None:
         """
-        If the response is cacheable (status 200 and Cache-Control does not include 'no-store'),
-        update the cache.
+        If the response is cacheable (status 200, and Cache-Control does not include 'no-store'),
+        update the cache. If Cache-Control includes 'no-cache', mark the cache entry as immediately expired,
+        so that subsequent requests always trigger revalidation.
         """
         cache_control = response.headers.get("Cache-Control", "")
         if "no-store" in cache_control.lower():
@@ -192,7 +193,14 @@ class ApiClient:
         m = re.search(r"max-age=(\d+)", cache_control)
         if m:
             max_age = int(m.group(1))
-        expires_at = time.time() + max_age if max_age > 0 else 0
+
+        # If 'no-cache' is present, then even though we may store the response,
+        # we treat it as expired immediately so that every subsequent request is revalidated.
+        if "no-cache" in cache_control.lower():
+            expires_at = time.time()  # Immediately expired.
+        else:
+            expires_at = time.time() + max_age if max_age > 0 else 0
+
         if (etag is not None or max_age > 0) and expires_at > time.time():
             self.cache.set(
                 url,

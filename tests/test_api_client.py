@@ -3,10 +3,12 @@ from unittest.mock import patch
 from requests import Response
 from prefab_cloud_python._requests import ApiClient
 
+
 # Dummy options for testing.
 class DummyOptions:
     prefab_api_urls = ["https://a.example.com", "https://b.example.com"]
     version = "1.0"
+
 
 class TestApiClient(unittest.TestCase):
     def setUp(self):
@@ -16,7 +18,13 @@ class TestApiClient(unittest.TestCase):
         # patch _get_attempt_number to always return 1.
         self.client._get_attempt_number = lambda: 1
 
-    def create_response(self, status_code=200, content=b"dummy", headers=None, url="https://a.example.com/api/v1/configs/0"):
+    def create_response(
+        self,
+        status_code=200,
+        content=b"dummy",
+        headers=None,
+        url="https://a.example.com/api/v1/configs/0",
+    ):
         resp = Response()
         resp.status_code = status_code
         resp._content = content
@@ -31,7 +39,7 @@ class TestApiClient(unittest.TestCase):
             status_code=200,
             content=b"response_no_cache",
             headers={"Cache-Control": "max-age=60", "ETag": "abc"},
-            url="https://a.example.com/api/v1/configs/0"
+            url="https://a.example.com/api/v1/configs/0",
         )
         mock_send_request.return_value = response
 
@@ -47,7 +55,7 @@ class TestApiClient(unittest.TestCase):
             status_code=200,
             content=b"cached_response",
             headers={"Cache-Control": "max-age=60", "ETag": "abc"},
-            url="https://a.example.com/api/v1/configs/0"
+            url="https://a.example.com/api/v1/configs/0",
         )
         mock_send_request.return_value = response
 
@@ -61,7 +69,7 @@ class TestApiClient(unittest.TestCase):
             status_code=200,
             content=b"new_response",
             headers={"Cache-Control": "max-age=60", "ETag": "def"},
-            url="https://a.example.com/api/v1/configs/0"
+            url="https://a.example.com/api/v1/configs/0",
         )
         mock_send_request.return_value = new_response
 
@@ -78,7 +86,7 @@ class TestApiClient(unittest.TestCase):
             status_code=200,
             content=b"cached_response",
             headers={"Cache-Control": "max-age=60", "ETag": "abc"},
-            url="https://a.example.com/api/v1/configs/0"
+            url="https://a.example.com/api/v1/configs/0",
         )
         mock_send_request.return_value = response
         resp1 = self.client.resilient_request("/api/v1/configs/0", allow_cache=True)
@@ -91,13 +99,14 @@ class TestApiClient(unittest.TestCase):
             status_code=304,
             content=b"",
             headers={},
-            url="https://a.example.com/api/v1/configs/0"
+            url="https://a.example.com/api/v1/configs/0",
         )
         mock_send_request.return_value = response_304
         resp2 = self.client.resilient_request("/api/v1/configs/0", allow_cache=True)
         self.assertEqual(resp2.status_code, 200)
         self.assertEqual(resp2.content, b"cached_response")
         self.assertEqual(resp2.headers.get("X-Cache"), "HIT")
+
 
 if __name__ == "__main__":
     unittest.main()

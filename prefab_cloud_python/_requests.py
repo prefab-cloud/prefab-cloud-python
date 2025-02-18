@@ -73,7 +73,9 @@ class HostIterator:
         self.index = (self.index + 1) % len(self.hosts)
         return host
 
+
 # --- Simple LRU Cache Implementation ---
+
 
 @dataclass
 class CacheEntry:
@@ -81,6 +83,7 @@ class CacheEntry:
     etag: str
     expires_at: float
     url: str  # The full URL from the successful response
+
 
 class LRUCache:
     def __init__(self, max_size: int):
@@ -120,9 +123,11 @@ class ApiClient:
         self.session = requests.Session()
         self.session.mount("https://", requests.adapters.HTTPAdapter())
         self.session.mount("http://", requests.adapters.HTTPAdapter())
-        self.session.headers.update({
-            "X-PrefabCloud-Client-Version": f"prefab-cloud-python-{getattr(options, 'version', 'development')}"
-        })
+        self.session.headers.update(
+            {
+                "X-PrefabCloud-Client-Version": f"prefab-cloud-python-{getattr(options, 'version', 'development')}"
+            }
+        )
         # Initialize a cache (here with a maximum of 2 entries).
         self.cache = LRUCache(max_size=2)
 
@@ -189,12 +194,15 @@ class ApiClient:
             max_age = int(m.group(1))
         expires_at = time.time() + max_age if max_age > 0 else 0
         if (etag is not None or max_age > 0) and expires_at > time.time():
-            self.cache.set(url, CacheEntry(
-                data=response.content,
-                etag=etag,
-                expires_at=expires_at,
-                url=response.url
-            ))
+            self.cache.set(
+                url,
+                CacheEntry(
+                    data=response.content,
+                    etag=etag,
+                    expires_at=expires_at,
+                    url=response.url,
+                ),
+            )
             response.headers["X-Cache"] = "MISS"
 
     def _send_request(self, method: str, url: str, **kwargs) -> Response:
@@ -208,7 +216,14 @@ class ApiClient:
         wait=wait_exponential(multiplier=1, min=0.05, max=2),
         retry=retry_if_exception_type((RequestException, ConnectionError, OSError)),
     )
-    def resilient_request(self, path, method="GET", allow_cache: bool = False, hosts: list[str] = None, **kwargs) -> Response:
+    def resilient_request(
+        self,
+        path,
+        method="GET",
+        allow_cache: bool = False,
+        hosts: list[str] = None,
+        **kwargs,
+    ) -> Response:
         """
         Makes a resilient (retrying) request.
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.11.1] - 2025-02-20
+
+- adds http conditional fetch logic to configuration polling to lower bandwidth requirements [#116]
+
 ## [0.11.0] - 2025-02-07
 
 - removes reference to protobuf internal class [#113]

@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.11.2] - 2025-02-24
+
+- Updates ConfigValueType's union to include dict to better support json values [#117]
+
 ## [0.11.1] - 2025-02-20
 
 - adds http conditional fetch logic to configuration polling to lower bandwidth requirements [#116]

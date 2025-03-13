@@ -40,6 +40,7 @@ class TestContextShape:
             "confidential",
             "decrypt_with",
             "duration",
+            "schema"
         ]
 
         supported = list(

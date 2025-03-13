@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+
 - Re-exported Protocol Buffer types including `ConfigValue`, `StringList`, `ProtoContext`, `ContextSet`, `ContextShape`, `LogLevel`, `Json`, and `Schema` for easier access.
 
 ## [0.11.2] - 2025-02-24

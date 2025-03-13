@@ -1,3 +1,24 @@
+"""
+Prefab Cloud Python client library.
+
+This module provides access to the Prefab Cloud configuration and feature flag service.
+
+Main components:
+- Client: The main client for interacting with Prefab Cloud
+- Options: Configuration options for the client
+- Context: Context information for evaluating configs and feature flags
+
+Re-exported Protocol Buffer types:
+- ConfigValue: Represents a configuration value
+- StringList: Represents a list of strings
+- ProtoContext: Protocol buffer Context class
+- ContextSet: Collection of contexts
+- ContextShape: Shape information for contexts
+- LogLevel: Enumeration of log levels
+- Json: Represents JSON data in configuration values
+- Schema: Represents schema validation for configuration values
+"""
+
 from typing import Optional
 
 from . import _internal_logging
@@ -9,6 +30,19 @@ from .read_write_lock import ReadWriteLock as _ReadWriteLock
 from .context import Context, NamedContext
 from .feature_flag_client import FeatureFlagClient
 from .config_client import ConfigClient
+
+# Re-export Protocol Buffer types for easier access
+import prefab_pb2
+from prefab_pb2 import (
+    ConfigValue,
+    StringList,
+    Context as ProtoContext,
+    ContextSet,
+    ContextShape,
+    LogLevel,
+    Json,
+    Schema,
+)
 
 log = _internal_logging.InternalLogger(__name__)
 

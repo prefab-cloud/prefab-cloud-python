@@ -33,6 +33,23 @@ result = prefab_cloud_python.get_client().enabled("my-first-feature-flag", conte
 print("my-first-feature-flag is:", result)
 ```
 
+## Protocol Buffer Types
+
+If you need to work with the underlying Protocol Buffer types, the following are re-exported for convenience:
+
+```python
+from prefab_cloud_python import ConfigValue, StringList, ProtoContext, ContextSet, ContextShape, LogLevel, Json, Schema
+
+# Create a config value
+config_value = ConfigValue(string="example value")
+
+# Create a JSON value
+json_value = ConfigValue(json=Json(json='{"key": "value"}'))
+
+# Create a Schema value
+schema_value = Schema(definition='{"type": "object", "properties": {"name": {"type": "string"}}}')
+```
+
 See full documentation https://docs.prefab.cloud/docs/sdks/python
 
 ## Development

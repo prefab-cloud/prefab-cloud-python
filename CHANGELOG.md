@@ -1,8 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Re-exported Protocol Buffer types including `ConfigValue`, `StringList`, `ProtoContext`, `ContextSet`, `ContextShape`, `LogLevel`, `Json`, and `Schema` for easier access.
+
 ## [0.11.2] - 2025-02-24
 
 - Updates ConfigValueType's union to include dict to better support json values [#117]
+- Renamed encrypted content paths
 
 ## [0.11.1] - 2025-02-20
 

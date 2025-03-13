@@ -47,6 +47,7 @@ class _ConfigTypeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._Enu
     SEGMENT: _ConfigType.ValueType  # 4
     LIMIT_DEFINITION: _ConfigType.ValueType  # 5
     DELETED: _ConfigType.ValueType  # 6
+    SCHEMA: _ConfigType.ValueType  # 7
 
 class ConfigType(_ConfigType, metaclass=_ConfigTypeEnumTypeWrapper): ...
 
@@ -58,6 +59,7 @@ LOG_LEVEL: ConfigType.ValueType  # 3
 SEGMENT: ConfigType.ValueType  # 4
 LIMIT_DEFINITION: ConfigType.ValueType  # 5
 DELETED: ConfigType.ValueType  # 6
+SCHEMA: ConfigType.ValueType  # 7
 global___ConfigType = ConfigType
 
 class _LogLevel:
@@ -150,6 +152,7 @@ class ConfigValue(google.protobuf.message.Message):
     PROVIDED_FIELD_NUMBER: builtins.int
     DURATION_FIELD_NUMBER: builtins.int
     JSON_FIELD_NUMBER: builtins.int
+    SCHEMA_FIELD_NUMBER: builtins.int
     CONFIDENTIAL_FIELD_NUMBER: builtins.int
     DECRYPT_WITH_FIELD_NUMBER: builtins.int
     int: builtins.int
@@ -172,6 +175,8 @@ class ConfigValue(google.protobuf.message.Message):
     def duration(self) -> global___IsoDuration: ...
     @property
     def json(self) -> global___Json: ...
+    @property
+    def schema(self) -> global___Schema: ...
     confidential: builtins.bool
     """don't log or telemetry this value"""
     decrypt_with: builtins.str
@@ -192,17 +197,18 @@ class ConfigValue(google.protobuf.message.Message):
         provided: global___Provided | None = ...,
         duration: global___IsoDuration | None = ...,
         json: global___Json | None = ...,
+        schema: global___Schema | None = ...,
         confidential: builtins.bool | None = ...,
         decrypt_with: builtins.str | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["_confidential", b"_confidential", "_decrypt_with", b"_decrypt_with", "bool", b"bool", "bytes", b"bytes", "confidential", b"confidential", "decrypt_with", b"decrypt_with", "double", b"double", "duration", b"duration", "int", b"int", "int_range", b"int_range", "json", b"json", "limit_definition", b"limit_definition", "log_level", b"log_level", "provided", b"provided", "string", b"string", "string_list", b"string_list", "type", b"type", "weighted_values", b"weighted_values"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["_confidential", b"_confidential", "_decrypt_with", b"_decrypt_with", "bool", b"bool", "bytes", b"bytes", "confidential", b"confidential", "decrypt_with", b"decrypt_with", "double", b"double", "duration", b"duration", "int", b"int", "int_range", b"int_range", "json", b"json", "limit_definition", b"limit_definition", "log_level", b"log_level", "provided", b"provided", "string", b"string", "string_list", b"string_list", "type", b"type", "weighted_values", b"weighted_values"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_confidential", b"_confidential", "_decrypt_with", b"_decrypt_with", "bool", b"bool", "bytes", b"bytes", "confidential", b"confidential", "decrypt_with", b"decrypt_with", "double", b"double", "duration", b"duration", "int", b"int", "int_range", b"int_range", "json", b"json", "limit_definition", b"limit_definition", "log_level", b"log_level", "provided", b"provided", "schema", b"schema", "string", b"string", "string_list", b"string_list", "type", b"type", "weighted_values", b"weighted_values"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_confidential", b"_confidential", "_decrypt_with", b"_decrypt_with", "bool", b"bool", "bytes", b"bytes", "confidential", b"confidential", "decrypt_with", b"decrypt_with", "double", b"double", "duration", b"duration", "int", b"int", "int_range", b"int_range", "json", b"json", "limit_definition", b"limit_definition", "log_level", b"log_level", "provided", b"provided", "schema", b"schema", "string", b"string", "string_list", b"string_list", "type", b"type", "weighted_values", b"weighted_values"]) -> None: ...
     @typing.overload
     def WhichOneof(self, oneof_group: typing_extensions.Literal["_confidential", b"_confidential"]) -> typing_extensions.Literal["confidential"] | None: ...
     @typing.overload
     def WhichOneof(self, oneof_group: typing_extensions.Literal["_decrypt_with", b"_decrypt_with"]) -> typing_extensions.Literal["decrypt_with"] | None: ...
     @typing.overload
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["type", b"type"]) -> typing_extensions.Literal["int", "string", "bytes", "double", "bool", "weighted_values", "limit_definition", "log_level", "string_list", "int_range", "provided", "duration", "json"] | None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["type", b"type"]) -> typing_extensions.Literal["int", "string", "bytes", "double", "bool", "weighted_values", "limit_definition", "log_level", "string_list", "int_range", "provided", "duration", "json", "schema"] | None: ...
 
 global___ConfigValue = ConfigValue
 
@@ -456,6 +462,7 @@ class Config(google.protobuf.message.Message):
     DRAFT_ID_FIELD_NUMBER: builtins.int
     VALUE_TYPE_FIELD_NUMBER: builtins.int
     SEND_TO_CLIENT_SDK_FIELD_NUMBER: builtins.int
+    SCHEMA_KEY_FIELD_NUMBER: builtins.int
     id: builtins.int
     project_id: builtins.int
     key: builtins.str
@@ -470,6 +477,7 @@ class Config(google.protobuf.message.Message):
     value_type: global___Config.ValueType.ValueType
     send_to_client_sdk: builtins.bool
     """default value of a boolean in proto3 is false"""
+    schema_key: builtins.str
     def __init__(
         self,
         *,
@@ -483,10 +491,14 @@ class Config(google.protobuf.message.Message):
         draft_id: builtins.int | None = ...,
         value_type: global___Config.ValueType.ValueType = ...,
         send_to_client_sdk: builtins.bool = ...,
+        schema_key: builtins.str | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["_draft_id", b"_draft_id", "changed_by", b"changed_by", "draft_id", b"draft_id"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["_draft_id", b"_draft_id", "allowable_values", b"allowable_values", "changed_by", b"changed_by", "config_type", b"config_type", "draft_id", b"draft_id", "id", b"id", "key", b"key", "project_id", b"project_id", "rows", b"rows", "send_to_client_sdk", b"send_to_client_sdk", "value_type", b"value_type"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_draft_id", b"_draft_id", "_schema_key", b"_schema_key", "changed_by", b"changed_by", "draft_id", b"draft_id", "schema_key", b"schema_key"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_draft_id", b"_draft_id", "_schema_key", b"_schema_key", "allowable_values", b"allowable_values", "changed_by", b"changed_by", "config_type", b"config_type", "draft_id", b"draft_id", "id", b"id", "key", b"key", "project_id", b"project_id", "rows", b"rows", "schema_key", b"schema_key", "send_to_client_sdk", b"send_to_client_sdk", "value_type", b"value_type"]) -> None: ...
+    @typing.overload
     def WhichOneof(self, oneof_group: typing_extensions.Literal["_draft_id", b"_draft_id"]) -> typing_extensions.Literal["draft_id"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_schema_key", b"_schema_key"]) -> typing_extensions.Literal["schema_key"] | None: ...
 
 global___Config = Config
 
@@ -1725,3 +1737,36 @@ class ClientStats(google.protobuf.message.Message):
     def ClearField(self, field_name: typing_extensions.Literal["dropped_event_count", b"dropped_event_count", "end", b"end", "start", b"start"]) -> None: ...
 
 global___ClientStats = ClientStats
+
+@typing_extensions.final
+class Schema(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    class _SchemaType:
+        ValueType = typing.NewType("ValueType", builtins.int)
+        V: typing_extensions.TypeAlias = ValueType
+
+    class _SchemaTypeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[Schema._SchemaType.ValueType], builtins.type):  # noqa: F821
+        DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+        UNKNOWN: Schema._SchemaType.ValueType  # 0
+        ZOD: Schema._SchemaType.ValueType  # 1
+        JSON_SCHEMA: Schema._SchemaType.ValueType  # 2
+
+    class SchemaType(_SchemaType, metaclass=_SchemaTypeEnumTypeWrapper): ...
+    UNKNOWN: Schema.SchemaType.ValueType  # 0
+    ZOD: Schema.SchemaType.ValueType  # 1
+    JSON_SCHEMA: Schema.SchemaType.ValueType  # 2
+
+    SCHEMA_FIELD_NUMBER: builtins.int
+    SCHEMA_TYPE_FIELD_NUMBER: builtins.int
+    schema: builtins.str
+    schema_type: global___Schema.SchemaType.ValueType
+    def __init__(
+        self,
+        *,
+        schema: builtins.str = ...,
+        schema_type: global___Schema.SchemaType.ValueType = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["schema", b"schema", "schema_type", b"schema_type"]) -> None: ...
+
+global___Schema = Schema

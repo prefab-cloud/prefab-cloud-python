@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.11.4] - 2025-03-14
+
+- Make ConfigValue work as a value in the Context Dictionary. Declare a new type `ContextDictOrContext` to better cover the type possibilities of the context argument [#122]
+
 ## [0.11.3] - 2025-03-13
 
 - Re-exported Protocol Buffer types including `ConfigValue`, `StringList`, `ProtoContext`, `ContextSet`, `ContextShape`, `LogLevel`, `Json`, and `Schema` for easier access. [#120]

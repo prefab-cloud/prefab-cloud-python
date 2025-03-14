@@ -169,6 +169,23 @@ class TestContext:
         )
         assert proto_context == expected_proto_context
 
+    def test_named_context_to_proto_with_config_values(self):
+        proto_context = NamedContext(
+            "the-name",
+            {"a": ConfigValue(int=10), "b": ConfigValue(double=1.1), "c": "hello world", "d": ["hello", "world"], "e": True},
+        ).to_proto()
+        expected_proto_context = ProtoContext(
+            type="the-name",
+            values={
+                "a": ConfigValue(int=10),
+                "b": ConfigValue(double=1.1),
+                "c": ConfigValue(string="hello world"),
+                "d": ConfigValue(string_list=StringList(values=["hello", "world"])),
+                "e": ConfigValue(bool=True),
+            },
+        )
+        assert proto_context == expected_proto_context
+
     def test_context_to_proto(self):
         proto_context_set = Context(
             {

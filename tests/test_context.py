@@ -172,7 +172,13 @@ class TestContext:
     def test_named_context_to_proto_with_config_values(self):
         proto_context = NamedContext(
             "the-name",
-            {"a": ConfigValue(int=10), "b": ConfigValue(double=1.1), "c": "hello world", "d": ["hello", "world"], "e": True},
+            {
+                "a": ConfigValue(int=10),
+                "b": ConfigValue(double=1.1),
+                "c": "hello world",
+                "d": ["hello", "world"],
+                "e": True,
+            },
         ).to_proto()
         expected_proto_context = ProtoContext(
             type="the-name",

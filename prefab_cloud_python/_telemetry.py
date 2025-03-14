@@ -305,7 +305,9 @@ class TelemetryEventProcessor(object):
                 super().run()
             except Exception as e:
                 # Log just the exception name and message without the full traceback
-                logger.warning(f"Exception in thread {self.name}: {e.__class__.__name__}: {e}")
+                logger.warning(
+                    f"Exception in thread {self.name}: {e.__class__.__name__}: {e}"
+                )
                 # Using warning level instead of error+traceback to keep logs cleaner
 
     def __init__(

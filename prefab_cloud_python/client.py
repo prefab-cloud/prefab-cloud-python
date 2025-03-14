@@ -22,7 +22,11 @@ import prefab_pb2 as Prefab
 import uuid
 import requests
 from urllib.parse import urljoin
-from .constants import NoDefaultProvided, ConfigValueType, ContextDictType, ContextDictOrContext
+from .constants import (
+    NoDefaultProvided,
+    ConfigValueType,
+    ContextDictOrContext,
+)
 from ._internal_constants import LOG_LEVEL_BASE_KEY
 
 PostBodyType = Union[Prefab.Loggers, Prefab.ContextShapes, Prefab.TelemetryEvents]

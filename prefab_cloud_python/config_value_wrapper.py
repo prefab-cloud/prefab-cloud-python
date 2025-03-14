@@ -7,7 +7,7 @@ class ConfigValueWrapper:
     @staticmethod
     def wrap(value, confidential=None):
         value_type = type(value)
-        if value_type  == Prefab.ConfigValue:
+        if value_type == Prefab.ConfigValue:
             return value
         elif value_type == int:
             return Prefab.ConfigValue(int=value, confidential=confidential)

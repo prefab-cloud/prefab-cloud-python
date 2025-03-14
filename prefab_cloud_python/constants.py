@@ -8,5 +8,10 @@ if TYPE_CHECKING:
 
 NoDefaultProvided = object()
 ConfigValueType = Optional[Union[int, float, bool, str, list[str], timedelta, dict]]
-ContextDictType = dict[str, dict[str, Union[int, float, bool, str, date, datetime, list[str], Prefab.ConfigValue]]]
+ContextDictType = dict[
+    str,
+    dict[
+        str, Union[int, float, bool, str, date, datetime, list[str], Prefab.ConfigValue]
+    ],
+]
 ContextDictOrContext = Union[ContextDictType, "Context"]

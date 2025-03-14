@@ -22,7 +22,7 @@ import prefab_pb2 as Prefab
 import uuid
 import requests
 from urllib.parse import urljoin
-from .constants import NoDefaultProvided, ConfigValueType, ContextDictType
+from .constants import NoDefaultProvided, ConfigValueType, ContextDictType, ContextDictOrContext
 from ._internal_constants import LOG_LEVEL_BASE_KEY
 
 PostBodyType = Union[Prefab.Loggers, Prefab.ContextShapes, Prefab.TelemetryEvents]
@@ -78,7 +78,7 @@ class Client:
         self,
         key: str,
         default: ConfigValueType = NoDefaultProvided,
-        context: Optional[ContextDictType | Context] = None,
+        context: Optional[ContextDictOrContext] = None,
     ) -> ConfigValueType:
         if self.is_ff(key):
             return self.feature_flag_client().get(key, default=default, context=context)
@@ -86,7 +86,7 @@ class Client:
             return self.config_client().get(key, default=default, context=context)
 
     def enabled(
-        self, feature_name: str, context: Optional[ContextDictType | Context] = None
+        self, feature_name: str, context: Optional[ContextDictOrContext] = None
     ) -> bool:
         return self.feature_flag_client().feature_is_on_for(
             feature_name, context=context
@@ -163,7 +163,7 @@ class Client:
         return self.config_client().is_ready()
 
     def set_global_context(
-        self, global_context: Optional[ContextDictType | Context] = None
+        self, global_context: Optional[ContextDictOrContext] = None
     ) -> Client:
         self.global_context = Context.normalize_context_arg(global_context)
         return self

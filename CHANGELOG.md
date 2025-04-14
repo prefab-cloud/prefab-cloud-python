@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.12.0] - 2025-04-14
+
+- Add special case handling for context `prefab.current-time` to return the current time (UTC) to round out new operator support [#124]
+
 ## [0.11.4] - 2025-03-14
 
 - Make ConfigValue work as a value in the Context Dictionary. Declare a new type `ContextDictOrContext` to better cover the type possibilities of the context argument [#122]

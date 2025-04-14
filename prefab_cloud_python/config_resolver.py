@@ -1,5 +1,6 @@
 from __future__ import annotations
 import functools
+import time
 from collections.abc import Sequence
 
 from .read_write_lock import ReadWriteLock
@@ -129,7 +130,11 @@ class CriteriaEvaluator:
         return True
 
     def evaluate_criterion(self, criterion, properties):
-        value_from_properties = properties.get(criterion.property_name)
+        if criterion.property_name == "prefab.current-time":
+            value_from_properties = int(time.time() * 1000)
+        else:
+            value_from_properties = properties.get(criterion.property_name)
+
         deepest_value = ConfigValueUnwrapper.deepest_value(
             criterion.value_to_match, self.config, properties
         )
